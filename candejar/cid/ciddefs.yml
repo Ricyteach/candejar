@@ -1,4 +1,4 @@
-# CID file format line and field definitions
+# CID file format line and field definitions; field spec ::= width, default[, optional[, align[, precision]]]
 ---
 -   Cid
 -
