@@ -4,10 +4,10 @@
 """Tests for `candejar.cid` package."""
 
 import pytest
-from candejar.cid import make_cid_line_cls
 import yaml
 from pathlib import Path
-from cid import Field, Align
+from candejar.cid.cidline import make_cid_line_cls
+from candejar.cid.cidfield import Field, Align
 
 # cidfield tests
 
