@@ -13,10 +13,10 @@ from candejar.cid.cidfield import Field, Align
 
 @pytest.fixture
 def input():
-    return list(yaml.safe_load_all(Path(__file__).resolve().parents[1].joinpath("src/cid/defs.yaml").open()))
+    return list(yaml.safe_load_all(Path(__file__).resolve().parents[1].joinpath("candejar/cid/ciddefs.yml").open()))
 
 def test_yml(input):
-    input
+    assert input
 
 #Objects used in Field testing
 field_objs = {  "int=1 width=1": Field(1, 1),
@@ -45,6 +45,7 @@ class TestField:
     def test_parse(self, field_test_name):
         for input,result in self.parse_data[field_test_name]:
             assert field_objs[field_test_name].parse(input) == result
+
     spec_data = {   "int=1 width=1": " >1d",
                     "int=1 width=1 optional": " >1d",
                     "int=1 width=2": " >2d",
@@ -57,6 +58,7 @@ class TestField:
         result = self.spec_data[field_test_name]
         obj = field_objs[field_test_name]
         assert result == obj.spec
+
     bspec_data = {  "int=1 width=1": " >1",
                     "int=1 width=1 optional": " >1",
                     "int=1 width=2": " >2",
@@ -68,6 +70,7 @@ class TestField:
     def test_bspec(self, field_test_name):
         result = self.bspec_data[field_test_name]
         assert field_objs[field_test_name].blank_spec == result
+
     regex_data = {  "int=1 width=1": ("Name", "(?P<Name>.{1})"),
                     "int=1 width=1 optional": ("Name", "(?P<Name>.{1})?"),
                     "int=1 width=2": ("Name", "(?P<Name>.{2})"),
@@ -79,6 +82,7 @@ class TestField:
     def test_regex(self, field_test_name):
         input, result = self.regex_data[field_test_name]
         assert field_objs[field_test_name].regex(input) == result
+
     format_data = { "int=1 width=1": [(1, "1")],
                     "int=1 width=1 optional": [(None, " ")],
                     "int=1 width=2": [(1, " 1")],
@@ -90,6 +94,7 @@ class TestField:
     def test_format(self, field_test_name):
         for input,result in self.format_data[field_test_name]:
             assert field_objs[field_test_name].format(input) == result
+
     precision_data = {  "int=1 width=1": None,
                         "int=1 width=1 optional": None,
                         "int=1 width=2": None,
@@ -101,6 +106,7 @@ class TestField:
     def test_precision(self, field_test_name):
         result = self.precision_data[field_test_name]
         assert field_objs[field_test_name].precision == result
+
     align_data = {  "int=1 width=1": ">",
                     "int=1 width=1 optional": ">",
                     "int=1 width=2": ">",
@@ -112,6 +118,7 @@ class TestField:
     def test_align(self, field_test_name):
         result = self.align_data[field_test_name]
         assert field_objs[field_test_name].align == result
+
     default_data = { "int=1 width=1": 1,
                      "int=1 width=1 optional": 1,
                      "int=1 width=2": 1,
@@ -123,6 +130,7 @@ class TestField:
     def test_default(self, field_test_name):
         result = self.default_data[field_test_name]
         assert field_objs[field_test_name].default == result
+
     width_data = {  "int=1 width=1": 1,
                     "int=1 width=1 optional": 1,
                     "int=1 width=2": 2,
@@ -134,6 +142,7 @@ class TestField:
     def test_width(self, field_test_name):
         result = self.width_data[field_test_name]
         assert field_objs[field_test_name].width == result
+
     type_data = {   "int=1 width=1": "d",
                     "int=1 width=1 optional": "d",
                     "int=1 width=2": "d",
@@ -144,7 +153,7 @@ class TestField:
                     }
     def test_type(self, field_test_name):
         result = self.type_data[field_test_name]
-        assert field_objs[field_test_name].type == result
+        assert field_objs[field_test_name].type_ == result
 
 # cidline tests
 

@@ -51,7 +51,7 @@ class Field:
     optional: bool = False  # allows for blank fields
     align: Optional[Union[str,Align]] = None  # defaults to ALIGN_SPEC_DEFAULT[type(default)].value
     precision: Optional[int] = PrecisionDesc()  # used for float fields only; defaults to PRECISION
-    type_: InitVar[Optional[str]] = field(default=None, init=False)  # "s", "f", or "d"; defaults to TYPE_SPEC_DEFAULT[type(default)]
+    type_: InitVar[Optional[str]] = field(default=None)  # "s", "f", or "d"; defaults to TYPE_SPEC_DEFAULT[type(default)]
     fill: ClassVar[str] = field(default=" ", init=False)  # character used to fill empty space in field
     def __post_init__(self, type_) -> None:
         try:
@@ -77,7 +77,7 @@ class Field:
     @property
     def spec(self) -> str:
         precision = f".{self.precision}" if self.precision is not None else ""
-        return f"{self.fill}{self.align}{self.width}{precision}{self.type}"
+        return f"{self.fill}{self.align}{self.width}{precision}{self.type_}"
     @property
     def blank_spec(self) -> str:
         return f"{self.fill}{self.align}{self.width}"
