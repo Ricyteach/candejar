@@ -67,4 +67,4 @@ def make_cid_line_cls(name, **definitions):
     else:
         start = 27
     return make_dataclass(name, fields, bases=(CidLine,), namespace=dict(prefix=PREFIX_TEMPLATE.format(prefix), _parser=parser,
-                                                                         _start=start), cidfields=cidfields)
+                                                                         _start=start, cidfields=cidfields))
