@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """CID line field module for working with individual fields in lines of a .cid file."""
+from . import CIDError
 from dataclasses import InitVar, field, dataclass
 from enum import Enum
 from typing import TypeVar, Any, Optional, Union, ClassVar
@@ -8,9 +9,6 @@ from typing import TypeVar, Any, Optional, Union, ClassVar
 
 PRECISION = 2  # for float field objects only
 
-
-class CIDError(Exception):
-    pass
 
 class FieldError(CIDError):
     pass
@@ -93,6 +91,6 @@ class Field:
         except TypeError as e:
             raise FieldError(f"FieldError occurred when formatting:\n\tOBJ: {self!r}\n\tSPEC: {self.spec!r}") from e
 
-def make_field_obj(dfntn_dict):
+def make_field_obj(*defntn_seq):
     """Placeholder function for now."""
-    pass
+    return Field(*defntn_seq)
