@@ -4,20 +4,8 @@
 """Tests for `candejar.cid.cidfield` module."""
 
 import pytest
-import yaml
-from pathlib import Path
 from candejar.cid.cidfield import Field, Align
 
-# cidfield tests
-
-@pytest.fixture
-def input():
-    return list(yaml.safe_load_all(Path(__file__).resolve().parents[1].joinpath("candejar/cid/ciddefs.yml").open()))
-
-def test_yml(input):
-    assert input
-
-#Objects used in Field testing
 field_objs = {  "int=1 width=1": Field(1, 1),
                 "int=1 width=2": Field(2, 1),
                 "int=1 width=1 optional": Field(1, 1, optional=True),
