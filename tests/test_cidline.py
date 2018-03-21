@@ -2,8 +2,10 @@
 # -*- coding: utf-8 -*-
 
 """Tests for `candejar.cid.cidline` module."""
+
 import pytest
 from candejar.cid.cidline import make_cid_line_cls
+from dataclasses import astuple
 
 yml_sample = [
     "OBJ",
@@ -33,36 +35,30 @@ yml_sample = [
 ]
 
 lines = [
-    "                      A-1!!ANALYS   3 1  1CID file from canderw: Rick Teachey, rick@teachey.org         =99    0    0    0",
+    "                      A-1!!ANALYS   3 1  1CID file from canderw: Rick Teachey, rick@teachey.org         -99    0    0    0",
     "                      E-1!!    1   40      1.25Factor for load step #1                                     "
-]
+    ]
+
 data = [
     ("ANALYS", 3, 1, 1, "CID file from canderw: Rick Teachey, rick@teachey.org", -99, 0, 0, 0),
     (1, 40, 1.25, "Factor for load step #1")
-]
+    ]
 
+_, line_defs_dict = yml_sample
+line_classes = [make_cid_line_cls(name, **dfntn_dict) for name, dfntn_dict in line_defs_dict.items()]
 
-@pytest.fixture
-def line_classes():
-    """CidLine classes.
-    """
-    _, line_defs_dict = yml_sample
-    return [make_cid_line_cls(name, **dfntn_dict) for name, dfntn_dict in line_defs_dict.items()]
-
-@pytest.fixture
-def class_data_and_line_sets(line_classes):
+@pytest.fixture(params=zip(line_classes, data, lines),ids=[cls.__name__ for cls in line_classes])
+def class_data_and_line(request):
     """A 3 tuple of class, data, and line that go together.
     """
-    return list(zip(line_classes, lines, data))
-
-@pytest.fixture(params = class_data_and_line_sets, ids = yml_sample[1])
-def class_data_and_line(request):
     return request.param
 
 class TestCidLine:
     def test_parse(self, class_data_and_line):
         """Confirm CideLine child classes read lines correctly."""
-        assert False
+        cls, data, line = class_data_and_line
+        assert astuple(cls.parse(line)) == data
     def test_format(self, class_data_and_line):
         """Confirm CideLine child classes write data correctly."""
-        assert False
+        cls, data, line = class_data_and_line
+        assert format(cls(*data), "cid") == line
