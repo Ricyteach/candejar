@@ -35,7 +35,7 @@ yml_sample = [
 ]
 
 lines = [
-    "                      A-1!!ANALYS   3 1  1CID file from canderw: Rick Teachey, rick@teachey.org         -99    0    0    0",
+    "                      A-1!!ANALYS   3 1  1CID file from canderw: Rick Teachey, rick@teachey.org         -99               ",
     "                      E-1!!    1   40      1.25Factor for load step #1                                     "
     ]
 

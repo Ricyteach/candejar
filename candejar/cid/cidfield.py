@@ -65,7 +65,7 @@ class Field:
             raise FieldError(f"No default settings available for field of type {type(self.default).__name__}")
     def parse(self, s: Optional[str]) -> FieldType:
         try:
-            return type(self.default)(s)
+            return type(self.default)(s.strip())
         except Exception as e:
             try:
                 if self.optional and (s is None or s.strip() == ""):
