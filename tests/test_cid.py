@@ -6,6 +6,7 @@
 import pytest
 import yaml
 from pathlib import Path
+from candejar.cid.cidlineclasses import A1
 
 @pytest.fixture
 def input():
