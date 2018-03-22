@@ -4,7 +4,7 @@
 import re
 from dataclasses import make_dataclass, dataclass, field, asdict
 from typing import Optional, Type, Pattern
-from . import CIDError
+from .exc import CIDError
 from .cidfield import make_field_obj
 
 
@@ -49,7 +49,7 @@ class CidLine:
                                        }[True])
                 except KeyError:
                     if self.start in (27,28):
-                        raise LineError("unsupported format string passed to {type(self).__name__}.__format__") from None
+                        raise LineError(f"unsupported format string passed to {type(self).__name__}.__format__") from None
                     else:
                         raise LineError("upsupported line start location provided; cid lines start at 27 or 28") from None
                 # fields

@@ -2,6 +2,4 @@
 
 """Sub package for reading/writing (parsing/formatting) .cid files."""
 
-class CIDError(Exception):
-    pass
-
+from .cidlineclasses import *

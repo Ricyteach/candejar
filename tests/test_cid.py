@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Tests for `candejar` package."""
+"""Tests for `candejar.cid` package."""
 
 import pytest
 import yaml
 from pathlib import Path
-from candejar.cid.cidlineclasses import A1
+from candejar.cid import A1
 
 @pytest.fixture
 def input():

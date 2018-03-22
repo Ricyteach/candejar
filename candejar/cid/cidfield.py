@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """CID line field module for working with individual fields in lines of a .cid file."""
-from . import CIDError
+from .exc import CIDError
 from dataclasses import InitVar, field, dataclass
 from enum import Enum
 from typing import TypeVar, Any, Optional, Union, ClassVar
