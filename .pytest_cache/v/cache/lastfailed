@@ -3,6 +3,10 @@
   "tests/test_candejar.py::TestCidLine::()::test_parse": true,
   "tests/test_cid.py::TestCidLine::()::test_format": true,
   "tests/test_cid.py::TestCidLine::()::test_parse": true,
+  "tests/test_cidfield.py::TestField": true,
+  "tests/test_cidfield.py::TestField::()": true,
+  "tests/test_cidline.py::TestCidLine": true,
+  "tests/test_cidline.py::TestCidLine::()": true,
   "tests/test_cidline.py::TestCidLine::()::test_format": true,
   "tests/test_cidline.py::TestCidLine::()::test_parse": true
 }
