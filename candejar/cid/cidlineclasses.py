@@ -15,7 +15,7 @@ def make_cid_line_classes():
 
 cidlineclassgroups = make_cid_line_classes()
 
-cidlineclasses = SimpleNamespace(**{k:v for group in vars(cidlineclassgroups).values() for k,v in vars(group)})
+cidlineclasses = SimpleNamespace(**{k:v for group in vars(cidlineclassgroups).values() for k,v in vars(group).items()})
 
 def __getattr__(name):
     try:
