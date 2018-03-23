@@ -43,12 +43,12 @@ class CidLine:
                 # "L" or " " for line types C3 C4 C5 D1
                 try:
                     result_list.append({
-                                           self.start == 27 and "L" not in format_spec: "",
-                                           self.start == 28: " ",
-                                           self.start == 28 and "L" in format_spec: "L",
+                                           self.start_ == 27 and "L" not in format_spec: "",
+                                           self.start_ == 28: " ",
+                                           self.start_ == 28 and "L" in format_spec: "L",
                                        }[True])
                 except KeyError:
-                    if self.start in (27,28):
+                    if self.start_ in (27,28):
                         raise LineError(f"unsupported format string passed to {type(self).__name__}.__format__") from None
                     else:
                         raise LineError("upsupported line start location provided; cid lines start at 27 or 28") from None
@@ -66,14 +66,14 @@ class CidLine:
     @classmethod
     def parse(cls: Type["CidLine"], s: str) -> "CidLine":
         if s.startswith(cls.prefix):
-            s = s[slice(cls.start, None)]
+            s = s[slice(cls.start_, None)]
         try:
             return cls(**{k:cls.cidfields[k].parse(v) for k,v in cls.parser.fullmatch(s).groupdict().items()})
         except AttributeError:
             raise ValueError(f"{cls.__name__} failed to parse line:\n{s!r}")
 
 
-def make_cid_line_cls(name, **definitions):
+def make_cid_line_cls(name_, **definitions):
     """Uses information provided by the ciddefs.yml to create the CidLine child classes."""
     prefix = definitions.pop("prefix")
     # dataclass fields
@@ -81,5 +81,5 @@ def make_cid_line_cls(name, **definitions):
     # cid line fields
     cidfields = {f_name:make_field_obj(*dfntn_seq) for f_name,dfntn_seq in definitions.items()}
 
-    return make_dataclass(name, fields, bases=(CidLine,), namespace=dict(prefix=PREFIX_TEMPLATE.format(prefix), parser=Parser(),
-                                                                         start=Start(), cidfields=cidfields))
+    return make_dataclass(name_, fields, bases=(CidLine,), namespace=dict(prefix=PREFIX_TEMPLATE.format(prefix), parser=Parser(),
+                                                                         start_=Start(), cidfields=cidfields))

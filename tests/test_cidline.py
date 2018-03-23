@@ -13,34 +13,51 @@ yml_sample = [
         A1=dict(
             prefix='A-1',
             # ANALYS or DESIGN
-            Mode=(8, 'ANALYS'),
+            mode=(8, 'ANALYS'),
             # 1, 2, or 3
-            Level=(2, 3),
-            Method=(2, 1),
-            NGroups=(3, 1),
-            Heading=(60, 'CID file from canderw: Rick Teachey, rick@teachey.org'),
-            Iterations=(5, -99),
-            CulvertID=(5, 0, True),
-            ProcessID=(5, 0, True),
-            SubdomainID=(5, 0, True)
+            level=(2, 3),
+            method=(2, 1),
+            ngroups=(3, 1),
+            heading=(60, 'CID file from canderw: Rick Teachey, rick@teachey.org'),
+            iterations=(5, -99),
+            culvertid=(5, 0, True),
+            processid=(5, 0, True),
+            subdomainid=(5, 0, True)
+        ),
+        D1=dict(
+            prefix= "D-1",
+            # Note: moved limit field to line prefix
+            # Limit: [1, " "]
+            id= [4, 0],
+            # 1: Isotropic, 2: Orthotropic,
+            # 3: Duncan/Selig, 4: Overburden,
+            # 5: Extended Hardin, 6: Interface,
+            # 7: Composite Link, 8: Mohr/Coulomb
+            model= [5, 1],
+            density= [10, 0.0],
+            name= [20, ""],
+            # overburden model only
+            layers= [2, 0, True]
         ),
         E1=dict(
             prefix='E-1',
-            Start=(5, 0),
-            Last=(5, 0),
-            Factor=(10, 1.0),
-            Comment=(60, '')
+            start=(5, 0),
+            last=(5, 0),
+            factor=(10, 1.0),
+            comment=(40, '')
         )
     )
 ]
 
 lines = [
     "                      A-1!!ANALYS   3 1  1CID file from canderw: Rick Teachey, rick@teachey.org         -99               ",
-    "                      E-1!!    1   40      1.25Factor for load step #1                                     "
+    "                      D-1!!    0    1      0.00                      ",
+    "                      E-1!!    1   40      1.25Factor for load step #1                 "
     ]
 
 data = [
     ("ANALYS", 3, 1, 1, "CID file from canderw: Rick Teachey, rick@teachey.org", -99, 0, 0, 0),
+    (0, 1, 0.0, "", 0),
     (1, 40, 1.25, "Factor for load step #1")
     ]
 
