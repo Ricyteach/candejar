@@ -9,8 +9,8 @@ from candejar.cidprocessing.main import A1
 @pytest.fixture
 def cidmock():
     groupmockdcts = [
-        dict(type="ALUMINUM"),
-        dict(type="PLASTIC", WallType="GENERAL"),
+        dict(type_="ALUMINUM"),
+        dict(type_="PLASTIC", WallType="GENERAL"),
         dict(type="STEEL", jointslip=True, varytravel=True)
     ]
     soilmaterialmockdcts = [
