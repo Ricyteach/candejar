@@ -8,9 +8,10 @@
         Mode: [8, "ANALYS"]
         # 1, 2, or 3
         Level: [2, 3]
+        # 0 = WSD, 1 = LRFD
         Method: [2, 1]
         NGroups: [3, 1]
-        Heading: [60, "CID file from canderw: Rick Teachey, rick@teachey.org"]
+        Heading: [60, "From `pip install candejar`: Rick Teachey, rick@teachey.org"]
         Iterations: [5, -99]
         CulvertID: [5, 0]
         ProcessID: [5, 0]
@@ -21,7 +22,7 @@
         Start: [5, 0]
         Last: [5, 0]
         Factor: [10, 1.0]
-        Comment: [60, ""]
+        Comment: [40, ""]
 ...
 ---
 -   L3
