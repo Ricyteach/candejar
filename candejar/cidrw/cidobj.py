@@ -24,23 +24,28 @@ class AttributeDelegator:
 
 @dataclass
 class CidObjIn:
+    # only input parameter is lines
     lines: List[CidLine] = field(default_factory=list, repr=False)  # cid file lines
-    groups: List[Any] = field(default_factory=list, repr=False, init=False)  # pipe groups
-    nodes: List[Any] = field(default_factory=list, repr=False, init=False)
-    elements: List[Any] = field(default_factory=list, repr=False, init=False)
-    boundaries: List[Any] = field(default_factory=list, repr=False, init=False)
-    materials: List[Any] = field(default_factory=list, repr=False, init=False)  # element materials
-    factors: List[Any] = field(default_factory=list, repr=False, init=False)  # lrfd step factors
-    level: int = AttributeDelegator("a1")  # 1, 2, 3
-    method: int = AttributeDelegator("a1")  # 0=WSD, 1=LRFD
-    mode: int = AttributeDelegator("a1")  # ANALYS or DESIGN
-    ngroups: int = AttributeDelegator("a1")  # pipe groups
-    nsteps: int = AttributeDelegator("c2")  # load steps
-    nnodes: int = AttributeDelegator("c2")
-    nelements: int = AttributeDelegator("c2")
-    nboundaries: int = AttributeDelegator("c2")
-    nsoil_materials: int = AttributeDelegator("c2")
-    ninterf_materials: int = AttributeDelegator("c2")
+
+    # all other fields are for display
+    mode: int = field(default=AttributeDelegator("a1"), init=False)  # ANALYS or DESIGN
+    level: int = field(default=AttributeDelegator("a1"), init=False)  # 1, 2, 3
+    method: int = field(default=AttributeDelegator("a1"), init=False)  # 0=WSD, 1=LRFD
+    ngroups: int = field(default=AttributeDelegator("a1"), init=False)  # pipe groups
+    nsteps: int = field(default=AttributeDelegator("c2"), init=False)  # load steps
+    nnodes: int = field(default=AttributeDelegator("c2"), init=False)
+    nelements: int = field(default=AttributeDelegator("c2"), init=False)
+    nboundaries: int = field(default=AttributeDelegator("c2"), init=False)
+    nsoilmaterials: int = field(default=AttributeDelegator("c2"), init=False)
+    ninterfmaterials: int = field(default=AttributeDelegator("c2"), init=False)
+    groups: List[Any] = field(default_factory=list, init=False)  # pipe groups
+    """
+    nodes: List[Any] = field(default_factory=list, init=False)
+    elements: List[Any] = field(default_factory=list, init=False)
+    boundaries: List[Any] = field(default_factory=list, init=False)
+    """
+    materials: List[Any] = field(default_factory=list, init=False)  # element materials
+    factors: List[Any] = field(default_factory=list, init=False)  # lrfd step factors
 
     @property
     def soilmaterials(self):
