@@ -23,8 +23,8 @@ def A2(cid, group_num):
     yield from gen_line('A2')
     group = cid.groups[group_num-1]
     try:
-        typ = group.type
-        gen = pipelookup[typ]
+        type_ = group.type_
+        gen = pipelookup[type_]
         yield from gen(cid, group)
     except StopIteration:
         raise

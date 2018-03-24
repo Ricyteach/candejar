@@ -3,24 +3,25 @@
 """Load `ciddefs.yml` file into objects."""
 import yaml
 from pathlib import Path
-import keyword
+import keyword, builtins
 
 def isvalid(ident: str) -> bool:
     """Determines if string is valid Python identifier."""
+    flag = True
 
     if not isinstance(ident, str):
         raise TypeError("expected str, but got {!r}".format(type(ident)))
 
     if not ident.isidentifier():
-        return False
+        flag = False
 
     if keyword.iskeyword(ident):
-        return False
+        flag = False
 
-    if ident in dir(__builtins__):
-        return False
+    if ident in dir(builtins):
+        flag = False
 
-    return True
+    return flag
 
 def load_yml_objs():
     with Path(__file__).resolve().parents[1].joinpath("cid/ciddefs.yml").open() as f:

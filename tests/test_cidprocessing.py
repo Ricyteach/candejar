@@ -11,7 +11,7 @@ def cidmock():
     groupmockdcts = [
         dict(type_="ALUMINUM"),
         dict(type_="PLASTIC", WallType="GENERAL"),
-        dict(type="STEEL", jointslip=True, varytravel=True)
+        dict(type_="STEEL", jointslip=True, varytravel=True)
     ]
     soilmaterialmockdcts = [
         dict(model=1)
