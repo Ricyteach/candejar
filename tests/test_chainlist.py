@@ -1,5 +1,5 @@
 import pytest
-from candejar.utilities.chainlist import ChainSequences
+from candejar.utilities.chainsequences import ChainSequences
 
 @pytest.fixture
 def seqs():
