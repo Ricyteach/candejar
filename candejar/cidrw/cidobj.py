@@ -54,25 +54,27 @@ class CidObjIn:
     level: int = field(default=AttributeDelegator("a1"), init=False)  # 1, 2, 3
     method: int = field(default=AttributeDelegator("a1"), init=False)  # 0=WSD, 1=LRFD
     ngroups: int = field(default=AttributeDelegator("a1"), init=False)  # pipe groups
+    heading: int = field(default=AttributeDelegator("a1"), init=False)
+    iterations: int = field(default=AttributeDelegator("a1"), init=False)
+    title: int = field(default=AttributeDelegator("c1"), init=False)
+    check: int = field(default=AttributeDelegator("c2"), init=False)
     nsteps: int = field(default=AttributeDelegator("c2"), init=False)  # load steps
     nnodes: int = field(default=AttributeDelegator("c2"), init=False)
     nelements: int = field(default=AttributeDelegator("c2"), init=False)
     nboundaries: int = field(default=AttributeDelegator("c2"), init=False)
     nsoilmaterials: int = field(default=AttributeDelegator("c2"), init=False)
     ninterfmaterials: int = field(default=AttributeDelegator("c2"), init=False)
+
+    # sequences of other cid objects
     groups: List[PipeGroup] = field(default_factory=list, init=False)  # pipe groups
-    """
     nodes: List[Any] = field(default_factory=list, init=False)
     elements: List[Any] = field(default_factory=list, init=False)
     boundaries: List[Any] = field(default_factory=list, init=False)
-    """
-    materials: List[Material] = field(default_factory=list, init=False)  # element materials
+    soilmaterials: List[Material] = field(default_factory=list, init=False)  # soil element materials
+    interfmaterials: List[Material] = field(default_factory=list, init=False)  # interface element materials
     factors: List[E1] = field(default_factory=list, init=False)  # lrfd step factors
 
     @property
-    def soilmaterials(self):
-        return NotImplemented
-
-    @property
-    def interfmaterials(self):
+    def materials(self):
+        """The combination of the `soilmaterials`  and `interfmaterials` sequences."""
         return NotImplemented
