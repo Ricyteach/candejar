@@ -4,7 +4,7 @@
 """Tests for `candejar.cidprocessing` module."""
 import pytest
 from types import SimpleNamespace
-from candejar.cidprocessing.main import A1
+from candejar.cidprocessing.main import process
 
 @pytest.fixture
 def cidmock():
@@ -36,10 +36,11 @@ def cidmock():
     )
     return SimpleNamespace(**cidmockdct)
 
-def process(cid):
-    print("\n")
-    for result in A1(cid):
-        print(result.__name__, end=" ")
+def process_(cid):
+    for result in process(cid):
+        yield result.__name__
 
 def test_processing(cidmock):
-    process(cidmock)
+    names = " ".join(process_(cidmock))
+    assert names[:5] == "A1 A2"
+    print(f"\n{names}")

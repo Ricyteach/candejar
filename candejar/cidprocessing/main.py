@@ -5,11 +5,10 @@ __all__ = 'A1 E1'.split()
 
 
 def process(cid):
-    for _ in A1(cid):
-        pass
+    yield from A1(cid)
 
 def gen_line(tag):
-    '''Validate the CID tag'''
+    """Validate the CID tag against cidlineclasses"""
     yield getattr(cidlineclasses, tag) # execution pauses here
 
 #@GeneratorObj
