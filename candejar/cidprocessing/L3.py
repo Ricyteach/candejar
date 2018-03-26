@@ -30,7 +30,7 @@ def A2(cid, group_num):
         raise
     except Exception as e:
         raise exc.CIDProcessingError('cid section B failed for '
-                       '{}'.format(group)) from e
+                                     '{}'.format(group)) from e
     # cid.listener.throw(exc.ObjectComplete)
 
 
@@ -50,8 +50,10 @@ def C2(cid):
                 raise
             except Exception as e:
                 raise exc.CIDProcessingError('cid L3.{} failed at {} #'
-                               '{:d}'.format(gen.__name__, name,
-                                             cid_obj_num)) from e
+                                             '{:d}'.format(gen.__name__, name,
+                                                           cid_obj_num)
+                                             ) from e
+
         # cid.listener.throw(exc.SequenceComplete, ('{}s completed'.format(name), getattr(cid, nplural)))
 
 
