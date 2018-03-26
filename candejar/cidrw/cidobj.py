@@ -2,7 +2,8 @@
 
 """CID object module for working with an entire cid file as a read/write object."""
 from dataclasses import dataclass, field, InitVar
-from typing import List, Any, ClassVar, Optional, NewType
+from types import SimpleNamespace
+from typing import List, Any, Optional, NewType, Sequence, Type
 from ..utilities.chainsequences import ChainSequences
 from ..cid.cidlineclasses import A1, A2, C1, C2, C3, C4, C5, D1, E1
 from ..cid.cidline import CidLine
@@ -12,26 +13,6 @@ from ..cidprocessing.main import process as process_cid
 MaterialNum = NewType("MaterialNum", int)
 StepNum = NewType("StepNum", int)
 InterfLink = NewType("InterfLink", int)
-
-
-class AttributeDelegator:
-    """Delegates attribute access to another named object attribute."""
-    def __init__(self, name: str, delegate_name: str) -> None:
-        self.delegate_name = delegate_name
-        self.name = name
-    """
-    def __set_name__(self, owner, name):
-        self.name = name
-    """
-    def __get__(self, instance: Any, owner: Any) -> Any:
-        delegate = getattr(instance, self.delegate_name)
-        try:
-            return getattr(delegate, self.name)
-        except AttributeError:
-            return self
-    def __set__(self, instance: Any, value: Any) -> None:
-        delegate = getattr(instance, self.delegate_name)
-        setattr(delegate, self.name, value)
 
 
 @dataclass
@@ -94,6 +75,53 @@ class Factor:
     comment: str = ""
 
 
+class NumberedCidSubObj(SimpleNamespace):
+    def __init__(self, num_, **kwargs):
+        kwargs.pop("num", None)
+        self.num = num_
+        super().__init__(**kwargs)
+
+
+class CidCollection(Sequence):
+    type_dict = {A2: PipeGroup, C3: Node, C4: Element, C5: Boundary, D1: Material, E1: Factor, None: Thing}
+
+    def __init__(self, cid_obj: "CidObjIn", type_: Type[CidLine]):
+        self.type_ = type_
+        self.cid_obj = cid_obj
+
+    @property
+    def iter_sequence(self):
+        yield from (obj for obj in self.cid_obj.line_objs if isinstance(obj, self.type_))
+
+    def __getitem__(self, idx: int) -> Any:
+        for i,item in enumerate(self.iter_sequence):
+            if i == idx:
+                return item
+
+    def __len__(self) -> int:
+        return len(list(self.iter_sequence))
+
+
+class AttributeDelegator:
+    """Delegates attribute access to another named object attribute."""
+    def __init__(self, name: str, delegate_name: str) -> None:
+        self.delegate_name = delegate_name
+        self.name = name
+    """
+    def __set_name__(self, owner, name):
+        self.name = name
+    """
+    def __get__(self, instance: Any, owner: Any) -> Any:
+        delegate = getattr(instance, self.delegate_name)
+        try:
+            return getattr(delegate, self.name)
+        except AttributeError:
+            return self
+    def __set__(self, instance: Any, value: Any) -> None:
+        delegate = getattr(instance, self.delegate_name)
+        setattr(delegate, self.name, value)
+
+
 @dataclass
 class CidObjIn:
     # only input parameter is lines; not stored
@@ -116,13 +144,13 @@ class CidObjIn:
     ninterfmaterials: int = field(default=AttributeDelegator("ninterfmaterials", "c2"), init=False)
 
     # sequences of other cid objects
-    groups: List[PipeGroup] = field(default_factory=list, init=False)  # pipe groups
-    nodes: List[Node] = field(default_factory=list, init=False)
-    elements: List[Element] = field(default_factory=list, init=False)
-    boundaries: List[Boundary] = field(default_factory=list, init=False)
-    soilmaterials: List[Material] = field(default_factory=list, init=False)  # soil element materials
-    interfmaterials: List[Material] = field(default_factory=list, init=False)  # interface element materials
-    factors: List[Factor] = field(default_factory=list, init=False)  # lrfd step factors
+    groups: CidCollection = field(default_factory=list, init=False)  # pipe groups
+    nodes: CidCollection = field(default_factory=list, init=False)
+    elements: CidCollection = field(default_factory=list, init=False)
+    boundaries: CidCollection = field(default_factory=list, init=False)
+    soilmaterials: CidCollection = field(default_factory=list, init=False)  # soil element materials
+    interfmaterials: CidCollection = field(default_factory=list, init=False)  # interface element materials
+    factors: CidCollection = field(default_factory=list, init=False)  # lrfd step factors
 
     def __post_init__(self, lines):
         # cid file line objects stored; other objects are views
@@ -134,10 +162,8 @@ class CidObjIn:
         for line in lines:
             line_type = next(iter_line_types)
             self.line_objs.append(line_type.parse(line))
-            """
             if isinstance(line_type, A2):
-                self.groups.append(PipeGroup())
-            """
+                self.groups.append(PipeGroup(self))
 
     def process_line_objs(self):
         yield from process_cid(self)
