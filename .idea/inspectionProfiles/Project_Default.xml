@@ -10,5 +10,20 @@
         </value>
       </option>
     </inspection_tool>
+    <inspection_tool class="PyUnresolvedReferencesInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredIdentifiers">
+        <list>
+          <option value="cid.cidlineclasses.A1" />
+          <option value="cid.cidlineclasses.A2" />
+          <option value="cid.cidlineclasses.C1" />
+          <option value="cid.cidlineclasses.C2" />
+          <option value="cid.cidlineclasses.C3" />
+          <option value="cid.cidlineclasses.C4" />
+          <option value="cid.cidlineclasses.C5" />
+          <option value="cid.cidlineclasses.D1" />
+          <option value="cid.cidlineclasses.E1" />
+        </list>
+      </option>
+    </inspection_tool>
   </profile>
 </component>
