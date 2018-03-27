@@ -28,7 +28,7 @@ class Node:
     y: float = 0.0
 
 
-NodeORNodeNum = TypeVar["NodeORNodeNum", int, Node]
+NodeORNodeNum = TypeVar("NodeORNodeNum", int, Node)
 
 
 @dataclass
