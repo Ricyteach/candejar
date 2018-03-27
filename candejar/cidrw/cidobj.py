@@ -6,8 +6,7 @@ from dataclasses import dataclass, field, InitVar, fields, asdict
 from typing import List, Any, Sequence, Type, TypeVar, MutableSequence, Generic, Union, Iterable
 
 from .exc import CIDRWError
-from ..utilities.chainsequences import ChainSequences
-from ..utilities.collections import MyCounter
+from ..utilities.collections import MyCounter, ChainSequence
 from ..cid.cidlineclasses import A1, A2, C1, C2, C3, C4, C5, D1, E1
 from ..cid.cidline import CidLine
 from ..cidprocessing.main import process as process_cid
@@ -185,4 +184,4 @@ class CidObj:
     @property
     def materials(self):
         """The combination of the `soilmaterials`  and `interfmaterials` sequences."""
-        return ChainSequences(self.soilmaterials, self.interfmaterials)
+        return ChainSequence(self.soilmaterials, self.interfmaterials)
