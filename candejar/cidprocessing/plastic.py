@@ -9,7 +9,7 @@ def B1Plastic(cid, group):
 
 def B2Plastic(cid, group):
     yield from gen_line('B2Plastic')
-    yield from B3_dict[group.WallType](cid)
+    yield from B3_dict[group.walltype](cid)
     if cid.method == 1:  # LRFD
         yield from B4Plastic(cid)
 

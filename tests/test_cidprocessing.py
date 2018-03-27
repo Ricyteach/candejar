@@ -10,7 +10,7 @@ from candejar.cidprocessing.main import process
 def cidmock():
     groupmockdcts = [
         dict(type_="ALUMINUM"),
-        dict(type_="PLASTIC", WallType="GENERAL"),
+        dict(type_="PLASTIC", walltype="GENERAL"),
         dict(type_="STEEL", jointslip=True, varytravel=True)
     ]
     soilmaterialmockdcts = [
