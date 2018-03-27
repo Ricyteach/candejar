@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+
+"""Tools for combining multiple sequences together."""
+
 from collections.abc import MutableSequence
 from dataclasses import dataclass, field
 from typing import List, Tuple, Any
