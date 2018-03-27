@@ -409,19 +409,19 @@
         Density: [10, 0.0] # pci
 
     B3PlasticAGeneral:
-        prefix: "B-3.Plastic.A.General"
+        prefix: "B-3.Plastic.A.Smooth"
         # for ANALYS only
         # WallType = GENERAL
         Height: [10, 0.0] # in
+        Area: [10, 0.0] # in2/in
+        I: [10, 0.0] # in4/in
+        Centroid: [10, 0.0] # in
 
     B3PlasticASmooth:
         prefix: "B-3.Plastic.A.Smooth"
         # for ANALYS only
         # WallType = SMOOTH
         Height: [10, 0.0] # in
-        Area: [10, 0.0] # in2/in
-        I: [10, 0.0] # in4/in
-        Centroid: [10, 0.0] # in
 
     B3PlasticAProfile:
         prefix: "B-3.Plastic.A.Profile"
