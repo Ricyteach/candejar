@@ -24,7 +24,7 @@ def cidmock():
         mode="ANALYS",
         method=0,
         ngroups=3,
-        groups=[SimpleNamespace(**groupmockdct) for groupmockdct in groupmockdcts],
+        pipe_groups=[SimpleNamespace(**groupmockdct) for groupmockdct in groupmockdcts],
         nsteps=2,
         nnodes=6,
         nelements=6,
