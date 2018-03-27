@@ -1,5 +1,5 @@
 import pytest
-from candejar.utilities.chainsequences import ChainSequences
+from candejar.utilities.collections import ChainSequence
 
 @pytest.fixture
 def seqs():
@@ -7,10 +7,10 @@ def seqs():
 
 @pytest.fixture
 def chain_seq(seqs):
-    return ChainSequences(*seqs)
+    return ChainSequence(*seqs)
 
 def test_empty_chain_seq():
-    assert not ChainSequences()
+    assert not ChainSequence()
 
 def test_non_empty_chain_seq(chain_seq):
     assert chain_seq
