@@ -13,7 +13,7 @@ def L3(cid):
         except Exception as e:
             raise exc.CIDProcessingError('cid failed at pipe group #'
                                '{:d}'.format(group_num)) from e
-    # cid.listener.throw(exc.SequenceComplete, ('Groups completed', len(cid.groups)))
+    # cid.listener.throw(exc.SequenceComplete, ('Groups completed', len(cid.pipe_groups)))
     yield from C1(cid)
     yield from C2(cid)
     yield from soil.D1(cid)
@@ -21,7 +21,7 @@ def L3(cid):
 
 def A2(cid, group_num):
     yield from gen_line('A2')
-    group = cid.groups[group_num-1]
+    group = cid.pipe_groups[group_num-1]
     try:
         type_ = group.type_
         gen = pipelookup[type_]
