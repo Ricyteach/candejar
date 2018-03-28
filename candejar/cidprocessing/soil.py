@@ -27,7 +27,8 @@ def D1Soil(cid, material_num):
     if material.model in (6, 8): #  Interface or Composite
         raise exc.CIDProcessingError('Interface or composite model number found in soil material #{:d}'
                                      ''.format(material.id))
-    D_nxts[material.model](material)
+    gen = D_nxts[material.model]
+    yield from gen(material)
     # cid.listener.throw(exc.ObjectComplete)
 
 
@@ -42,7 +43,7 @@ def D1Interf(cid, material_num):
     if material.model != 7:
         raise exc.CIDProcessingError('Soil model number ({:d}) found in interf material #{:d}'
                                      ''.format(material.model, material.id))
-    D2Interface(material)
+    yield from D2Interface(material)
     # cid.listener.throw(exc.ObjectComplete)
 
 
