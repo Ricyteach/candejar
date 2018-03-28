@@ -12,6 +12,8 @@ from ..cid.cidline import CidLine
 from ..cidprocessing.main import process as process_cid
 from ..fea.objs import PipeGroup, Node, Element, Boundary, Material, Factor
 
+class CIDSubSeqError(CIDRWError):
+    pass
 
 FEAObj = TypeVar("FEAObj", PipeGroup, Node, Element, Boundary, Material, Factor)
 CidSubLine = TypeVar("CidSubLine", A2, C3, C4, C5, D1, E1)
@@ -70,35 +72,50 @@ class CidSubObj(Generic[CidSubLine, FEAObj]):
 
 class CidSubSeq(Sequence[CidSubObj], Generic[CidSubLine, FEAObj]):
 
-    def __init__(self, cid_obj: "CidObj", line_type: Type[CidSubLine]) -> None:
+    def __init__(self, cid_obj: "CidObj", seq_name: str) -> None:
         self.cid_obj = cid_obj
-        self.line_type = line_type
-        self.seq: MutableSequence[CidSubObj] = []
-        try:
-            self.seq = {A2: cid_obj.pipe_groups, C3: cid_obj.nodes, C4: cid_obj.elements,
-                        C5: cid_obj.boundaries, D1: cid_obj.materials, E1: cid_obj.factors}[line_type]
-        except AttributeError:
-            pass
-        if any(not issubclass(obj.type_, self.type_) for obj in self.seq):
-            i, c = next(enumerate(o for o in self.seq if not issubclass(o, self.type_)))
-            raise CIDRWError(f"The class ({c.__name__}) of item seq[{i}] is not a {self.type_.__name__} subclass.")
+        self.line_type = SEQ_NAME_DICT[seq_name]
+        if getattr(self.cid_obj, seq_name):
+            self.seq = getattr(self.cid_obj, seq_name)
+            if any(not issubclass(obj.type_, self.type_) for obj in self.seq):
+                i, c = next(enumerate(o for o in self.seq if not issubclass(o, self.type_)))
+                raise CIDRWError(f"The class ({c.__name__}) of item seq[{i}] is not a {self.type_.__name__} subclass.")
+        else:
+            self.seq: Sequence[CidSubObj] = []
 
     @property
     def type_(self) -> Type[FEAObj]:
         return TYPE_DICT[self.line_type]
 
+    @property
     def iter_sequence(self):
         yield from (obj for obj in self.cid_obj.line_objs if isinstance(obj, self.line_type))
 
+    def update_seq(self) -> None:
+        i_seq =self.iter_sequence
+        for i,_ in enumerate(self.seq):
+            try:
+                next(i_seq)
+            except StopIteration:
+                raise CIDSubSeqError(f"The CidSubSeq object [{i}] has no corresponding line object.")
+        for _ in i_seq:
+            obj = CidSubObj(self, len(self))
+            self.seq.append(obj)
+
     def __getitem__(self, idx: int) -> CidSubObj:
         try:
-            return self.seq[idx]
-        except IndexError:
-            self.seq.append(CidSubObj(self, idx))
+            self.update_seq()
+        except CIDSubSeqError:
+            raise IndexError(f"Index [{idx:d}] exceeds available indexes for {self.line_type.__name__} objects")
         return self.seq[idx]
 
     def __len__(self) -> int:
-        return len(self.seq)
+        try:
+            s = self.seq
+        except AttributeError:
+            return 0
+        else:
+            return len(s)
 
 
 class AttributeDelegator:
@@ -110,12 +127,14 @@ class AttributeDelegator:
     def __set_name__(self, owner, name):
         self.name = name
     """
+
     def __get__(self, instance: Any, owner: Any) -> Any:
         delegate = getattr(instance, self.delegate_name)
         try:
             return getattr(delegate, self.name)
         except AttributeError:
             return self
+
     def __set__(self, instance: Any, value: Any) -> None:
         delegate = getattr(instance, self.delegate_name)
         setattr(delegate, self.name, value)
@@ -142,7 +161,7 @@ class CidObj:
     nsoilmaterials: int = field(default=AttributeDelegator("nsoilmaterials", "c2"), init=False)
     ninterfmaterials: int = field(default=AttributeDelegator("ninterfmaterials", "c2"), init=False)
 
-    # sub-sequences of other cid objects
+    # sub-sequences of other cid objects; must appear in SEQ_NAME_DICT
     pipe_groups: Sequence[CidSubObj] = field(default_factory=list, init=False)  # pipe groups
     nodes: Sequence[CidSubObj] = field(default_factory=list, init=False)
     elements: Sequence[CidSubObj] = field(default_factory=list, init=False)
@@ -153,9 +172,9 @@ class CidObj:
 
     def __post_init__(self, lines):
         # initialize empty sub-sequences of other cid objects
-        for seq_name in "pipe_groups nodes elements boundaries soilmaterials interfmaterials factors".split():
+        for seq_name in SEQ_NAME_DICT:
             if not getattr(self, seq_name):
-                setattr(self, seq_name, CidSubSeq(self, SEQ_NAME_DICT[seq_name]))
+                setattr(self, seq_name, CidSubSeq(self, seq_name))
 
         # cid file line objects stored; other objects are views
         if lines is None:
