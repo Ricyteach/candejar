@@ -191,25 +191,30 @@ class CidObj:
                                      "STOP statement.")
             else:
                 self.line_objs.append(line_type.parse(line))
-            """
-            if isinstance(line_type, A2):
-                self.pipe_groups.append(PipeGroup(self))
-            """
 
     def process_line_objs(self):
         yield from process_cid(self)
 
     @property
     def a1(self) -> A1:
-        return next(line_obj for line_obj in self.line_objs if isinstance(line_obj, A1))
+        try:
+            return next(line_obj for line_obj in self.line_objs if isinstance(line_obj, A1))
+        except StopIteration:
+            return A1()
 
     @property
     def c1(self) -> C1:
-        return next(line_obj for line_obj in self.line_objs if isinstance(line_obj, C1))
+        try:
+            return next(line_obj for line_obj in self.line_objs if isinstance(line_obj, C1))
+        except StopIteration:
+            return C1()
 
     @property
     def c2(self) -> C2:
-        return next(line_obj for line_obj in self.line_objs if isinstance(line_obj, C2))
+        try:
+            return next(line_obj for line_obj in self.line_objs if isinstance(line_obj, C2))
+        except StopIteration:
+            return C2()
 
     @property
     def materials(self):

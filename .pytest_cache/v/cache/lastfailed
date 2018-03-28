@@ -4,5 +4,6 @@
   "tests/test_cid.py::TestCidLine::()::test_format": true,
   "tests/test_cid.py::TestCidLine::()::test_parse": true,
   "tests/test_cidline.py::TestCidLine::()::test_format": true,
-  "tests/test_cidline.py::TestCidLine::()::test_parse": true
+  "tests/test_cidline.py::TestCidLine::()::test_parse": true,
+  "tests/test_cidobj.py::test_blank_cid_obj": true
 }
