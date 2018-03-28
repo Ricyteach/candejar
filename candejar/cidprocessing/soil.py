@@ -20,7 +20,7 @@ def D1(cid):
 
 def D1Soil(cid, material_num):
     yield from gen_line('D1')
-    material = cid.soilmaterials[material_num-1]
+    material = cid.materials[material_num-1]
     if material.model not in range(1, 9):
         raise exc.CIDProcessingError('Invalid model number {:d} for material #{:d}'
                                      ''.format(material.model, material.id))
@@ -34,13 +34,13 @@ def D1Soil(cid, material_num):
 
 def D1Interf(cid, material_num):
     yield from gen_line('D1')
-    material = cid.interfmaterials[material_num-cid.nsoilmaterials-1]
+    material = cid.materials[material_num+cid.nsoilmaterials-1]
     if material.model not in range(1, 9):
         raise exc.CIDProcessingError('Invalid model number {:d} for material #{:d}'
                                      ''.format(material.model, material.id))
-    if material.model == 6: #  Composite Link
+    if material.model == 7: #  Composite Link
         return NotImplemented
-    if material.model != 7:
+    if material.model != 6:
         raise exc.CIDProcessingError('Soil model number ({:d}) found in interf material #{:d}'
                                      ''.format(material.model, material.id))
     yield from D2Interface(material)

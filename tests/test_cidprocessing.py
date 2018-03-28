@@ -17,7 +17,7 @@ def cidmock():
         dict(model=1)
     ]
     interfmaterialmockdcts = [
-        dict(model=7)
+        dict(model=6)
     ]
     cidmockdct = dict(
         level=3,
@@ -30,9 +30,8 @@ def cidmock():
         nelements=6,
         nboundaries=3,
         nsoilmaterials=1,
-        soilmaterials=[SimpleNamespace(**soilmaterialmockdct) for soilmaterialmockdct in soilmaterialmockdcts],
-        ninterfmaterials=2,
-        interfmaterials=[SimpleNamespace(**interfmaterialmockdct) for interfmaterialmockdct in interfmaterialmockdcts]
+        ninterfmaterials=1,
+        materials=[SimpleNamespace(**materialmockdct) for materialmockdcts in (soilmaterialmockdcts, interfmaterialmockdcts) for materialmockdct in materialmockdcts]
     )
     return SimpleNamespace(**cidmockdct)
 
