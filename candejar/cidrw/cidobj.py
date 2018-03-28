@@ -70,10 +70,13 @@ class CidSubObj(Generic[CidSubLine, FEAObj]):
         raise AttributeError(f"{type(self).__name__!r} object has no attribute {attr!r}")
 
 
+@dataclass(eq=False)
 class CidSubSeq(Sequence[CidSubObj], Generic[CidSubLine, FEAObj]):
-
-    def __init__(self, cid_obj: "CidObj", seq_name: str) -> None:
-        self.cid_obj = cid_obj
+    cid_obj: "CidObj" = field(repr=False)
+    line_type: Type[CidLine] = field(init=False, repr=False)
+    seq: Sequence[CidSubObj] = field(init=False)
+    seq_name: InitVar[str]
+    def __post_init__(self, seq_name: str) -> None:
         self.line_type = SEQ_NAME_DICT[seq_name]
         if getattr(self.cid_obj, seq_name):
             self.seq = getattr(self.cid_obj, seq_name)
@@ -81,7 +84,7 @@ class CidSubSeq(Sequence[CidSubObj], Generic[CidSubLine, FEAObj]):
                 i, c = next(enumerate(o for o in self.seq if not issubclass(o, self.type_)))
                 raise CIDRWError(f"The class ({c.__name__}) of item seq[{i}] is not a {self.type_.__name__} subclass.")
         else:
-            self.seq: Sequence[CidSubObj] = []
+            self.seq = []
 
     @property
     def type_(self) -> Type[FEAObj]:
