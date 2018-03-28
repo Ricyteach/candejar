@@ -14,6 +14,7 @@ class LineError(CIDError):
 
 PREFIX_TEMPLATE = "{: >25s}!!"
 START_COLUMN = {n:28 for n in 'C3 C4 C5 D1'.split()}
+START_COLUMN["Stop"] = 0
 
 
 class Start:
@@ -81,5 +82,6 @@ def make_cid_line_cls(name_, **definitions):
     # cid line fields
     cidfields = {f_name:make_field_obj(*dfntn_seq) for f_name,dfntn_seq in definitions.items()}
 
-    return make_dataclass(name_, fields, bases=(CidLine,), namespace=dict(prefix=PREFIX_TEMPLATE.format(prefix), parser=Parser(),
-                                                                         start_=Start(), cidfields=cidfields))
+    return make_dataclass(name_, fields, bases=(CidLine,), namespace=dict(prefix=PREFIX_TEMPLATE.format(prefix)
+                                                                            if prefix is not None else "",
+                                                                          parser=Parser(), start_=Start(), cidfields=cidfields))

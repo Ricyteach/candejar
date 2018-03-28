@@ -23,6 +23,7 @@ def A1(cid):
         for step_num, _ in enumerate(range(cid.nsteps), 1):
             yield from E1(cid)
         # cid.listener.throw(exc.SequenceComplete, ('Factors completed', len(cid.factors)))
+    yield from gen_line('Stop')
 
 #@GeneratorObj
 def E1(cid):

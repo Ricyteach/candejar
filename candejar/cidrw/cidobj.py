@@ -7,7 +7,7 @@ from typing import List, Any, Sequence, Type, TypeVar, MutableSequence, Generic,
 
 from .exc import CIDRWError
 from ..utilities.collections import MyCounter, ChainSequence
-from ..cid.cidlineclasses import A1, A2, C1, C2, C3, C4, C5, D1, E1
+from ..cid.cidlineclasses import A1, A2, C1, C2, C3, C4, C5, D1, E1, Stop
 from ..cid.cidline import CidLine
 from ..cidprocessing.main import process as process_cid
 from ..fea.objs import PipeGroup, Node, Element, Boundary, Material, Factor
@@ -39,7 +39,13 @@ class CidSubObj(Generic[CidSubLine, FEAObj]):
         i_line_objs = iter(self.cid_obj.line_objs)
         num = self.idx + 1
         start_ctr = MyCounter()
-        yield next(line for line in i_line_objs if start_ctr.incremented(isinstance(line, self.line_type)) == num)
+        for line in i_line_objs:
+            start_ctr[isinstance(line, self.line_type)] += 1
+            if start_ctr[True] == num:
+                yield line
+                break
+        else:
+            raise CIDRWError(f"Could not locate {self.line_type.__name__!s} object number {num!s}")
         for line in i_line_objs:
             if not isinstance(line, self.line_type):
                 yield line
@@ -54,12 +60,11 @@ class CidSubObj(Generic[CidSubLine, FEAObj]):
         return self.container.type_(**{k:v for line_obj in self.iter_line_objs for k,v in asdict(line_obj).items() if k in field_names})
 
     def __getattr__(self, attr: str) -> Union[int, float, str]:
-        for line_obj in self.cid_obj.line_objs:
+        for line_obj in self.iter_line_objs:
             try:
                 return getattr(line_obj, attr)
             except AttributeError:
-                pass
-            continue
+                continue
         raise AttributeError(f"{type(self).__name__!r} object has no attribute {attr!r}")
 
 
@@ -159,8 +164,14 @@ class CidObj:
         # build line_objs sequence
         iter_line_types = self.process_line_objs()
         for line in lines:
-            line_type = next(iter_line_types)
-            self.line_objs.append(line_type.parse(line))
+            try:
+                line_type = next(iter_line_types)
+            except StopIteration:
+                if line and not isinstance(self.line_objs[-1], Stop):
+                    raise CIDRWError("End of file reached before encountering"
+                                     "STOP statement.")
+            else:
+                self.line_objs.append(line_type.parse(line))
             """
             if isinstance(line_type, A2):
                 self.pipe_groups.append(PipeGroup(self))

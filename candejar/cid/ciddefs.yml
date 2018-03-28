@@ -23,6 +23,10 @@
         Last: [5, 0]
         Factor: [10, 1.0]
         Comment: [40, ""]
+
+    Stop:
+        prefix: null
+        Stop: [4, "STOP"]
 ...
 ---
 -   L3
