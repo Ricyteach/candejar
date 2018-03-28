@@ -36,7 +36,7 @@
     C1:
         prefix: "C-1.L3"
         Prep: [5, "PREP"]
-        Title: [67, ""]
+        Title: [40, ""]
 
     C2:
         prefix: "C-2.L3"
