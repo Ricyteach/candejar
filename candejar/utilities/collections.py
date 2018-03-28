@@ -12,19 +12,28 @@ class ChainSequence(MutableSequence):
     sequences: MutableSequence
 
     def __init__(self, *sequences):
-        self.sequences = sequences
+        self.sequences = sequences if sequences else [[]]
 
     def __delitem__(self, idx: int) -> None:
         seq, new_idx = self.get_seq_and_idx(idx)
-        del seq[new_idx]
+        try:
+            del seq[new_idx]
+        except IndexError:
+            raise IndexError(f"{idx!s}")
 
     def __getitem__(self, idx: int) -> Any:
         seq, new_idx = self.get_seq_and_idx(idx)
-        return seq[new_idx]
+        try:
+            return seq[new_idx]
+        except IndexError:
+            raise IndexError(f"{idx!s}")
 
     def __setitem__(self, idx: int, value: Any) -> None:
         seq, new_idx = self.get_seq_and_idx(idx)
-        seq[new_idx] = value
+        try:
+            seq[new_idx] = value
+        except IndexError:
+            raise IndexError(f"{idx!s}")
 
     def __len__(self) -> int:
         return sum(len(s) for s in self.sequences)
@@ -34,9 +43,7 @@ class ChainSequence(MutableSequence):
         seq.insert(new_idx, value)
 
     def get_seq_and_idx(self, idx: int) -> Tuple[MutableSequence, int]:
-        if idx>=len(self) or idx<-len(self):
-            raise IndexError(f"{idx!r}")
-        if idx<0:
+        if -len(self)<idx<0:
             idx = len(self)+idx
         sequences = iter(self.sequences)
         old_idx = idx
@@ -45,6 +52,8 @@ class ChainSequence(MutableSequence):
             if new_idx<0:
                 break
             old_idx = new_idx
+        else:
+            old_idx = len(s)
         return s, old_idx
 
     @property
@@ -58,6 +67,7 @@ class ChainSequence(MutableSequence):
     @property
     def parents(self) -> "ChainSequence":
         return ChainSequence(*self.sequences[:-1])
+
 
 class MyCounter(collections.Counter):
     """A special `collections.Counter` that can be incremented."""

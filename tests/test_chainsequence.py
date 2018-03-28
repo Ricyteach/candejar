@@ -10,7 +10,11 @@ def chain_seq(seqs):
     return ChainSequence(*seqs)
 
 def test_empty_chain_seq():
-    assert not ChainSequence()
+    c = ChainSequence()
+    assert not c
+    c.append(1)
+    assert c
+    assert c[0] == 1
 
 def test_non_empty_chain_seq(chain_seq):
     assert chain_seq
@@ -36,3 +40,5 @@ def test_insert_chain_list(chain_seq, idx, value):
 def test_index_chain_list(chain_seq, idx):
     with pytest.raises(IndexError):
         chain_seq[idx]
+    with pytest.raises(IndexError):
+        del chain_seq[idx]
