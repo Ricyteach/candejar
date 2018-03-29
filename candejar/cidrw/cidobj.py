@@ -3,26 +3,27 @@
 """CID object module for working with an entire cid file as a read/write object."""
 
 from dataclasses import dataclass, field, InitVar, fields, asdict
-from typing import List, Any, Sequence, Type, TypeVar, MutableSequence, Generic, Union, Iterable
+from typing import List, Any, Sequence, Type, TypeVar, Generic, Union, Iterable
 
 from .exc import CIDRWError
 from ..utilities.collections import MyCounter, ChainSequence
 from ..cid.cidlineclasses import A1, A2, C1, C2, C3, C4, C5, D1, E1, Stop
 from ..cid.cidline import CidLine
 from ..cidprocessing.main import process as process_cid
-from ..fea.objs import PipeGroup, Node, Element, Boundary, Material, Factor
+from .. import fea
+
 
 class CIDSubSeqError(CIDRWError):
     pass
 
-FEAObj = TypeVar("FEAObj", PipeGroup, Node, Element, Boundary, Material, Factor)
+
 CidSubLine = TypeVar("CidSubLine", A2, C3, C4, C5, D1, E1)
 
-TYPE_DICT = {A2: PipeGroup, C3: Node, C4: Element, C5: Boundary, D1: Material, E1: Factor}
+TYPE_DICT = {A2: fea.PipeGroup, C3: fea.Node, C4: fea.Element, C5: fea.Boundary, D1: fea.Material, E1: fea.Factor}
 SEQ_NAME_DICT = {"pipe_groups": A2, "nodes": C3, "elements": C4, "boundaries": C5, "soilmaterials": D1, "interfmaterials": D1, "factors": E1}
 
 
-class CidSubObj(Generic[CidSubLine, FEAObj]):
+class CidSubObj(Generic[CidSubLine, fea.FEAObj]):
 
     def __init__(self, container: "CidSubSeq", idx: int) -> None:
         self.container = container
@@ -33,7 +34,7 @@ class CidSubObj(Generic[CidSubLine, FEAObj]):
         return self.container.cid_obj
 
     @property
-    def line_type(self) -> Type[CidSubLine]:
+    def line_type(self) -> Type[CidLine]:
         return self.container.line_type
 
     @property
@@ -55,7 +56,7 @@ class CidSubObj(Generic[CidSubLine, FEAObj]):
                 break
 
     @property
-    def fea_obj(self) -> FEAObj:
+    def fea_obj(self) -> fea.FEAObj:
         field_names = [f.name for f in fields(self.container.type_)]
         #  NOTE: major bug below, currently: most fields/attributes for Material and PipeGroup objects are being lost
         #  Need to think of a way to fix
@@ -71,7 +72,7 @@ class CidSubObj(Generic[CidSubLine, FEAObj]):
 
 
 @dataclass(eq=False)
-class CidSubSeq(Sequence[CidSubObj], Generic[CidSubLine, FEAObj]):
+class CidSubSeq(Sequence[CidSubObj], Generic[CidSubLine, fea.FEAObj]):
     cid_obj: "CidObj" = field(repr=False)
     line_type: Type[CidLine] = field(init=False, repr=False)
     seq: Sequence[CidSubObj] = field(init=False)
@@ -87,7 +88,7 @@ class CidSubSeq(Sequence[CidSubObj], Generic[CidSubLine, FEAObj]):
             self.seq = []
 
     @property
-    def type_(self) -> Type[FEAObj]:
+    def type_(self) -> Type[fea.FEAObj]:
         return TYPE_DICT[self.line_type]
 
     @property
