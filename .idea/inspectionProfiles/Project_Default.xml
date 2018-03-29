@@ -23,6 +23,16 @@
           <option value="cid.cidlineclasses.D1" />
           <option value="cid.cidlineclasses.E1" />
           <option value="cid.cidlineclasses.Stop" />
+          <option value="cid.A2" />
+          <option value="cid.C3" />
+          <option value="cid.C4" />
+          <option value="cid.C5" />
+          <option value="cid.D1" />
+          <option value="cid.E1" />
+          <option value="cid.A1" />
+          <option value="cid.C1" />
+          <option value="cid.C2" />
+          <option value="cid.Stop" />
         </list>
       </option>
     </inspection_tool>
