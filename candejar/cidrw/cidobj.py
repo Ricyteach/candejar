@@ -3,7 +3,7 @@
 """CID object module for working with an entire cid file as a read/write object."""
 
 from dataclasses import dataclass, field, InitVar, fields, asdict
-from typing import List, Any, Sequence, Type, TypeVar, Generic, Union, Iterable
+from typing import List, Any, Sequence, Type, TypeVar, Generic, Union, Iterable, ClassVar, MutableSequence
 
 from .exc import CIDRWError
 from ..utilities.collections import MyCounter, ChainSequence
@@ -23,11 +23,17 @@ TYPE_DICT = {A2: fea.PipeGroup, C3: fea.Node, C4: fea.Element, C5: fea.Boundary,
 SEQ_NAME_DICT = {"pipe_groups": A2, "nodes": C3, "elements": C4, "boundaries": C5, "soilmaterials": D1, "interfmaterials": D1, "factors": E1}
 
 
+@dataclass(eq=False)
 class CidSubObj(Generic[CidSubLine, fea.FEAObj]):
+    def make_fea(self) -> fea.FEAObj:
+        field_names = [f.name for f in fields(self.container.type_)]
+        # TODO: major bug below, currently: most fields/attributes for Material and PipeGroup objects are being lost;
+        # need to think of a way to fix
+        return self.container.type_(**{k:v for line_obj in self.iter_line_objs for k,v in asdict(line_obj).items() if k in field_names})
 
-    def __init__(self, container: "CidSubSeq", idx: int) -> None:
-        self.container = container
-        self.idx = idx
+    container: "CidSubSeq" = field(repr=False)
+    idx: int = field(repr=False)
+    fea_obj: fea.FEAObj = field(default=property(make_fea), init=False)
 
     @property
     def cid_obj(self) -> "CidObj":
@@ -55,13 +61,6 @@ class CidSubObj(Generic[CidSubLine, fea.FEAObj]):
             else:
                 break
 
-    @property
-    def fea_obj(self) -> fea.FEAObj:
-        field_names = [f.name for f in fields(self.container.type_)]
-        #  NOTE: major bug below, currently: most fields/attributes for Material and PipeGroup objects are being lost
-        #  Need to think of a way to fix
-        return self.container.type_(**{k:v for line_obj in self.iter_line_objs for k,v in asdict(line_obj).items() if k in field_names})
-
     def __getattr__(self, attr: str) -> Union[int, float, str]:
         for line_obj in self.iter_line_objs:
             try:
@@ -72,10 +71,10 @@ class CidSubObj(Generic[CidSubLine, fea.FEAObj]):
 
 
 @dataclass(eq=False)
-class CidSubSeq(Sequence[CidSubObj], Generic[CidSubLine, fea.FEAObj]):
+class CidSubSeq(Sequence[CidSubObj]):
     cid_obj: "CidObj" = field(repr=False)
     line_type: Type[CidLine] = field(init=False, repr=False)
-    seq: Sequence[CidSubObj] = field(init=False)
+    seq: MutableSequence[CidSubObj[CidSubLine, fea.FEAObj]] = field(init=False)
     seq_name: InitVar[str]
     def __post_init__(self, seq_name: str) -> None:
         self.line_type = SEQ_NAME_DICT[seq_name]
@@ -103,8 +102,11 @@ class CidSubSeq(Sequence[CidSubObj], Generic[CidSubLine, fea.FEAObj]):
             except StopIteration:
                 raise CIDSubSeqError(f"The CidSubSeq object [{i}] has no corresponding line object.")
         for _ in i_seq:
-            obj = CidSubObj(self, len(self))
-            self.seq.append(obj)
+            self.add_new()
+
+    def add_new(self):
+        obj = CidSubObj(self, len(self))
+        self.seq.append(obj)
 
     def __getitem__(self, idx: int) -> CidSubObj:
         try:
