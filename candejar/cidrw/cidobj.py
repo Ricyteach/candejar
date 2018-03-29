@@ -3,7 +3,7 @@
 """CID object module for working with an entire cid file as a read/write object."""
 
 from dataclasses import dataclass, field, InitVar, fields, asdict
-from typing import List, Any, Sequence, Type, TypeVar, Generic, Union, Iterable, ClassVar, MutableSequence
+from typing import List, Any, Sequence, Type, TypeVar, Generic, Union, MutableSequence, Iterator, Iterable, Optional
 
 from .exc import CIDRWError
 from ..utilities.collections import MyCounter, ChainSequence
@@ -17,6 +17,7 @@ class CIDSubSeqError(CIDRWError):
     pass
 
 
+CidData = Union[int, float, str]
 CidSubLine = TypeVar("CidSubLine", A2, C3, C4, C5, D1, E1)
 
 TYPE_DICT = {A2: fea.PipeGroup, C3: fea.Node, C4: fea.Element, C5: fea.Boundary, D1: fea.Material, E1: fea.Factor}
@@ -26,7 +27,7 @@ SEQ_NAME_DICT = {"pipe_groups": A2, "nodes": C3, "elements": C4, "boundaries": C
 @dataclass(eq=False)
 class CidSubObj(Generic[CidSubLine, fea.FEAObj]):
     def make_fea(self) -> fea.FEAObj:
-        field_names = [f.name for f in fields(self.container.type_)]
+        field_names: List[str] = [f.name for f in fields(self.container.type_)]
         # TODO: major bug below, currently: most fields/attributes for Material and PipeGroup objects are being lost;
         # need to think of a way to fix
         return self.container.type_(**{k:v for line_obj in self.iter_line_objs for k,v in asdict(line_obj).items() if k in field_names})
@@ -44,7 +45,7 @@ class CidSubObj(Generic[CidSubLine, fea.FEAObj]):
         return self.container.line_type
 
     @property
-    def iter_line_objs(self) -> Iterable[CidLine]:
+    def iter_line_objs(self) -> Iterator[CidSubLine]:
         i_line_objs = iter(self.cid_obj.line_objs)
         num = self.idx + 1
         start_ctr = MyCounter()
@@ -61,7 +62,7 @@ class CidSubObj(Generic[CidSubLine, fea.FEAObj]):
             else:
                 break
 
-    def __getattr__(self, attr: str) -> Union[int, float, str]:
+    def __getattr__(self, attr: str) -> CidData:
         for line_obj in self.iter_line_objs:
             try:
                 return getattr(line_obj, attr)
@@ -71,27 +72,28 @@ class CidSubObj(Generic[CidSubLine, fea.FEAObj]):
 
 
 @dataclass(eq=False)
-class CidSubSeq(Sequence[CidSubObj]):
+class CidSubSeq(Sequence[CidSubObj], Generic[CidSubLine, fea.FEAObj]):
     cid_obj: "CidObj" = field(repr=False)
-    line_type: Type[CidLine] = field(init=False, repr=False)
+    line_type: Type[CidSubLine] = field(init=False, repr=False)
     seq: MutableSequence[CidSubObj[CidSubLine, fea.FEAObj]] = field(init=False)
     seq_name: InitVar[str]
     def __post_init__(self, seq_name: str) -> None:
         self.line_type = SEQ_NAME_DICT[seq_name]
         if getattr(self.cid_obj, seq_name):
             self.seq = getattr(self.cid_obj, seq_name)
-            if any(not issubclass(obj.type_, self.type_) for obj in self.seq):
-                i, c = next(enumerate(o for o in self.seq if not issubclass(o, self.type_)))
+            if any(not issubclass(obj.fea_obj, self.type_) for obj in self.seq):
+                i, c = next(enumerate(o for o in self.seq if not issubclass(o.fea_obj, self.type_)))
                 raise CIDRWError(f"The class ({c.__name__}) of item seq[{i}] is not a {self.type_.__name__} subclass.")
         else:
             self.seq = []
 
     @property
     def type_(self) -> Type[fea.FEAObj]:
-        return TYPE_DICT[self.line_type]
+        fea_type: Type[fea.FEAObj] = TYPE_DICT[self.line_type]
+        return fea_type
 
     @property
-    def iter_sequence(self):
+    def iter_sequence(self) -> Iterator[CidSubLine]:
         yield from (obj for obj in self.cid_obj.line_objs if isinstance(obj, self.line_type))
 
     def update_seq(self) -> None:
@@ -104,16 +106,16 @@ class CidSubSeq(Sequence[CidSubObj]):
         for _ in i_seq:
             self.add_new()
 
-    def add_new(self):
+    def add_new(self) -> None:
         obj = CidSubObj(self, len(self))
         self.seq.append(obj)
 
-    def __getitem__(self, idx: int) -> CidSubObj:
+    def __getitem__(self, val: Union[slice, int]) -> CidSubObj[CidSubLine, fea.FEAObj]:
         try:
             self.update_seq()
         except CIDSubSeqError:
-            raise IndexError(f"Index [{idx:d}] exceeds available indexes for {self.line_type.__name__} objects")
-        return self.seq[idx]
+            raise IndexError(f"{val!s} exceeds available indexes for {self.line_type.__name__} objects")
+        return self.seq[val]
 
     def __len__(self) -> int:
         try:
@@ -149,7 +151,7 @@ class AttributeDelegator:
 @dataclass
 class CidObj:
     # only input parameter is lines; not stored
-    lines: InitVar[List[CidLine]] = field(default=None)  # cid file line objects
+    lines: InitVar[Optional[Iterable[str]]] = field(default=None)  # cid file line objects
 
     # all other fields are for display/output
     mode: int = field(default=AttributeDelegator("mode", "a1"), init=False)  # ANALYS or DESIGN
@@ -168,15 +170,15 @@ class CidObj:
     ninterfmaterials: int = field(default=AttributeDelegator("ninterfmaterials", "c2"), init=False)
 
     # sub-sequences of other cid objects; must appear in SEQ_NAME_DICT
-    pipe_groups: Sequence[CidSubObj] = field(default_factory=list, init=False)  # pipe groups
-    nodes: Sequence[CidSubObj] = field(default_factory=list, init=False)
-    elements: Sequence[CidSubObj] = field(default_factory=list, init=False)
-    boundaries: Sequence[CidSubObj] = field(default_factory=list, init=False)
-    soilmaterials: Sequence[CidSubObj] = field(default_factory=list, init=False)  # soil element materials
-    interfmaterials: Sequence[CidSubObj] = field(default_factory=list, init=False)  # interface element materials
-    factors: Sequence[CidSubObj] = field(default_factory=list, init=False)  # lrfd step factors
+    pipe_groups: Sequence[CidSubObj[A2, fea.PipeGroup]] = field(default_factory=list, init=False)  # pipe groups
+    nodes: Sequence[CidSubObj[C3, fea.Node]] = field(default_factory=list, init=False)
+    elements: Sequence[CidSubObj[C4, fea.Element]] = field(default_factory=list, init=False)
+    boundaries: Sequence[CidSubObj[C5, fea.Boundary]] = field(default_factory=list, init=False)
+    soilmaterials: Sequence[CidSubObj[D1, fea.Material]] = field(default_factory=list, init=False)  # soil element materials
+    interfmaterials: Sequence[CidSubObj[D1, fea.Material]] = field(default_factory=list, init=False)  # interface element materials
+    factors: Sequence[CidSubObj[E1, fea.Factor]] = field(default_factory=list, init=False)  # lrfd step factors
 
-    def __post_init__(self, lines):
+    def __post_init__(self, lines: Optional[Iterable[str]]) -> None:
         # initialize empty sub-sequences of other cid objects
         for seq_name in SEQ_NAME_DICT:
             if not getattr(self, seq_name):
@@ -192,13 +194,13 @@ class CidObj:
             try:
                 line_type = next(iter_line_types)
             except StopIteration:
-                if line and not isinstance(self.line_objs[-1], Stop):
+                if line.strip() and not isinstance(self.line_objs[-1], Stop):
                     raise CIDRWError("End of file reached before encountering"
                                      "STOP statement.")
             else:
                 self.line_objs.append(line_type.parse(line))
 
-    def process_line_objs(self):
+    def process_line_objs(self) -> Iterator[Type[CidLine]]:
         yield from process_cid(self)
 
     @property
@@ -223,6 +225,6 @@ class CidObj:
             return C2()
 
     @property
-    def materials(self):
+    def materials(self) -> ChainSequence:
         """The combination of the `soilmaterials`  and `interfmaterials` sequences."""
         return ChainSequence(self.soilmaterials, self.interfmaterials)
