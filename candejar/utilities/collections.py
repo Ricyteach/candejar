@@ -42,6 +42,15 @@ class ChainSequence(MutableSequence):
         seq, new_idx = self.get_seq_and_idx(idx)
         seq.insert(new_idx, value)
 
+    def append(self, item: Any, map_idx: int = -1):
+        try:
+            s = self.sequences[map_idx]
+        except IndexError:
+            raise IndexError(f"Invalid map index [{map_idx:d}] provided for {len(self.sequences):d} sequences")
+        else:
+            s.append(item)
+
+
     def get_seq_and_idx(self, idx: int) -> Tuple[MutableSequence, int]:
         if -len(self)<idx<0:
             idx = len(self)+idx
