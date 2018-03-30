@@ -2,33 +2,28 @@
 
 """CID sequence module for working with CID sub object sequences (pipe groups, nodes, etc)."""
 from abc import abstractmethod, ABC
-from dataclasses import dataclass, field, InitVar
-from typing import Sequence, Generic, Type, MutableSequence, Iterator, Union, TypeVar, List, ClassVar
+from dataclasses import dataclass, field, InitVar, make_dataclass
+from typing import Sequence, Generic, Type, MutableSequence, Iterator, Union, TypeVar, Optional
 
 from .. import fea
 from ..cid import CidSubLine
+from ..utilities.collections import ChainSequence
 from ..utilities.mixins import ChildRegistryBase
 from .cidsubobj import CidSubObj
 from .exc import CIDRWError
-from . import SEQ_NAME_DICT, TYPE_DICT
+from . import SEQ_NAME_DICT, TYPE_DICT, SEQ_CLASS_DICT
 
 
 class CIDSubSeqError(CIDRWError):
     pass
 
 
-CidObj = TypeVar("CidObj")
+CidObj = TypeVar("CidObj", covariant=True)
 
 
-@dataclass(eq=False)
-class CidSeq(ABC, ChildRegistryBase, Sequence[CidSubObj[CidObj, CidSubLine, fea.FEAObj]], Generic[CidObj, CidSubLine, fea.FEAObj]):
-    cid_obj: CidObj = field(repr=False)
-    line_type: Type[CidSubLine] = field(init=False, repr=False)
-    seq: MutableSequence[CidSubObj[CidObj, CidSubLine, fea.FEAObj]] = field(init=False)
-    seq_name: InitVar[str]
+class CidSeq(ABC, ChildRegistryBase, Sequence[CidSubObj[CidObj, "CidSeq", CidSubLine, fea.FEAObj]], Generic[CidObj, CidSubLine, fea.FEAObj]):
 
     def __post_init__(self, seq_name: str) -> None:
-        self.line_type = SEQ_NAME_DICT[seq_name]
         if getattr(self.cid_obj, seq_name):
             self.seq = getattr(self.cid_obj, seq_name)
             if any(not issubclass(obj.fea_obj, self.type_) for obj in self.seq):
@@ -54,19 +49,19 @@ class CidSeq(ABC, ChildRegistryBase, Sequence[CidSubObj[CidObj, CidSubLine, fea.
             except StopIteration:
                 raise CIDSubSeqError(f"The CidSeq object [{i}] has no corresponding line object.")
         for _ in i_seq:
-            self.add_new()
+            obj = CidSubObj(self, len(self))
+            self.add_new(obj)
 
     @abstractmethod
-    def add_new(self) -> None:
-        obj = CidSubObj(self, len(self))
+    def add_new(self, obj: CidSubObj[CidObj, "CidSeq", CidSubLine, fea.FEAObj]) -> None:
         self.seq.append(obj)
 
-    def __getitem__(self, val: Union[slice, int]) -> CidSubObj[CidObj, CidSubLine, fea.FEAObj]:
+    def __getitem__(self, val: Union[slice, int]) -> CidSubObj[CidObj, "CidSeq", CidSubLine, fea.FEAObj]:
         try:
             self.update_seq()
         except CIDSubSeqError:
             raise IndexError(f"{val!s} exceeds available indexes for {self.line_type.__name__} objects")
-        result: CidSubObj[CidObj, CidSubLine, fea.FEAObj] = self.seq[val]
+        result: CidSubObj[CidObj, "CidSeq", CidSubLine, fea.FEAObj] = self.seq[val]
         return result
 
     def __len__(self) -> int:
@@ -76,3 +71,39 @@ class CidSeq(ABC, ChildRegistryBase, Sequence[CidSubObj[CidObj, CidSubLine, fea.
             return 0
         else:
             return len(s)
+
+
+
+
+def subclass_CidSeq(seq_name):
+    """Produce a `CidSeq` based subclass `dataclass`."""
+
+    # see if already exists
+    cls_name = SEQ_CLASS_DICT[seq_name]
+    try:
+        return CidSeq.subclasses[cls_name]
+    except KeyError:
+        pass
+
+    # resolvea all the types
+    SubLine = SEQ_NAME_DICT[seq_name]  # type of CidLine indicating start of an object in CID file
+    FEA_Obj = TYPE_DICT[SEQ_NAME_DICT[seq_name]]  # type of FEA object corresponding to CID object
+    CidSeqChild = TypeVar("CidSeqChild", bound=CidSeq[CidObj, SubLine, FEA_Obj])
+    SubObj = CidSubObj[CidObj, CidSeqChild, SubLine, FEA_Obj]
+
+    # provide alternate new object insertion for soil materials (needs to be insert into middle
+    # of the `ChainSequence` container).
+    def add_new_soilmaterial(self, material: CidSubObj[CidObj, CidSeqChild, SubLine, FEA_Obj]) -> None:
+        self.seq.sequences[0].append(material)
+
+    # lookup correct `add_new` method
+    add_new_dict = dict(soilmaterials=add_new_soilmaterial)
+    add_new = add_new_dict.get(seq_name, CidSeq.add_new)
+
+    cls = make_dataclass(cls_name,
+                         (("cid_obj", CidObj, field(repr=False)),
+                          ("seq_name", InitVar[str]),
+                          ("line_type", Type[SubLine], field(default=SubLine, init=False, repr=False)),
+                          ("seq", Optional[Sequence[SubObj]], field(default=None, init=False))),
+                         bases = (CidSeqChild, Generic[CidObj]), namespace = dict(add_new=add_new))
+    return cls

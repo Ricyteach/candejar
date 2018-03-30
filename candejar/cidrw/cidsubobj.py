@@ -11,19 +11,28 @@ from ..utilities.collections import MyCounter
 from .. import fea
 
 
+# TODO: Delete this module? Rework references to contained `CidObj`s to return a `SimpleNamespace` subclass on the fly.
+# The `SimpleNamespace` would just be a current view of the combined attributes from the relevant file `CidLine`s.
+# Could do away with all code below except `iter_line_objs`. Code for `iter_line_objs` would be identical except
+# need to accept `idx` parameter for object of interest.
+
+
 CidData = Union[int, float, str]
 CidObj = TypeVar("CidObj")
+CidSeq = TypeVar("CidSeq")
 
 
 @dataclass(eq=False)
-class CidSubObj(Generic[CidObj, CidSubLine, fea.FEAObj]):
+class CidSubObj(Generic[CidObj, CidSeq, CidSubLine, fea.FEAObj]):
+    """A viewer object that gets its data from the `CidLine` objects in `.cid_obj`."""
+
     def make_fea(self) -> fea.FEAObj:
         field_names: List[str] = [f.name for f in fields(self.container.type_)]
         # TODO: major bug below, currently: most fields/attributes for Material and PipeGroup objects are being lost;
         # need to think of a way to fix
         return self.container.type_(**{k:v for line_obj in self.iter_line_objs for k,v in asdict(line_obj).items() if k in field_names})
 
-    container: CidObj = field(repr=False)
+    container: CidSeq = field(repr=False)
     idx: int = field(repr=False)
     fea_obj: fea.FEAObj = field(default=property(make_fea), init=False)
 
