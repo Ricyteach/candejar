@@ -3,15 +3,15 @@
 """CID object module for working with an entire cid file as a read/write object."""
 
 from dataclasses import dataclass, field, InitVar
-from typing import List, Any, Sequence, Type, Iterator, Iterable, Optional, TypeVar
+from typing import List, Any, Sequence, Type, Iterator, Iterable, Optional
 
 from .. import fea
-from ..cid import CidLine, CidSubLine, A1, A2, C1, C2, C3, C4, C5, D1, E1, Stop
+from ..cid import CidLine, A1, A2, C1, C2, C3, C4, C5, D1, E1, Stop
 from .exc import CIDRWError
-from ..utilities.collections import MyCounter, ChainSequence
+from ..utilities.collections import ChainSequence
 from ..cidprocessing.main import process as process_cid
 from . import SEQ_NAME_DICT
-from .cidseq import CidSeq
+from .cidseq import CidSeq, subclass_CidSeq
 
 
 class AttributeDelegator:
@@ -70,7 +70,7 @@ class CidObj:
         # initialize empty sub-sequences of other cid objects
         for seq_name in SEQ_NAME_DICT:
             if not getattr(self, seq_name):
-                setattr(self, seq_name, CidSeq(self, seq_name))
+                setattr(self, seq_name, subclass_CidSeq(seq_name)(self, seq_name))
 
         # cid file line objects stored; other objects are views
         if lines is None:
