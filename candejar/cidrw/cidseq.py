@@ -23,8 +23,9 @@ CidObj = TypeVar("CidObj")
 class CidSeq(Sequence[CidSubObj[CidObj, CidSubLine, fea.FEAObj]], Generic[CidObj, CidSubLine, fea.FEAObj]):
     cid_obj: CidObj = field(repr=False)
     line_type: Type[CidSubLine] = field(init=False, repr=False)
-    seq: MutableSequence[CidSubObj[CidObj, CidSubLine, fea.FEAObj]] = field(init=False)
+    seq: MutableSequence[CidSubObj[CidObj, "CidSeq", CidSubLine, fea.FEAObj]] = field(init=False)
     seq_name: InitVar[str]
+
     def __post_init__(self, seq_name: str) -> None:
         self.line_type = SEQ_NAME_DICT[seq_name]
         if getattr(self.cid_obj, seq_name):
@@ -63,7 +64,7 @@ class CidSeq(Sequence[CidSubObj[CidObj, CidSubLine, fea.FEAObj]], Generic[CidObj
             self.update_seq()
         except CIDSubSeqError:
             raise IndexError(f"{val!s} exceeds available indexes for {self.line_type.__name__} objects")
-        result: CidSubObj[CidObj, CidSubLine, fea.FEAObj] = self.seq[val]
+        result: CidSubObj[CidObj, "CidSeq", CidSubLine, fea.FEAObj] = self.seq[val]
         return result
 
     def __len__(self) -> int:
