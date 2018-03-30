@@ -3,7 +3,7 @@
 """CID sequence module for working with CID sub object sequences (pipe groups, nodes, etc)."""
 from abc import abstractmethod, ABC
 from dataclasses import dataclass, field, InitVar
-from typing import Sequence, Generic, Type, MutableSequence, Iterator, Union, TypeVar, List, ClassVar
+from typing import Sequence, Generic, Type, MutableSequence, Iterator, Union, TypeVar
 
 from .. import fea
 from ..cid import CidSubLine
@@ -21,7 +21,7 @@ CidObj = TypeVar("CidObj")
 
 
 @dataclass(eq=False)
-class CidSeq(ABC, ChildRegistryBase, Sequence[CidSubObj[CidObj, CidSubLine, fea.FEAObj]], Generic[CidObj, CidSubLine, fea.FEAObj]):
+class CidSeq(ABC, ChildRegistryBase, Sequence[CidSubObj[CidObj, "CidSeq", CidSubLine, fea.FEAObj]], Generic[CidObj, CidSubLine, fea.FEAObj]):
     cid_obj: CidObj = field(repr=False)
     line_type: Type[CidSubLine] = field(init=False, repr=False)
     seq: MutableSequence[CidSubObj[CidObj, "CidSeq", CidSubLine, fea.FEAObj]] = field(init=False)
