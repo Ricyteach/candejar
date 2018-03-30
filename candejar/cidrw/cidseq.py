@@ -76,14 +76,19 @@ class CidSeq(ABC, ChildRegistryBase, Sequence[CidSubObj[CidObj, "CidSeq", CidSub
 
 
 def subclass_CidSeq(seq_name):
+    """Produce a `CidSeq` based subclass `dataclass`."""
+    # resolvea all the types
     SubLine = SEQ_NAME_DICT[seq_name]  # type of CidLine indicating start of an object in CID file
     FEA_Obj = TYPE_DICT[SEQ_NAME_DICT[seq_name]]  # type of FEA object corresponding to CID object
     CidSeqChild = TypeVar("CidSeqChild", bound=CidSeq[CidObj, SubLine, FEA_Obj])
     SubObj = CidSubObj[CidObj, CidSeqChild, SubLine, FEA_Obj]
 
+    # provide alternate new objection insertion for soil materials (needs to be insert into middle
+    # of the `ChainSequence` container).
     def add_new_soilmaterial(self, material: CidSubObj[CidObj, CidSeqChild, SubLine, FEA_Obj]) -> None:
         self.seq.sequences[0].append(material)
 
+    # lookup correct `add_new` method
     add_new_dict = dict(soilmaterials=add_new_soilmaterial)
     add_new = add_new_dict.get(seq_name, CidSeq.add_new)
 
