@@ -77,6 +77,7 @@ class CidSeq(ABC, ChildRegistryBase, Sequence[CidSubObj[CidObj, "CidSeq", CidSub
 
 def subclass_CidSeq(seq_name):
     """Produce a `CidSeq` based subclass `dataclass`."""
+
     # see if already exists
     cls_name = SEQ_CLASS_DICT[seq_name]
     try:
@@ -90,7 +91,7 @@ def subclass_CidSeq(seq_name):
     CidSeqChild = TypeVar("CidSeqChild", bound=CidSeq[CidObj, SubLine, FEA_Obj])
     SubObj = CidSubObj[CidObj, CidSeqChild, SubLine, FEA_Obj]
 
-    # provide alternate new objection insertion for soil materials (needs to be insert into middle
+    # provide alternate new object insertion for soil materials (needs to be insert into middle
     # of the `ChainSequence` container).
     def add_new_soilmaterial(self, material: CidSubObj[CidObj, CidSeqChild, SubLine, FEA_Obj]) -> None:
         self.seq.sequences[0].append(material)
