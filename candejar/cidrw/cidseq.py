@@ -59,7 +59,7 @@ class CidSeq(Sequence[CidSubObj[CidObj, CidSubLine, fea.FEAObj]], Generic[CidObj
         obj = CidSubObj(self, len(self))
         self.seq.append(obj)
 
-    def __getitem__(self, val: Union[slice, int]) -> CidSubObj[CidObj, CidSubLine, fea.FEAObj]:
+    def __getitem__(self, val: Union[slice, int]) -> CidSubObj[CidObj, "CidSeq", CidSubLine, fea.FEAObj]:
         try:
             self.update_seq()
         except CIDSubSeqError:
