@@ -77,6 +77,13 @@ class CidSeq(ABC, ChildRegistryBase, Sequence[CidSubObj[CidObj, "CidSeq", CidSub
 
 def subclass_CidSeq(seq_name):
     """Produce a `CidSeq` based subclass `dataclass`."""
+    # see if already exists
+    cls_name = SEQ_CLASS_DICT[seq_name]
+    try:
+        return CidSeq.subclasses[cls_name]
+    except KeyError:
+        pass
+
     # resolvea all the types
     SubLine = SEQ_NAME_DICT[seq_name]  # type of CidLine indicating start of an object in CID file
     FEA_Obj = TYPE_DICT[SEQ_NAME_DICT[seq_name]]  # type of FEA object corresponding to CID object
@@ -92,7 +99,7 @@ def subclass_CidSeq(seq_name):
     add_new_dict = dict(soilmaterials=add_new_soilmaterial)
     add_new = add_new_dict.get(seq_name, CidSeq.add_new)
 
-    cls = make_dataclass(SEQ_CLASS_DICT[seq_name],
+    cls = make_dataclass(cls_name,
                          (("cid_obj", CidObj, field(repr=False)),
                           ("seq_name", InitVar[str]),
                           ("line_type", Type[SubLine], field(default=SubLine, init=False, repr=False)),
