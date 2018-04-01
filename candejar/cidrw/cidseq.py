@@ -97,18 +97,15 @@ def subclass_CidSeq(seq_name):
         self.seq.append(item)
 
     # lookup correct `add_new` method
-    add_new_dict = dict(soilmaterials=add_new_soilmaterial)
-    add_new_method = add_new_dict.get(seq_name, add_new_)
+    selection_dict = dict(soilmaterials=add_new_soilmaterial)
+    body = dict(add_new = selection_dict.get(seq_name, add_new_))
 
-    # TODO: this will not work as-is because `make_dataclass` calls `type` with the namespace instead of `types.new_class`
-    # Changing to `types.new_class` creates a new problem because `make_dataclass` doesn't know to utilize exec_body
 
     cls = make_dataclass(cls_name,
                          (("cid_obj", CidObj, field(repr=False)),
                           ("seq_name", InitVar[str]),
                           ("line_type", Type[SubLine], field(default=SubLine, init=False, repr=False)),
                           ("seq", Optional[Sequence[SubObj]], field(default=None, init=False))),
-                         bases = (CidSeqChild, Generic[CidObj]),
-                         namespace = dict(), eq=False)
+                         bases = (CidSeqChild, Generic[CidObj]), namespace = body, eq=False)
 
     return cls
