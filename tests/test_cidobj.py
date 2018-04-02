@@ -22,3 +22,7 @@ def test_new_cid_obj(cid_file_lines):
     o = CidObj(cid_file_lines)
     print(o)
     assert o
+    breakpoint()
+    assert len(o.materials) == 3
+    assert len(o.soilmaterials) == 3
+    assert len(o.interfmaterials) == 0

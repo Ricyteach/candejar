@@ -27,6 +27,8 @@ class CidSubObj(Generic[CidObj, CidSeq, CidSubLine, fea.FEAObj]):
     """A viewer object that gets its data from the `CidLine` objects in `.cid_obj`."""
 
     def make_fea(self) -> fea.FEAObj:
+        if type(self.container).__name__ == "SoilMaterials":
+            breakpoint()
         field_names: List[str] = [f.name for f in fields(self.container.type_)]
         # TODO: major bug below, currently: most fields/attributes for Material and PipeGroup objects are being lost;
         # need to think of a way to fix

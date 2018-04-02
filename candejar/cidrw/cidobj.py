@@ -3,16 +3,15 @@
 """CID object module for working with an entire cid file as a read/write object."""
 
 from dataclasses import dataclass, field, InitVar
-from typing import List, Any, Sequence, Type, Iterator, Iterable, Optional
+from typing import List, Any, Type, Iterator, Iterable, Optional
 
 from .. import fea
 from ..cid import CidLine, A1, A2, C1, C2, C3, C4, C5, D1, E1, Stop
 from .exc import CIDRWError
 from ..utilities.collections import ChainSequence
 from ..cidprocessing.main import process as process_cid
-from . import SEQ_NAME_DICT
-from .cidseq import CidSeq, subclass_CidSeq
-
+from .cidseq import CidSeq
+from .cidseq.names import SEQ_NAMES, SEQ_CLASS_NAMES
 
 class AttributeDelegator:
     """Delegates attribute access to another named object attribute."""
@@ -57,7 +56,7 @@ class CidObj:
     nsoilmaterials: int = field(default=AttributeDelegator("nsoilmaterials", "c2"), init=False)
     ninterfmaterials: int = field(default=AttributeDelegator("ninterfmaterials", "c2"), init=False)
 
-    # sub-sequences of other cid objects; must appear in SEQ_NAME_DICT
+    # sub-sequences of other cid objects; must appear in SEQ_NAMES
     pipe_groups: CidSeq["CidObj", A2, fea.PipeGroup] = field(default_factory=list, init=False)  # pipe groups
     nodes: CidSeq["CidObj", C3, fea.Node] = field(default_factory=list, init=False)
     elements: CidSeq["CidObj", C4, fea.Element] = field(default_factory=list, init=False)
@@ -68,9 +67,17 @@ class CidObj:
 
     def __post_init__(self, lines: Optional[Iterable[str]]) -> None:
         # initialize empty sub-sequences of other cid objects
-        for seq_name in SEQ_NAME_DICT:
-            if not getattr(self, seq_name):
-                setattr(self, seq_name, subclass_CidSeq(seq_name)(self, seq_name))
+        for seq_name, seq_cls_name in zip(SEQ_NAMES, SEQ_CLASS_NAMES):
+            existing_seq_obj = getattr(self, seq_name)
+            seq_obj = CidSeq.subclasses[seq_cls_name](self)
+            if isinstance(existing_seq_obj, CidSeq):
+                seq_obj.set_seq(existing_seq_obj.seq)
+            elif existing_seq_obj:
+                seq_obj.set_seq(existing_seq_obj)
+            if any(not issubclass(obj.fea_obj, seq_obj.type_) for obj in existing_seq_obj):
+                i, c = next(enumerate(o for o in existing_seq_obj if not issubclass(o.fea_obj, seq_obj.type_)))
+                raise CIDRWError(f"The class ({c.__name__}) of item seq[{i}] is not a {seq_obj.type_.__name__} subclass.")
+            setattr(self, seq_name, seq_obj)
 
         # cid file line objects stored; other objects are views
         if lines is None:
