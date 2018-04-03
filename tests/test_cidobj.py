@@ -6,6 +6,8 @@
 import pytest
 from pathlib import Path
 from candejar.cidrw.cidobj import CidObj
+from candejar.cidrw import write
+
 
 @pytest.fixture
 def cid_file_lines():
@@ -17,7 +19,7 @@ def test_blank_cid_obj():
     print(o)
     assert o
 
-def test_new_cid_obj(cid_file_lines):
+def test_read_cid_obj(cid_file_lines):
     print()
     o = CidObj(cid_file_lines)
     print(o)
@@ -25,3 +27,6 @@ def test_new_cid_obj(cid_file_lines):
     assert len(o.materials) == 3
     assert len(o.soilmaterials) == 3
     assert len(o.interfmaterials) == 0
+
+def test_write_blank_cid_obj():
+    write.file(CidObj(), Path(__file__).resolve().parents[0].joinpath("output_test1.cid"))
