@@ -2,7 +2,7 @@ from dataclasses import dataclass, field, InitVar
 from typing import TypeVar, Type, Optional, Sequence, Generic, Iterator
 
 from ... import fea
-from ...cid import D1
+from ...cid import CidSubLine, D1
 from ..cidsubobj import CidSubObj
 from .cidseq import CidSeq
 
@@ -26,6 +26,13 @@ class InterfMaterials(CidSeq[CidObj, D1, fea.Material], Generic[CidObj]):
     line_type: Type[D1] = field(default=D1, init=False, repr=False)
 
     @property
-    def iter_sequence_interfmaterial(self) -> Iterator[D1]:
-        """Alternate line sequence iterator for interface materials (type 6 only)"""
+    def iter_sequence(self) -> Iterator[D1]:
+        """Line sequence iterator for interface materials (type 6 only)"""
         yield from (i for i in super().iter_sequence if getattr(i,"model",None)==6)
+
+    def add_new(self, obj: CidSubObj[CidObj, "InterfMaterials", D1, fea.Material] = None) -> None:
+        """Increase idx argument for CidSubObj by nsoilmaterials"""
+        if obj is None:
+            idx = len(self)+self.cid_obj.nsoilmaterials
+            obj = CidSubObj(self, idx)
+        self.seq.append(obj)

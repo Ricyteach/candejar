@@ -23,8 +23,8 @@ SubObj = CidSubObj[CidObj, "CidSeq", CidSubLine, fea.FEAObj]
 @dataclass
 class CidSeq(ChildRegistryBase, Sequence[SubObj], Generic[CidObj, CidSubLine, fea.FEAObj]):
     cid_obj: CidObj = field(repr=False)
-    seq: Optional[Sequence[SubObj]] = field(default=None, init=False)
     seq_name: str = field(init=False, repr=False)
+    seq: Optional[Sequence[SubObj]] = field(default=None, init=False)
 
     def __post_init__(self) -> None:
         # make ABC
@@ -49,18 +49,19 @@ class CidSeq(ChildRegistryBase, Sequence[SubObj], Generic[CidObj, CidSubLine, fe
             except StopIteration:
                 raise CIDSubSeqError(f"The CidSeq object [{i}] has no corresponding line object.")
         for _ in i_seq:
-            obj = CidSubObj(self, len(self))
-            self.add_new(obj)
+            self.add_new()
 
-    def add_new(self, obj: CidSubObj[CidObj, "CidSeq", CidSubLine, fea.FEAObj]) -> None:
+    def add_new(self, obj: SubObj = None) -> None:
+        if obj is None:
+            obj = CidSubObj(self, len(self))
         self.seq.append(obj)
 
-    def __getitem__(self, val: Union[slice, int]) -> CidSubObj[CidObj, "CidSeq", CidSubLine, fea.FEAObj]:
+    def __getitem__(self, val: Union[slice, int]) -> SubObj:
         try:
             self.update_seq()
         except CIDSubSeqError:
             raise IndexError(f"{val!s} exceeds available indexes for {self.line_type.__name__} objects")
-        result: CidSubObj[CidObj, "CidSeq", CidSubLine, fea.FEAObj] = self.seq[val]
+        result: SubObj = self.seq[val]
         return result
 
     def __len__(self) -> int:
