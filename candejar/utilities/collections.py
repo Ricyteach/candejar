@@ -8,7 +8,10 @@ from typing import List, Tuple, Any
 
 
 class ChainSequence(MutableSequence):
-    """Combines multiple sequences together. Similar to `collections.ChainMap`"""
+    """Combines multiple sequences together. Similar to `collections.ChainMap`
+
+    All operations default to the left-most subsequence except for `append`, which defaults to the right-most.
+    """
     sequences: MutableSequence
 
     def __init__(self, *sequences):
@@ -43,6 +46,7 @@ class ChainSequence(MutableSequence):
         seq.insert(new_idx, value)
 
     def append(self, item: Any, map_idx: int = -1):
+        """Appending defaults to the last subsequence."""
         try:
             s = self.sequences[map_idx]
         except IndexError:
@@ -54,6 +58,12 @@ class ChainSequence(MutableSequence):
     def get_seq_and_idx(self, idx: int) -> Tuple[MutableSequence, int]:
         if -len(self)<idx<0:
             idx = len(self)+idx
+        if idx>=len(self):
+            cum_len = 0
+            for seq,length in zip(self.sequences, self.cumulative_lens):
+                if length==len(self):
+                    return seq, idx-cum_len
+                cum_len = length
         sequences = iter(self.sequences)
         old_idx = idx
         for s in sequences:

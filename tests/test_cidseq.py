@@ -6,7 +6,7 @@ import pytest
 from types import SimpleNamespace
 
 from candejar.cidrw.cidseq import SoilMaterials, InterfMaterials
-from candejar.cid.cidlineclasses import D1, D2Isotropic, D2Interface
+from candejar.cid.cidlineclasses import D1, D2Isotropic, D2Interface, D2Duncan
 
 
 @pytest.fixture
@@ -14,7 +14,7 @@ def cidmock():
     cidmockdct = dict(
         nsoilmaterials=3,
         ninterfmaterials=1,
-        line_objs = [D1(), D2Isotropic(), D1(), D2Isotropic(), D1(), D2Isotropic(), D1(model=6), D2Interface()]
+        line_objs = [D1(), D2Isotropic(), D1(), D2Duncan(), D1(), D2Duncan(), D1(model=6), D2Interface()]
     )
     return SimpleNamespace(**cidmockdct)
 

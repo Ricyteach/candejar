@@ -33,6 +33,9 @@
           <option value="cid.C1" />
           <option value="cid.C2" />
           <option value="cid.Stop" />
+          <option value="cid.cidlineclasses.D2Duncan" />
+          <option value="cid.cidlineclasses.D2Isotropic" />
+          <option value="cid.cidlineclasses.D2Interface" />
         </list>
       </option>
     </inspection_tool>

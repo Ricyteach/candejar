@@ -9,6 +9,7 @@ PipeGroups = subclass_CidSeq(SEQ_NAMES["pipe_groups"])
 Nodes = subclass_CidSeq(SEQ_NAMES["nodes"])
 Elements = subclass_CidSeq(SEQ_NAMES["elements"])
 Boundaries = subclass_CidSeq(SEQ_NAMES["boundaries"])
+Materials = subclass_CidSeq(SEQ_NAMES["materials"])
 Factors = subclass_CidSeq(SEQ_NAMES["factors"])
 
-__all__ = "PipeGroups Nodes Elements Boundaries SoilMaterials InterfMaterials Factors".split()
+__all__ = "PipeGroups Nodes Elements Boundaries SoilMaterials InterfMaterials Materials Factors".split()

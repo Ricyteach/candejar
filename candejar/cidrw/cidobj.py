@@ -10,7 +10,7 @@ from ..cid import CidLine, A1, A2, C1, C2, C3, C4, C5, D1, E1, Stop
 from .exc import CIDRWError
 from ..utilities.collections import ChainSequence
 from ..cidprocessing.main import process as process_cid
-from .cidseq import CidSeq
+from .cidseq import CidSeq, Materials
 from .cidseq.names import SEQ_NAMES, SEQ_CLASS_NAMES
 
 class AttributeDelegator:
@@ -68,6 +68,9 @@ class CidObj:
     def __post_init__(self, lines: Optional[Iterable[str]]) -> None:
         # initialize empty sub-sequences of other cid objects
         for seq_name, seq_cls_name in zip(SEQ_NAMES, SEQ_CLASS_NAMES):
+            # skip materials sequence; consists of soil and interf material sub sequences
+            if seq_name == "materials":
+                continue
             existing_seq_obj = getattr(self, seq_name)
             seq_obj = CidSeq.subclasses[seq_cls_name](self)
             if isinstance(existing_seq_obj, CidSeq):
@@ -120,8 +123,8 @@ class CidObj:
             return C2()
 
     @property
-    def materials(self) -> ChainSequence:
+    def materials(self) -> CidSeq["CidObj", D1, fea.Material]:
         """The combination of the `soilmaterials`  and `interfmaterials` sequences."""
-        return ChainSequence(self.soilmaterials, self.interfmaterials)
-
-
+        seq_obj = Materials(self)
+        seq_obj.set_seq(ChainSequence(self.soilmaterials, self.interfmaterials))
+        return seq_obj

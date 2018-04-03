@@ -9,7 +9,7 @@ from ...cid import CidSubLine
 from ...utilities.mixins import ChildRegistryBase
 from ..cidsubobj import CidSubObj
 from ..exc import CIDRWError
-from .names import SEQ_NAMES, TYPE_DICT, SEQ_CLASS_DICT
+from .names import TYPE_DICT, SEQ_CLASS_DICT
 
 
 class CIDSubSeqError(CIDRWError):
@@ -30,7 +30,10 @@ class CidSeq(ChildRegistryBase, Sequence[SubObj], Generic[CidObj, CidSubLine, fe
         # make ABC
         if type(self)==CidSeq:
             raise TypeError("Can't instantiate abstract class CidSeq without abstract field line_type")
-        self.seq = []
+        self.set_seq([])
+
+    def set_seq(self, s):
+        self.seq = s
 
     @property
     def type_(self) -> Type[fea.FEAObj]:
@@ -52,9 +55,14 @@ class CidSeq(ChildRegistryBase, Sequence[SubObj], Generic[CidObj, CidSubLine, fe
             self.add_new()
 
     def add_new(self, obj: SubObj = None) -> None:
+        """Update the view with already existing sub object information."""
         if obj is None:
             obj = CidSubObj(self, len(self))
-        self.seq.append(obj)
+        seq = self.seq
+        # can't append directly to a `CidSeq`, which is intended to be just a viewer
+        while isinstance(seq, CidSeq):
+            seq = seq.seq
+        seq.append(obj)
 
     def __getitem__(self, val: Union[slice, int]) -> SubObj:
         try:
