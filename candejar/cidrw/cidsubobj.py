@@ -2,7 +2,7 @@
 
 """CID sub object module for working with the sub objects in a CID sub object sequence (pipe groups, nodes, etc)."""
 
-from dataclasses import field, fields, asdict, dataclass
+from dataclasses import field, fields, asdict, dataclass, InitVar
 from typing import Generic, List, Type, Iterator, Union, TypeVar
 
 from ..cid import CidLine, CidSubLine
@@ -32,9 +32,13 @@ class CidSubObj(Generic[CidObj, CidSeq, CidSubLine, fea.FEAObj]):
         # need to think of a way to fix
         return self.container.type_(**{k:v for line_obj in self.iter_line_objs for k,v in asdict(line_obj).items() if k in field_names})
 
-    container: CidSeq = field(repr=False)
-    idx: int = field(repr=False)
+    container: InitVar[CidSeq]
+    idx: InitVar[int]
     fea_obj: fea.FEAObj = field(default=property(make_fea), init=False)
+
+    def __post_init__(self, container: CidSeq, idx: int):
+        self.container = container
+        self.idx = idx
 
     @property
     def cid_obj(self) -> CidObj:
