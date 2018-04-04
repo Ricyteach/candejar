@@ -23,7 +23,6 @@ SubObj = CidSubObj[CidObj, "CidSeq", CidSubLine, fea.FEAObj]
 @dataclass
 class CidSeq(ChildRegistryBase, Sequence[SubObj], Generic[CidObj, CidSubLine, fea.FEAObj]):
     cid_obj: InitVar[CidObj]
-    seq_name: str = field(init=False, repr=False)
     seq: Optional[Sequence[SubObj]] = field(default=None, init=False)
 
     def __post_init__(self, cid_obj: CidObj) -> None:
