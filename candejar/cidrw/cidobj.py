@@ -3,8 +3,10 @@
 """CID object module for working with an entire cid file as a read/write object."""
 
 from dataclasses import dataclass, field, InitVar
+from pathlib import Path
 from typing import List, Any, Type, Iterator, Iterable, Optional
 
+from .write import line_strings
 from .. import fea
 from ..cid import CidLine, A1, A2, C1, C2, C3, C4, C5, D1, E1, Stop
 from .exc import CIDRWError
@@ -100,6 +102,20 @@ class CidObj:
 
     def process_line_objs(self) -> Iterator[Type[CidLine]]:
         yield from process_cid(self)
+
+    def iter_lines(self) -> Iterator[str]:
+        """The formatted .cid file line strings from current object state.
+
+        The number of objects in A1, C2 are updated to match lengths of sub-object sequences.
+        """
+        i_line_types = self.process_line_objs()
+        yield from line_strings(self, i_line_types)
+
+    def save(self, path: Path, mode="x"):
+        """Save .cid file to the path."""
+        path = path.with_suffix(".cid")
+        with path.open(mode):
+            path.write_text("\n".join(self.iter_lines()))
 
     @property
     def a1(self) -> A1:
