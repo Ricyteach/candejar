@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+
+"""Special tools for working with dataclass types."""
+
 from dataclasses import is_dataclass, asdict, fields
 from typing import Any, Mapping, Callable, Tuple
 
