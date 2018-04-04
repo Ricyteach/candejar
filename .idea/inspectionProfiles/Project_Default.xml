@@ -36,6 +36,7 @@
           <option value="cid.cidlineclasses.D2Duncan" />
           <option value="cid.cidlineclasses.D2Isotropic" />
           <option value="cid.cidlineclasses.D2Interface" />
+          <option value="cid.D2Isotropic" />
         </list>
       </option>
     </inspection_tool>
