@@ -6,7 +6,7 @@
 import pytest
 from pathlib import Path
 from candejar.cidrw.cidobj import CidObj
-from candejar.cidrw import write
+from candejar.cidprocessing.exc import CIDProcessingError
 
 
 @pytest.fixture
@@ -29,4 +29,8 @@ def test_read_cid_obj(cid_file_lines):
     assert len(o.interfmaterials) == 0
 
 def test_write_blank_cid_obj():
-    write.file(CidObj(), Path(__file__).resolve().parents[0].joinpath("output_test1.cid"))
+    c = CidObj()
+    p = Path(__file__).resolve().parents[0].joinpath("output_test1.cid")
+    # raises error because sub sequences are all empty
+    with pytest.raises(CIDProcessingError):
+        c.save(p, mode="w")
