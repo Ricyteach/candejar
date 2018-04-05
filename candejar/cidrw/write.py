@@ -17,7 +17,7 @@ CidObj = TypeVar("CidObj")
 CidLineType = Type[CidLine]
 
 def process_lines(cid: CidObj, i_line_types: Iterator[CidLineType]) -> Iterator[CidLine]:
-    while True:
+    while True:  # top level objects
         line_type = next(i_line_types)
         valid_fields = field_names(line_type)
         target_obj_name: Optional[str] = SEQ_TYPES.get(line_type, "")
@@ -27,7 +27,7 @@ def process_lines(cid: CidObj, i_line_types: Iterator[CidLineType]) -> Iterator[
         for subobj in target_obj:
             d: Mapping = mapify(subobj)
             yield unmapify(d, line_type, lambda k: k in valid_fields)
-            while True:
+            while True:  # sub level objects
                 # look ahead in `i_line_types`
                 try:
                     prev_line_type, line_type = line_type, next(i_line_types)

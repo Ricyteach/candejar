@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 from types import SimpleNamespace
 
-from candejar.cid import A1, A2, C1, C2, C3, C4, C5, D1, D2Isotropic, E1, Stop
+from candejar.cid import A1, A2, B1Alum, B2AlumA, B1Plastic, B2Plastic, B3PlasticAGeneral, B1Steel, B2SteelA, C1, C2, C3, C4, C5, D1, D2Isotropic, D2Interface, Stop
 from candejar.cidrw.write import file
 
 
@@ -16,7 +16,7 @@ def cidmock():
     groupmockdcts = [
         dict(type_="ALUMINUM"),
         dict(type_="PLASTIC", walltype="GENERAL"),
-        dict(type_="STEEL", jointslip=True, varytravel=True)
+        dict(type_="STEEL", jointslip=0)
     ]
     soilmaterialmockdcts = [
         dict(model=1)
@@ -42,7 +42,12 @@ def cidmock():
 
 @pytest.fixture
 def types():
-    return (A1, A2, C1, C2, C3, C4, C5, D1, D2Isotropic, Stop)
+    return (A1, A2, B1Alum, B2AlumA, A2, B1Plastic, B2Plastic, B3PlasticAGeneral, A2, B1Steel, B2SteelA,
+            C1, C2,
+            C3, C3, C3, C3, C3, C3,
+            C4, C4, C4, C4, C4, C4,
+            C5, C5, C5,
+            D1, D2Isotropic, D1, D2Interface, Stop)
 
 def test_write_file(cidmock, types):
     p = Path(__file__).resolve().parents[0].joinpath("output_test2.cid")
