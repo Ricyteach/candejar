@@ -4,7 +4,5 @@
   "tests/test_cid.py::TestCidLine::()::test_format": true,
   "tests/test_cid.py::TestCidLine::()::test_parse": true,
   "tests/test_cidline.py::TestCidLine::()::test_format": true,
-  "tests/test_cidline.py::TestCidLine::()::test_parse": true,
-  "tests/test_cidobj_abc.py::test_cidabc_subclass": true,
-  "tests/test_cidrw_write.py::test_write_file": true
+  "tests/test_cidline.py::TestCidLine::()::test_parse": true
 }
