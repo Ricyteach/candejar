@@ -22,11 +22,11 @@ SubObj = CidSubObj[CidObj, "CidSeq", CidSubLine, fea.FEAObj]
 
 @dataclass
 class CidSeq(ChildRegistryBase, Sequence[SubObj], Generic[CidObj, CidSubLine, fea.FEAObj]):
-    cid_obj: CidObj = field(repr=False)
-    seq_name: str = field(init=False, repr=False)
+    cid_obj: InitVar[CidObj]
     seq: Optional[Sequence[SubObj]] = field(default=None, init=False)
 
-    def __post_init__(self) -> None:
+    def __post_init__(self, cid_obj: CidObj) -> None:
+        self.cid_obj = cid_obj
         # make ABC
         if type(self)==CidSeq:
             raise TypeError("Can't instantiate abstract class CidSeq without abstract field line_type")

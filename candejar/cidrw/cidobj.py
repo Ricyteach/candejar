@@ -3,8 +3,10 @@
 """CID object module for working with an entire cid file as a read/write object."""
 
 from dataclasses import dataclass, field, InitVar
+from pathlib import Path
 from typing import List, Any, Type, Iterator, Iterable, Optional
 
+from .write import line_strings
 from .. import fea
 from ..cid import CidLine, A1, A2, C1, C2, C3, C4, C5, D1, E1, Stop
 from .exc import CIDRWError
@@ -41,13 +43,13 @@ class CidObj:
     lines: InitVar[Optional[Iterable[str]]] = field(default=None)  # cid file line objects
 
     # all other fields are for display/output
-    mode: int = field(default=AttributeDelegator("mode", "a1"), init=False)  # ANALYS or DESIGN
+    mode: str = field(default=AttributeDelegator("mode", "a1"), init=False)  # ANALYS or DESIGN
     level: int = field(default=AttributeDelegator("level", "a1"), init=False)  # 1, 2, 3
     method: int = field(default=AttributeDelegator("method", "a1"), init=False)  # 0=WSD, 1=LRFD
     ngroups: int = field(default=AttributeDelegator("ngroups", "a1"), init=False)  # pipe groups
-    heading: int = field(default=AttributeDelegator("heading", "a1"), init=False)
+    heading: str = field(default=AttributeDelegator("heading", "a1"), init=False)
     iterations: int = field(default=AttributeDelegator("iterations", "a1"), init=False)
-    title: int = field(default=AttributeDelegator("title", "c1"), init=False)
+    title: str = field(default=AttributeDelegator("title", "c1"), init=False)
     check: int = field(default=AttributeDelegator("check", "c2"), init=False)
     nsteps: int = field(default=AttributeDelegator("nsteps", "c2"), init=False)  # load steps
     nnodes: int = field(default=AttributeDelegator("nnodes", "c2"), init=False)
@@ -66,7 +68,7 @@ class CidObj:
     factors: CidSeq["CidObj", E1, fea.Factor] = field(default_factory=list, init=False)  # lrfd step factors
 
     def __post_init__(self, lines: Optional[Iterable[str]]) -> None:
-        # initialize empty sub-sequences of other cid objects
+        # initialize empty cid sub object sequence types
         for seq_name, seq_cls_name in zip(SEQ_NAMES, SEQ_CLASS_NAMES):
             # skip materials sequence; consists of soil and interf material sub sequences
             if seq_name == "materials":
@@ -100,6 +102,20 @@ class CidObj:
 
     def process_line_objs(self) -> Iterator[Type[CidLine]]:
         yield from process_cid(self)
+
+    def iter_lines(self) -> Iterator[str]:
+        """The formatted .cid file line strings from current object state.
+
+        The number of objects in A1, C2 are updated to match lengths of sub-object sequences.
+        """
+        i_line_types = self.process_line_objs()
+        yield from line_strings(self, i_line_types)
+
+    def save(self, path: Path, mode="x"):
+        """Save .cid file to the path."""
+        path = path.with_suffix(".cid")
+        with path.open(mode):
+            path.write_text("\n".join(self.iter_lines()))
 
     @property
     def a1(self) -> A1:
