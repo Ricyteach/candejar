@@ -9,6 +9,7 @@ from types import SimpleNamespace
 
 from candejar.cid import A1, A2, B1Alum, B2AlumA, B1Plastic, B2Plastic, B3PlasticAGeneral, B1Steel, B2SteelA, C1, C2, C3, C4, C5, D1, D2Isotropic, D2Interface, Stop
 from candejar.cidrw.write import file
+from candejar.cidrw.exc import CIDRWError
 
 
 @pytest.fixture
@@ -44,7 +45,17 @@ def cidmock():
     return SimpleNamespace(**cidmockdct)
 
 @pytest.fixture
-def types():
+def types1():
+    return (A1, A2, B1Alum, B2AlumA, A2, B1Plastic, B2Plastic, B3PlasticAGeneral, A2, B1Steel, B2SteelA,
+            C1, C2,
+            D1, D2Isotropic, D1, D2Interface, Stop)
+
+def test_write_file(cidmock, types1):
+    p = Path(__file__).resolve().parents[0].joinpath("output_test.cid")
+    file(cidmock, iter(types1), p, mode="w")
+
+@pytest.fixture
+def types2():
     return (A1, A2, B1Alum, B2AlumA, A2, B1Plastic, B2Plastic, B3PlasticAGeneral, A2, B1Steel, B2SteelA,
             C1, C2,
             C3, C3, C3, C3, C3, C3,
@@ -52,7 +63,7 @@ def types():
             C5, C5, C5,
             D1, D2Isotropic, D1, D2Interface, Stop)
 
-@pytest.mark.skip(reason="can't find infinite loop...???")
-def test_write_file(cidmock, types):
-    p = Path(__file__).resolve().parents[0].joinpath("output_test2.cid")
-    file(cidmock, iter(types), p, mode="w")
+def test_write_empty_collection(cidmock, types2):
+    p = Path(__file__).resolve().parents[0].joinpath("bad_output_test.cid")
+    with pytest.raises(CIDRWError):
+        file(cidmock, iter(types2), p, mode="w")

@@ -6,7 +6,7 @@
 import pytest
 from pathlib import Path
 from candejar.cidrw.cidobj import CidObj
-from candejar.cidprocessing.exc import CIDProcessingError
+from candejar.cidrw.exc import CIDRWError
 
 
 @pytest.fixture
@@ -28,10 +28,9 @@ def test_read_cid_obj(cid_file_lines):
     assert len(o.soilmaterials) == 3
     assert len(o.interfmaterials) == 0
 
-@pytest.mark.skip(reason="can't find infinite loop...???")
 def test_write_blank_cid_obj():
     c = CidObj()
-    p = Path(__file__).resolve().parents[0].joinpath("output_test1.cid")
+    p = Path(__file__).resolve().parents[0].joinpath("bad_output_test.cid")
     # raises error because sub sequences are all empty
-    with pytest.raises(CIDProcessingError):
+    with pytest.raises(CIDRWError):
         c.save(p, mode="w")
