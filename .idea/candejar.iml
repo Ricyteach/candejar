@@ -6,6 +6,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module" module-name="20270" />
   </component>
   <component name="PackageRequirementsSettings">
     <option name="requirementsPath" value="" />
