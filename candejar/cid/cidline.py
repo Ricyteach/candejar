@@ -44,6 +44,7 @@ class CidLine:
                 # "L" or " " for line types C3 C4 C5 D1
                 try:
                     result_list.append({
+                                           self.start_ == 0 and "L" not in format_spec: "",
                                            self.start_ == 27 and "L" not in format_spec: "",
                                            self.start_ == 28: " ",
                                            self.start_ == 28 and "L" in format_spec: "L",
@@ -52,7 +53,8 @@ class CidLine:
                     if self.start_ in (27,28):
                         raise LineError(f"unsupported format string passed to {type(self).__name__}.__format__") from None
                     else:
-                        raise LineError("upsupported line start location provided; cid lines start at 27 or 28") from None
+                        raise LineError(f"upsupported line start location provided for {type(self).__name__} object; "
+                                        f"cid lines start at 27 or 28, not {self.start_!s}") from None
                 # fields
                 try:
                     result_list.append(''.join(self.cidfields[label].format(value) for label,value in asdict(self).items()))
