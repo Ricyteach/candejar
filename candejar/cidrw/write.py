@@ -11,7 +11,7 @@ from ..cid import A1, A2, C1, C2, C3, C4, C5, D1, E1, Stop
 from ..cid import CidLine
 
 SEQ_TYPES = {A2: "pipe_groups", C3: "nodes", C4: "elements", C5: "boundaries", D1: "materials", E1: "factors"}
-SUB_SEQ_TERMINATORS = SEQ_TYPES.keys() | {C1, Stop}  # marks end of B1 etc. or D2 etc. sub lines
+TOP_LEVEL_TYPES = SEQ_TYPES.keys() | {A1, C1, C2, Stop}  # marks end of B1 etc. or D2 etc. sub lines
 
 CidObj = TypeVar("CidObj")
 CidLineType = Type[CidLine]
@@ -37,21 +37,24 @@ def process_lines(cid: CidObj, line_types: Iterable[CidLineType]) -> Iterator[Ci
             target_obj = get_target(cid, line_type)
             if target_obj is cid:
                 target_obj = [target_obj]
+            if not len(target_obj):
+                raise CIDRWError(f"A {line_type.__name__} line type was encountered for processing but the "
+                                 f"cid.{SEQ_TYPES[line_type]} collection is empty.")
             for subobj in target_obj:  # re-use same subobj for every line until new top-level line encountered
                 # `valid_fields` and `line_type` already been iterated at this point
                 # (either in top-level loop or sub level loop)
                 d: Mapping = mapify(subobj)
-                yield unmapify(d, line_type, lambda k: k in line_type.cidfields)
+                yield unmapify(d, line_type, lambda k: k in line_type.cidfields)  # A1, A2, C1, C2, D1, E1 yielded here
                 while True:  # sub level objects loop
                     # look ahead in `i_line_types`
                     prev_line_type, line_type = line_type, next(i_line_types)
-                    if line_type in SUB_SEQ_TERMINATORS:
+                    if line_type in TOP_LEVEL_TYPES:
                         # encountered an A2, C1, C3, C4, C5, D1, E1, or Stop - the B1 etc. or D2 etc. sub lines are complete;
                         # exit sub level objects loop
                         break
                     else:
                         # line_type is a sub-type; use current subobj to write line
-                        yield unmapify(d, line_type, lambda k: k in line_type.cidfields)
+                        yield unmapify(d, line_type, lambda k: k in line_type.cidfields)  # B1 etc., D2 etc. yielded here
             else:
                 # cid subobj group (A2, C3, C4, C5, D1, or E1) complete; put the already iterated item back at the front
                 i_line_types = chain([line_type], i_line_types)
