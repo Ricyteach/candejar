@@ -7,7 +7,8 @@ from candejar.cidrw.cidobj_abc import CidObjBase, CidABC
 
 
 def test_cidabc_subclass():
-    assert CidObjBase()
+    obj = CidObjBase()
+    assert obj
 
 def test_fail_cidabc():
     with pytest.raises(TypeError):
