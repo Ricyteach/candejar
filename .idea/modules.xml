@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/../Uponor/20270/.idea/20270.iml" filepath="$PROJECT_DIR$/../Uponor/20270/.idea/20270.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/candejar.iml" filepath="$PROJECT_DIR$/.idea/candejar.iml" />
     </modules>
   </component>
