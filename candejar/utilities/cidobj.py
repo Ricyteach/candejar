@@ -21,5 +21,5 @@ def forgiving_dynamic_attr(obj: Any, attr_getter: Callable[[], Optional[str]]) -
         return getattr(obj, target_obj_name)
     except TypeError:
         return obj
-    except AttributeError:
-        raise SpecialError("The attr_getter did not produce an available attr name")
+    except AttributeError as e:
+        raise SpecialError("The attr_getter did not produce an available attr name") from e

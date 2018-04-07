@@ -67,8 +67,8 @@ class CidSeq(ChildRegistryBase, Sequence[SubObj], Generic[CidObj, CidSubLine, fe
     def __getitem__(self, val: Union[slice, int]) -> SubObj:
         try:
             self.update_seq()
-        except CIDSubSeqError:
-            raise IndexError(f"{val!s} exceeds available indexes for {self.line_type.__name__} objects")
+        except CIDSubSeqError as e:
+            raise IndexError(f"{val!s} exceeds available indexes for {self.line_type.__name__} objects") from e
         result: SubObj = self.seq[val]
         return result
 
