@@ -12,7 +12,7 @@ from candejar.cidrw.write import file
 from candejar.cidrw.exc import CIDRWError
 
 
-output_standard_text = """                      A-1!!ANALYS   3 0  3From `pip install candejar`: Rick Teachey, rick@teachey.org   -99    0    0    0
+output_standard_text = """                      A-1!!ANALYS   3 0  3From `pip install candejar`: Rick Teachey, rick@teachey.org   -99               
                    A-2.L3!!ALUMINUM      0
                  B-1.Alum!!10.0E6          0.3324.0E3    24.0E3          0.000.05*10E6     2    0
                B-2.Alum.A!!      0.00      0.00      0.00
