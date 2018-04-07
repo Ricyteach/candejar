@@ -57,6 +57,7 @@ def cidmock():
         nboundaries=0,
         nsoilmaterials=1,
         ninterfmaterials=1,
+        nmaterials=2,  # nmaterials is required in order to write a cid object
         nodes=[],
         elements=[],
         boundaries=[],

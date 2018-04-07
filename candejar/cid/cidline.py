@@ -72,8 +72,8 @@ class CidLine:
             s = s[slice(cls.start_, None)]
         try:
             return cls(**{k:cls.cidfields[k].parse(v) for k,v in cls.parser.fullmatch(s).groupdict().items()})
-        except AttributeError:
-            raise ValueError(f"{cls.__name__} failed to parse line:\n{s!r}")
+        except AttributeError as e:
+            raise ValueError(f"{cls.__name__} failed to parse line:\n{s!r}") from e
 
 
 def make_cid_line_cls(name_, **definitions):

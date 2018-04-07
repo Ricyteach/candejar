@@ -1,4 +1,4 @@
-                      A-1!!ANALYS   3 0  119962-3 Weholite Inlet Pipe Run 1 (flooded)                   -99    0    0    0
+input_test_standard1 = """                      A-1!!ANALYS   3 0  119962-3 Weholite Inlet Pipe Run 1 (flooded)                   -99
                    A-2.L3!!PLASTIC      36
               B-1.Plastic!!GENERAL   HDPE          2    1
               B-2.Plastic!!                         28000   1998.62      0.45 0.0378793
@@ -3569,10 +3569,10 @@
                    C-5.L3!!  110    1      0.00    0      0.00      0.00    0
                    C-5.L3!!  112    1      0.00    0      0.00      0.00    0
                    C-5.L3!!L 113    1      0.00    0      0.00      0.00    0
-                      D-1!!    1    1         0In Situ             10
+                      D-1!!    1    1         0In Situ               
             D-2.Isotropic!!      2000       0.3
-                      D-1!!    2    3       115CL90                10
+                      D-1!!    2    3       115CL90                  
                D-2.Duncan!!    0       0.5    1
-                      D-1!!L   3    3       125SW95                10
+                      D-1!!L   3    3       125SW95                  
                D-2.Duncan!!    0       0.5    1
-STOP
+STOP"""

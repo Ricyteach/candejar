@@ -8,10 +8,11 @@ from pathlib import Path
 from candejar.cidrw.cidobj import CidObj
 from candejar.cidrw.exc import CIDRWError
 
+from tests.input_test_standards import input_test_standard1
 
 @pytest.fixture
 def cid_file_lines():
-    return Path(__file__).resolve().parents[0].joinpath("input_test1.cid").read_text().split("\n")
+    return input_test_standard1.split("\n")
 
 def test_blank_cid_obj():
     print()
@@ -19,14 +20,19 @@ def test_blank_cid_obj():
     print(o)
     assert o
 
-def test_read_cid_obj(cid_file_lines):
+def test_rw_cid_obj(cid_file_lines):
     print()
     o = CidObj(cid_file_lines)
     print(o)
-    assert o
+    assert len(o.nodes) == 1471
+    assert len(o.elements) == 2047
+    assert len(o.boundaries) == 46
     assert len(o.materials) == 3
     assert len(o.soilmaterials) == 3
     assert len(o.interfmaterials) == 0
+    cid_output_path = Path(__file__).resolve().parents[0].joinpath("output_test1.cid")
+    o.save(cid_output_path, mode="w")
+    assert cid_file_lines == cid_output_path.read_text().split("\n")
 
 def test_write_blank_cid_obj():
     c = CidObj()
