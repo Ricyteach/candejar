@@ -42,8 +42,6 @@ def process_lines(cid: CidObj, line_types: Iterable[CidLineType]) -> Iterator[Ci
     while True:  # top level objects loop
         try:
             line_type = next(i_line_types)
-            if line_type==C3:
-                breakpoint()
             target_obj = forgiving_cid_attr(cid, lambda: LINET_COLL_DICT.get(line_type))
             if target_obj is cid:
                 target_obj = [target_obj]
