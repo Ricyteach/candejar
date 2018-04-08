@@ -73,16 +73,21 @@ class CidObj:
             # skip materials sequence; consists of soil and interf material sub sequences
             if seq_name == "materials":
                 continue
+            # check for already existing sequence
             existing_seq_obj = getattr(self, seq_name)
+            # initialize new empty sequence
             seq_obj = CidSeq.subclasses[seq_cls_name](self)
+            # point seq object to existing seq if needed
             if isinstance(existing_seq_obj, CidSeq):
                 seq_obj.set_seq(existing_seq_obj.seq)
             elif existing_seq_obj:
                 seq_obj.set_seq(existing_seq_obj)
+            setattr(self, seq_name, seq_obj)
+            """
             if any(not issubclass(obj.fea_obj, seq_obj.type_) for obj in existing_seq_obj):
                 i, c = next(enumerate(o for o in existing_seq_obj if not issubclass(o.fea_obj, seq_obj.type_)))
                 raise CIDRWError(f"The class ({c.__name__}) of item seq[{i}] is not a {seq_obj.type_.__name__} subclass.")
-            setattr(self, seq_name, seq_obj)
+            """
 
         # cid file line objects stored; other objects are views
         if lines is None:
@@ -99,6 +104,9 @@ class CidObj:
                                      "STOP statement.")
             else:
                 self.line_objs.append(line_type.parse(line))
+
+        for seq in (getattr(self, n) for n in SEQ_NAMES):
+            seq.update_seq()
 
     def process_line_objs(self) -> Iterator[Type[CidLine]]:
         yield from process_cid(self)
