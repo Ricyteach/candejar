@@ -7,7 +7,7 @@ from typing import Iterator, TypeVar, Mapping, Type, Optional, Tuple, Iterable, 
 
 from ..utilities.cidobj import forgiving_dynamic_attr, SpecialError
 from .exc import CIDRWError
-from ..utilities.dataclasses import unmapify, mapify
+from ..utilities.dataclasses import unmapify, shallow_mapify
 from ..cid import A1, A2, C1, C2, C3, C4, C5, D1, E1, Stop
 from ..cid import CidLine
 
@@ -51,7 +51,7 @@ def process_lines(cid: CidObj, line_types: Iterable[CidLineType]) -> Iterator[Ci
             for subobj in target_obj:  # re-use same subobj for every line until new top-level line encountered
                 # `valid_fields` and `line_type` already been iterated at this point
                 # (either in top-level loop or sub level loop)
-                d: Mapping = mapify(subobj)
+                d: Mapping = shallow_mapify(subobj)
                 yield unmapify(d, line_type, lambda k: k in line_type.cidfields)  # A1, A2, C1, C2, D1, E1 yielded here
                 while True:  # sub level objects loop
                     # look ahead in `i_line_types`

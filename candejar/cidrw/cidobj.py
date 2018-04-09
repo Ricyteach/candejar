@@ -58,14 +58,18 @@ class CidObj:
     nsoilmaterials: int = field(default=AttributeDelegator("nsoilmaterials", "c2"), init=False)
     ninterfmaterials: int = field(default=AttributeDelegator("ninterfmaterials", "c2"), init=False)
 
+    @property
+    def nmaterials(self) -> int:
+        return self.nsoilmaterials + self.ninterfmaterials
+
     # sub-sequences of other cid objects; must appear in SEQ_NAMES
-    pipe_groups: CidSeq["CidObj", A2, fea.PipeGroup] = field(default_factory=list, init=False)  # pipe groups
-    nodes: CidSeq["CidObj", C3, fea.Node] = field(default_factory=list, init=False)
-    elements: CidSeq["CidObj", C4, fea.Element] = field(default_factory=list, init=False)
-    boundaries: CidSeq["CidObj", C5, fea.Boundary] = field(default_factory=list, init=False)
-    soilmaterials: CidSeq["CidObj", D1, fea.Material] = field(default_factory=list, init=False)  # soil element materials
-    interfmaterials: CidSeq["CidObj", D1, fea.Material] = field(default_factory=list, init=False)  # interface element materials
-    factors: CidSeq["CidObj", E1, fea.Factor] = field(default_factory=list, init=False)  # lrfd step factors
+    pipe_groups: CidSeq["CidObj", A2, fea.PipeGroup] = field(default=None, init=False, repr=False)  # pipe groups
+    nodes: CidSeq["CidObj", C3, fea.Node] = field(default=None, init=False, repr=False)
+    elements: CidSeq["CidObj", C4, fea.Element] = field(default=None, init=False, repr=False)
+    boundaries: CidSeq["CidObj", C5, fea.Boundary] = field(default=None, init=False, repr=False)
+    soilmaterials: CidSeq["CidObj", D1, fea.Material] = field(default=None, init=False, repr=False)  # soil element materials
+    interfmaterials: CidSeq["CidObj", D1, fea.Material] = field(default=None, init=False, repr=False)  # interface element materials
+    factors: CidSeq["CidObj", E1, fea.Factor] = field(default=None, init=False, repr=False)  # lrfd step factors
 
     def __post_init__(self, lines: Optional[Iterable[str]]) -> None:
         # initialize empty cid sub object sequence types
