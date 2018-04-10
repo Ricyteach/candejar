@@ -11,12 +11,12 @@ from candejar.cid.cidlineclasses import D1, D2Isotropic, D2Interface, D2Duncan
 
 @pytest.fixture
 def cidmock():
-    cidmockdct = dict(
+    mock = SimpleNamespace(
         nsoilmaterials=3,
         ninterfmaterials=1,
         line_objs = [D1(), D2Isotropic(), D1(), D2Duncan(), D1(), D2Duncan(), D1(model=6), D2Interface()]
     )
-    return SimpleNamespace(**cidmockdct)
+    return mock
 
 
 def test_SoilMaterials(cidmock):
