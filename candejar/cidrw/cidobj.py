@@ -109,8 +109,10 @@ class CidObj:
             else:
                 self.line_objs.append(line_type.parse(line))
 
+        """
         for seq in (getattr(self, n) for n in SEQ_NAMES):
             seq.update_seq()
+        """
 
     def process_line_objs(self) -> Iterator[Type[CidLine]]:
         yield from process_cid(self)

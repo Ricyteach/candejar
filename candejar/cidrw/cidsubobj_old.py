@@ -13,7 +13,7 @@ from .. import fea
 
 # TODO: Delete this module? Rework references to contained `CidObj`s to return a `SimpleNamespace` subclass on the fly.
 # The `SimpleNamespace` would just be a current view of the combined attributes from the relevant file `CidLine`s.
-# Could do away with all code below except `iter_line_objs`. Code for `iter_line_objs` would be identical except
+# Could do away with all code below except `iter_sublines`. Code for `iter_sublines` would be identical except
 # need to accept `idx` parameter for object of interest.
 
 
@@ -33,12 +33,11 @@ class CidSubObj(Generic[CidObj, CidSeq, CidSubLine, fea.FEAObj]):
         return self.container.type_(**{k:v for line_obj in self.iter_line_objs for k,v in asdict(line_obj).items() if k in field_names})
 
     container: InitVar[CidSeq]
-    idx: InitVar[int]
+    idx: int
     fea_obj: fea.FEAObj = field(default=property(make_fea), init=False)
 
-    def __post_init__(self, container: CidSeq, idx: int):
+    def __post_init__(self, container: CidSeq):
         self.container = container
-        self.idx = idx
 
     @property
     def cid_obj(self) -> CidObj:

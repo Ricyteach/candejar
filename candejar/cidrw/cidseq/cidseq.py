@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
 """Module defining CidSeq base object."""
-from dataclasses import field, InitVar, make_dataclass, dataclass
-from typing import Sequence, Generic, Type, Iterator, Union, TypeVar, Optional
+from dataclasses import field, InitVar, make_dataclass, dataclass, asdict
+from typing import Sequence, Generic, Type, Iterator, Union, TypeVar, Optional, Counter
 
+from ..cidsubobj import CidSubObj, SUB_OBJ_NAMES_DICT
 from ... import fea
 from ...cid import CidSubLine
 from ...utilities.mixins import ChildRegistryBase
-from ..cidsubobj import CidSubObj
 from ..exc import CIDRWError
 from .names import TYPE_DICT, SEQ_CLASS_DICT
 
@@ -20,20 +20,15 @@ CidObj = TypeVar("CidObj", covariant=True)
 SubObj = CidSubObj[CidObj, "CidSeq", CidSubLine, fea.FEAObj]
 
 
-@dataclass
+@dataclass(eq=False)
 class CidSeq(ChildRegistryBase, Sequence[SubObj], Generic[CidObj, CidSubLine, fea.FEAObj]):
     cid_obj: InitVar[CidObj]
-    seq: Optional[Sequence[SubObj]] = field(default=None, init=False)
 
     def __post_init__(self, cid_obj: CidObj) -> None:
         self.cid_obj = cid_obj
         # make ABC
         if type(self)==CidSeq:
             raise TypeError("Can't instantiate abstract class CidSeq without abstract field line_type")
-        self.set_seq([])
-
-    def set_seq(self, s):
-        self.seq = s
 
     @property
     def type_(self) -> Type[fea.FEAObj]:
@@ -41,44 +36,42 @@ class CidSeq(ChildRegistryBase, Sequence[SubObj], Generic[CidObj, CidSubLine, fe
         return fea_type
 
     @property
-    def iter_sequence(self) -> Iterator[CidSubLine]:
+    def iter_main_lines(self) -> Iterator[CidSubLine]:
+        """Iterate the line objects associated with the container line_type"""
         yield from (obj for obj in self.cid_obj.line_objs if isinstance(obj, self.line_type))
 
-    def update_seq(self) -> None:
-        i_seq =self.iter_sequence
-        for i,_ in enumerate(self.seq):
-            try:
-                next(i_seq)
-            except StopIteration:
-                raise CIDSubSeqError(f"The CidSeq object [{i}] has no corresponding line object.")
-        for _ in i_seq:
-            self.add_new()
-
-    def add_new(self, obj: SubObj = None) -> None:
-        """Update the view with already existing sub object information."""
-        if obj is None:
-            obj = CidSubObj(self, len(self))
-        seq = self.seq
-        # can't append directly to a `CidSeq`, which is intended to be just a viewer
-        while isinstance(seq, CidSeq):
-            seq = seq.seq
-        seq.append(obj)
+    def iter_sublines(self, idx) -> Iterator[CidSubLine]:
+        """Iterate the line objects associated with the provided index"""
+        # TODO: implement slicing
+        i_line_objs = iter(self.cid_obj.line_objs)
+        num = idx + 1
+        start_ctr = Counter()
+        for line in i_line_objs:
+            start_ctr[isinstance(line, self.line_type)] += 1
+            if start_ctr[True] == num:
+                yield line
+                break
+        else:
+            raise CIDSubSeqError(f"Could not locate {self.line_type.__name__!s} object number {num!s}")
+        for line in i_line_objs:
+            if not isinstance(line, self.line_type):
+                yield line
+            else:
+                break
 
     def __getitem__(self, val: Union[slice, int]) -> SubObj:
+        # TODO: implement slicing
+        d = dict()
+        for obj in self.iter_sublines(val):
+            d.update(asdict(obj))
         try:
-            self.update_seq()
+            result = CidSubObj.subclasses[SUB_OBJ_NAMES_DICT[self.line_type]](self, **d)
         except CIDSubSeqError as e:
-            raise IndexError(f"{val!s} exceeds available indexes for {self.line_type.__name__} objects") from e
-        result: SubObj = self.seq[val]
+            raise IndexError(f"{val!s} not an available index for {self.line_type.__name__} object") from e
         return result
 
     def __len__(self) -> int:
-        try:
-            s = self.seq
-        except AttributeError:
-            return 0
-        else:
-            return len(s)
+        return sum(1 for _ in self.iter_main_lines)
 
 
 def subclass_CidSeq(sub_line_type):
@@ -91,7 +84,7 @@ def subclass_CidSeq(sub_line_type):
     except KeyError:
         pass
 
-    # resolve 3 of the CidSeq input types
+    # resolve 2 of the CidSeq input types
     SubLine = sub_line_type  # type of CidLine indicating start of an object in CID file
     FEA_Obj = TYPE_DICT[sub_line_type]  # type of FEA object corresponding to CID object
 

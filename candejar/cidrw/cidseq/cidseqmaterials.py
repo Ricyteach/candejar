@@ -16,9 +16,9 @@ class SoilMaterials(CidSeq[CidObj, D1, fea.Material], Generic[CidObj]):
     line_type: Type[D1] = field(default=D1, init=False, repr=False)
 
     @property
-    def iter_sequence(self) -> Iterator[D1]:
+    def iter_main_lines(self) -> Iterator[D1]:
         """Alternate line sequence iterator for soil materials (all types but 6,7)"""
-        yield from (i for i in super().iter_sequence if getattr(i,"model",None) not in (6,7,None))
+        yield from (i for i in super().iter_main_lines if getattr(i, "model", None) not in (6, 7, None))
 
 
 @dataclass
@@ -26,9 +26,9 @@ class InterfMaterials(CidSeq[CidObj, D1, fea.Material], Generic[CidObj]):
     line_type: Type[D1] = field(default=D1, init=False, repr=False)
 
     @property
-    def iter_sequence(self) -> Iterator[D1]:
+    def iter_main_lines(self) -> Iterator[D1]:
         """Line sequence iterator for interface materials (type 6 only)"""
-        yield from (i for i in super().iter_sequence if getattr(i,"model",None)==6)
+        yield from (i for i in super().iter_main_lines if getattr(i, "model", None) == 6)
 
     def add_new(self, obj: CidSubObj[CidObj, "InterfMaterials", D1, fea.Material] = None) -> None:
         """Increase idx argument for CidSubObj by nsoilmaterials"""
