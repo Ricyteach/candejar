@@ -29,7 +29,16 @@ class Parser:
         try:
             p = owner._parser
         except AttributeError:
-            p = owner._parser = re.compile("".join(f.regex(n) for n, f in owner.cidfields.items()))
+            parser_str = "".join(f.regex(n) for n, f in owner.cidfields.items())
+            if parser_str.endswith("?"):
+                # optional ending parser; tweak so captures zero up to the field with of characters and ignores trailing spaces
+                m = re.fullmatch(r"(.*?)(\d+)$", parser_str[:-3])
+                first, second = m.groups()
+                parser_str = first + "," + second + "}) *"
+            else:
+                # required ending parser; tweak so captures correct # of characters and ignores trailing spaces
+                parser_str = parser_str + " *"
+            p = owner._parser = re.compile(parser_str)
         return p
 
 
@@ -67,13 +76,13 @@ class CidLine:
         else:
             return super().__format__(format_spec)
     @classmethod
-    def parse(cls: Type["CidLine"], s: str) -> "CidLine":
-        if s.startswith(cls.prefix):
-            s = s[slice(cls.start_, None)]
+    def parse(cls: Type["CidLine"], line: str) -> "CidLine":
+        if line.startswith(cls.prefix):
+            line = line[slice(cls.start_, None)]
         try:
-            return cls(**{k:cls.cidfields[k].parse(v) for k,v in cls.parser.fullmatch(s).groupdict().items()})
+            return cls(**{k:cls.cidfields[k].parse(v) for k,v in cls.parser.fullmatch(line).groupdict().items()})
         except AttributeError as e:
-            raise ValueError(f"{cls.__name__} failed to parse line:\n{s!r}") from e
+            raise ValueError(f"{cls.__name__} failed to parse line:\n{line!r}") from e
 
 
 def make_cid_line_cls(name_, **definitions):

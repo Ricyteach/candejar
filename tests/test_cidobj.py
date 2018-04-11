@@ -40,3 +40,10 @@ def test_write_blank_cid_obj():
     # raises error because sub sequences are all empty
     with pytest.raises(CIDRWError):
         c.save(p, mode="w")
+
+from pathlib import Path
+
+@pytest.mark.skip(reason="only works on local machine")
+def test_open_wild_files():
+    p = Path(r"S:\Uponor\19962 CANDE Analyses for Two Layer Weholite Pipes, Quebec, Canada\CANDE runs\run1.cid")
+    CidObj(p.read_text().split("\n"))
