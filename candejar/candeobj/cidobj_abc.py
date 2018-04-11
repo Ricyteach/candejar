@@ -1,26 +1,46 @@
 # -*- coding: utf-8 -*-
 
 """The interface for cid type objects expected by the module."""
-from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass, field
 from typing import Collection
 
+from ..cidobjrw.names import SEQ_NAMES
+
+
+class CandeError(Exception):
+    pass
+
+
+class CandeTypeError(CandeError, TypeError):
+    pass
+
 
 @dataclass
-class CidABC(metaclass=ABCMeta):
-    @abstractmethod
-    def pipe_groups(self):...
-    @abstractmethod
-    def nodes(self):...
-    @abstractmethod
-    def elements(self):...
-    @abstractmethod
-    def boundaries(self):...
-    @abstractmethod
-    def materials(self):...
+class CandeABC:
+    def __new__(cls, *args, **kwargs):
+        obj = super().__new__(cls)
+        if type(obj) is CandeABC or any(getattr(obj, name) is NotImplemented for name in SEQ_NAMES):
+            raise CandeTypeError(f"Can't instantiate abstract class {cls.__name__} without attributes " +
+                                 ", ".join(SEQ_NAMES))
+        return obj
+    @property
+    def pipe_groups(self):
+        return NotImplemented
+    @property
+    def nodes(self):
+        return NotImplemented
+    @property
+    def elements(self):
+        return NotImplemented
+    @property
+    def boundaries(self):
+        return NotImplemented
+    @property
+    def materials(self):
+        return NotImplemented
 
 @dataclass
-class CidObjBase(CidABC):
+class CandeObjBase(CandeABC):
     # top level objects
     mode: str = field(default="ANALYS")  # ANALYS or DESIGN
     level: int = field(default=3)  # 1, 2, 3

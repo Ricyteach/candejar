@@ -40,7 +40,7 @@ class AttributeDelegator:
 
 @dataclass
 class CidObj:
-    """For working with a CANDE problem as a Python data model object.
+    """For working with a .cid file as a Python data model object.
 
     Note that the `CidObj` does not necessarily define a `dataclass` field for every cid A1, C1, and C2 field. This means,
     for example, that an input cid file read into `CidObj` will change all non-included fields to *default values* when it
