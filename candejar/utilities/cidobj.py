@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Special tools for working with cidobj types."""
+"""Special tools for working with cidobjrw types."""
 
 from typing import Any, Optional, Callable
 

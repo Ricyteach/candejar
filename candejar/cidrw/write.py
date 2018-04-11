@@ -5,7 +5,7 @@ from itertools import chain, repeat
 from pathlib import Path
 from typing import Iterator, TypeVar, Mapping, Type, Optional, Iterable, Collection, Union, Counter, Callable
 
-from ..cidobj.names import SEQ_LINE_TYPE_NAME_DICT, SEQ_LINE_TYPE_TOTAL_DICT
+from ..cidobjrw.names import SEQ_LINE_TYPE_NAME_DICT, SEQ_LINE_TYPE_TOTAL_DICT
 from ..cid import TOP_LEVEL_TYPES, CIDL_FORMAT_TYPES
 from ..utilities.cidobj import forgiving_dynamic_attr, SpecialError
 from ..utilities.dataclasses import unmapify, shallow_mapify

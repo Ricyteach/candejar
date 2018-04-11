@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Tests for `candejar.cidobj.cidobj_abc` module."""
+"""Tests for `candejar.cidobjrw.cidobj_abc` module."""
 import pytest
-from candejar.cidobj.cidobj_abc import CidObjBase, CidABC
+from candejar.cidobjrw.cidobj_abc import CidObjBase, CidABC
 
 
 def test_cidabc_subclass():

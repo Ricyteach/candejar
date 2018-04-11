@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Tests for `candejar.cidobj` module."""
+"""Tests for `candejar.cidobjrw` module."""
 
 import pytest
 from pathlib import Path
-from candejar.cidobj.cidobj import CidObj
+from candejar.cidobjrw.cidobj import CidObj
 from candejar.cidrw.exc import CIDRWError
 
 from tests.input_test_standards import input_test_standard1
