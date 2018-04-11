@@ -3,23 +3,15 @@
 """Contains the procedure for writing a `CidObj` to a .cid file."""
 from itertools import chain, repeat
 from pathlib import Path
-from typing import Iterator, TypeVar, Mapping, Type, Optional, Tuple, Iterable, Collection, Union, Counter, Callable
+from typing import Iterator, TypeVar, Mapping, Type, Optional, Iterable, Collection, Union, Counter, Callable
 
+from .names import SEQ_LINE_TYPE_NAME_DICT, SEQ_LINE_TYPE_TOTAL_DICT
+from ..cid import TOP_LEVEL_TYPES, CIDL_FORMAT_TYPES
 from ..utilities.cidobj import forgiving_dynamic_attr, SpecialError
 from .exc import CIDRWError
 from ..utilities.dataclasses import unmapify, shallow_mapify
-from ..cid import A1, A2, C1, C2, C3, C4, C5, D1, E1, Stop
+from ..cid import Stop
 from ..cid import CidLine
-
-SEQ_LINETYPES = (A2, C3, C4, C5, D1, E1)  # note: needs to be ordered
-TOP_LEVEL_TYPES = set(SEQ_LINETYPES) | {A1, C1, C2, Stop}  # marks end of B1 etc. or D2 etc. sub lines
-CIDL_FORMAT_TYPES = set(SEQ_LINETYPES) - {A2}  # lines types that can use cidL format
-
-LINETYPE_COLLECTIONS = ("pipe_groups", "nodes", "elements", "boundaries", "materials", "factors")
-LINET_COLL_DICT = dict(zip(SEQ_LINETYPES, LINETYPE_COLLECTIONS))
-
-LINETYPE_TOTALS = ("ngroups", "nnodes", "nelements", "nboundaries", "nmaterials", "nfactors")
-LINET_TOT_DICT = dict(zip(SEQ_LINETYPES, LINETYPE_TOTALS))
 
 CidObj = TypeVar("CidObj")
 CidLineType = Type[CidLine]
@@ -42,12 +34,12 @@ def process_lines(cid: CidObj, line_types: Iterable[CidLineType]) -> Iterator[Ci
     while True:  # top level objects loop
         try:
             line_type = next(i_line_types)
-            target_obj = forgiving_cid_attr(cid, lambda: LINET_COLL_DICT.get(line_type))
+            target_obj = forgiving_cid_attr(cid, lambda: SEQ_LINE_TYPE_NAME_DICT.get(line_type))
             if target_obj is cid:
                 target_obj = [target_obj]
             if not len(target_obj):
                 raise CIDRWError(f"A {line_type.__name__} line type was encountered for processing but the "
-                                 f"cid.{LINET_COLL_DICT[line_type]} collection is empty.")
+                                 f"cid.{SEQ_LINE_TYPE_NAME_DICT[line_type]} collection is empty.")
             for subobj in target_obj:  # re-use same subobj for every line until new top-level line encountered
                 # `valid_fields` and `line_type` already been iterated at this point
                 # (either in top-level loop or sub level loop)
@@ -75,7 +67,7 @@ def process_lines(cid: CidObj, line_types: Iterable[CidLineType]) -> Iterator[Ci
                                  f"{line_type.__name__!s}")
 
 def process_formatting(cid: CidObj, i_lines: Iterable[CidLine],
-                       total_getter = lambda cid,t: forgiving_cid_attr(cid, lambda: LINET_TOT_DICT.get(t))
+                       total_getter = lambda cid,t: forgiving_cid_attr(cid, lambda: SEQ_LINE_TYPE_TOTAL_DICT.get(t))
                        ) -> Iterator[str]:
     """The line object and appropriate format code as a tuple: (line_obj, format_str)
 
@@ -87,7 +79,7 @@ def process_formatting(cid: CidObj, i_lines: Iterable[CidLine],
     defined by the cid object. Alternatively a different function could be provided such as one that counts the number
     of lines of that type in the subsequences of the cid object. Example:
 
-        process_formatting(cid, i_lines, total_getter = lambda cid,t: len(getattr(cid, LINET_COLL_DICT[t])))
+        process_formatting(cid, i_lines, total_getter = lambda cid,t: len(getattr(cid, SEQ_LINE_TYPE_NAME_DICT[t])))
     """
     lines = list(i_lines)
     types = [type(x) for x in lines]

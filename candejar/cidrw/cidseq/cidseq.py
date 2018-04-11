@@ -4,12 +4,13 @@
 from dataclasses import field, InitVar, make_dataclass, dataclass, asdict
 from typing import Sequence, Generic, Type, Iterator, Union, TypeVar, Optional, Counter
 
-from ..cidsubobj import CidSubObj, SUB_OBJ_NAMES_DICT
 from ... import fea
-from ...cid import CidSubLine
+from ...cid import CidSubLine, TOP_LEVEL_TYPES
 from ...utilities.mixins import ChildRegistryBase
+from ..cidsubobj import CidSubObj, SUB_OBJ_NAMES_DICT
 from ..exc import CIDRWError
-from .names import TYPE_DICT, SEQ_CLASS_DICT
+from ..names import FEA_TYPE_DICT
+from .names import SEQ_CLASS_DICT
 
 
 class CIDSubSeqError(CIDRWError):
@@ -27,12 +28,16 @@ class CidSeq(ChildRegistryBase, Sequence[SubObj], Generic[CidObj, CidSubLine, fe
     def __post_init__(self, cid_obj: CidObj) -> None:
         self.cid_obj = cid_obj
         # make ABC
-        if type(self)==CidSeq:
-            raise TypeError("Can't instantiate abstract class CidSeq without abstract field line_type")
+        if type(self)==CidSeq or self.line_type==NotImplemented:
+            raise TypeError("Can't instantiate abstract class CidSeq without abstract class attribute line_type")
+
+    @property
+    def line_type(self):
+        return NotImplemented
 
     @property
     def type_(self) -> Type[fea.FEAObj]:
-        fea_type: Type[fea.FEAObj] = TYPE_DICT[self.line_type]
+        fea_type: Type[fea.FEAObj] = FEA_TYPE_DICT[self.line_type]
         return fea_type
 
     @property
@@ -54,10 +59,10 @@ class CidSeq(ChildRegistryBase, Sequence[SubObj], Generic[CidObj, CidSubLine, fe
         else:
             raise CIDSubSeqError(f"Could not locate {self.line_type.__name__!s} object number {num!s}")
         for line in i_line_objs:
-            if not isinstance(line, self.line_type):
-                yield line
-            else:
+            if type(line) in TOP_LEVEL_TYPES:
                 break
+            else:
+                yield line
 
     def __getitem__(self, val: Union[slice, int]) -> SubObj:
         # TODO: implement slicing
@@ -86,7 +91,7 @@ def subclass_CidSeq(sub_line_type):
 
     # resolve 2 of the CidSeq input types
     SubLine = sub_line_type  # type of CidLine indicating start of an object in CID file
-    FEA_Obj = TYPE_DICT[sub_line_type]  # type of FEA object corresponding to CID object
+    FEA_Obj = FEA_TYPE_DICT[sub_line_type]  # type of FEA object corresponding to CID object
 
     cls = make_dataclass(cls_name, (("line_type", Type[SubLine], field(default=SubLine, init=False, repr=False)),),
                          bases = (CidSeq[CidObj, SubLine, FEA_Obj], Generic[CidObj]), eq=False)

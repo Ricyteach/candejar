@@ -4,7 +4,8 @@
 from types import new_class
 from typing import Generic, Union, TypeVar
 
-from .names import SUB_OBJ_CLASS_DICT, TYPE_DICT
+from ..names import FEA_TYPE_DICT
+from .names import SUB_OBJ_CLASS_DICT
 from ...utilities.mixins import ChildRegistryBase
 from ...cid import CidSubLine
 from ... import fea
@@ -49,7 +50,8 @@ class CidSubObj(ChildRegistryBase, Generic[CidObj, CidSeq, CidSubLine, fea.FEAOb
             try:
                 return d[name]
             except KeyError:
-                raise e
+                pass
+            raise e
 
 def subclass_CidSubObj(sub_line_type):
     """Produce a `CidSubObj` based subclass."""
@@ -63,7 +65,7 @@ def subclass_CidSubObj(sub_line_type):
 
     # resolve 2 of the CidSubObj input types
     SubLine = sub_line_type  # type of CidLine indicating start of an object in CID file
-    FEA_Obj = TYPE_DICT[sub_line_type]  # type of FEA object corresponding to CID object
+    FEA_Obj = FEA_TYPE_DICT[sub_line_type]  # type of FEA object corresponding to CID object
 
     cls = new_class(cls_name, (CidSubObj[CidObj, CidSeq, SubLine, FEA_Obj], Generic[CidObj, CidSeq]))
 

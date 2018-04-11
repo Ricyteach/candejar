@@ -6,14 +6,15 @@ from dataclasses import dataclass, field, InitVar
 from pathlib import Path
 from typing import List, Any, Type, Iterator, Iterable, Optional
 
+from .cidseq.names import ALL_SEQ_CLASS_NAMES
+from .names import ALL_SEQ_NAMES
 from .write import line_strings
 from .. import fea
 from ..cid import CidLine, A1, A2, C1, C2, C3, C4, C5, D1, E1, Stop
 from .exc import CIDRWError
-from ..utilities.collections import ChainSequence
+# from ..utilities.collections import ChainSequence
 from ..cidprocessing.main import process as process_cid
-from .cidseq import CidSeq, Materials
-from .cidseq.names import SEQ_NAMES, SEQ_CLASS_NAMES
+from .cidseq import CidSeq
 
 class AttributeDelegator:
     """Delegates attribute access to another named object attribute."""
@@ -62,7 +63,7 @@ class CidObj:
     def nmaterials(self) -> int:
         return self.nsoilmaterials + self.ninterfmaterials
 
-    # sub-sequences of other cid objects; must appear in SEQ_NAMES
+    # sub-sequences of other cid objects; must appear in ALL_SEQ_NAMES
     pipe_groups: CidSeq["CidObj", A2, fea.PipeGroup] = field(default=None, init=False, repr=False)  # pipe groups
     nodes: CidSeq["CidObj", C3, fea.Node] = field(default=None, init=False, repr=False)
     elements: CidSeq["CidObj", C4, fea.Element] = field(default=None, init=False, repr=False)
@@ -74,7 +75,7 @@ class CidObj:
 
     def __post_init__(self, lines: Optional[Iterable[str]]) -> None:
         # initialize empty cid sub object sequence types
-        for seq_name, seq_cls_name in zip(SEQ_NAMES, SEQ_CLASS_NAMES):
+        for seq_name, seq_cls_name in zip(ALL_SEQ_NAMES, ALL_SEQ_CLASS_NAMES):
             """
             # skip materials sequence; consists of soil and interf material sub sequences
             if seq_name == "materials":
@@ -115,7 +116,7 @@ class CidObj:
                 self.line_objs.append(line_type.parse(line))
 
         """
-        for seq in (getattr(self, n) for n in SEQ_NAMES):
+        for seq in (getattr(self, n) for n in ALL_SEQ_NAMES):
             seq.update_seq()
         """
 
@@ -161,7 +162,7 @@ class CidObj:
     @property
     def materials(self) -> CidSeq["CidObj", D1, fea.Material]:
         """The combination of the `soilmaterials`  and `interfmaterials` sequences."""
-        seq_obj = Materials(self)
+        seq_obj = MaterialSeq(self)
         seq_obj.set_seq(ChainSequence(self.soilmaterials, self.interfmaterials))
         return seq_obj
     '''

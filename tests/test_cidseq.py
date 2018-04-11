@@ -5,7 +5,7 @@
 import pytest
 from types import SimpleNamespace
 
-from candejar.cidrw.cidseq import SoilMaterials, InterfMaterials
+from candejar.cidrw.cidseq import SoilMaterialSeq, InterfMaterialSeq
 from candejar.cid.cidlineclasses import D1, D2Isotropic, D2Interface, D2Duncan
 
 
@@ -24,9 +24,9 @@ def test_iteration():
     assert False
 
 
-def test_SoilMaterials(cidmock):
-    cidmock.soilmaterials = SoilMaterials(cidmock)
-    cidmock.interfmaterials = InterfMaterials(cidmock)
+def test_SoilMaterialSeq(cidmock):
+    cidmock.soilmaterials = SoilMaterialSeq(cidmock)
+    cidmock.interfmaterials = InterfMaterialSeq(cidmock)
     assert cidmock.interfmaterials[0].model == 6
     assert cidmock.soilmaterials[0].model == 1
     assert cidmock.soilmaterials[0].model == 1

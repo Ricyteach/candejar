@@ -6,11 +6,11 @@ from ..cidsubobj import CidSubObj
 from .cidseq import CidSeq, CIDSubSeqError
 
 CidObj = TypeVar("CidObj", covariant=True)
-SoilMatObj = CidSubObj[CidObj, "SoilMaterials", D1, fea.Material]
-InterfMatObj = CidSubObj[CidObj, "InterfMaterials", D1, fea.Material]
+SoilMatObj = CidSubObj[CidObj, "SoilMaterialSeq", D1, fea.Material]
+InterfMatObj = CidSubObj[CidObj, "InterfMaterialSeq", D1, fea.Material]
 
 
-class SoilMaterials(CidSeq[CidObj, D1, fea.Material], Generic[CidObj]):
+class SoilMaterialSeq(CidSeq[CidObj, D1, fea.Material], Generic[CidObj]):
     line_type = D1
 
     @property
@@ -31,7 +31,11 @@ class SoilMaterials(CidSeq[CidObj, D1, fea.Material], Generic[CidObj]):
             num = idx+1
             raise CIDSubSeqError(f"Could not locate {self.line_type.__name__!s} soil object number {num!s}")
 
-class InterfMaterials(CidSeq[CidObj, D1, fea.Material], Generic[CidObj]):
+    def __len__(self) -> int:
+        return sum(1 for line in self.iter_main_lines if line.model!=6)
+
+
+class InterfMaterialSeq(CidSeq[CidObj, D1, fea.Material], Generic[CidObj]):
     line_type = D1
 
     @property
@@ -51,3 +55,6 @@ class InterfMaterials(CidSeq[CidObj, D1, fea.Material], Generic[CidObj]):
         else:
             num = idx+1
             raise CIDSubSeqError(f"Could not locate {self.line_type.__name__!s} interface object number {num!s}")
+
+    def __len__(self) -> int:
+        return sum(1 for line in self.iter_main_lines if line.model==6)
