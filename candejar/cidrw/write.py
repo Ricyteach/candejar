@@ -5,13 +5,13 @@ from itertools import chain, repeat
 from pathlib import Path
 from typing import Iterator, TypeVar, Mapping, Type, Optional, Iterable, Collection, Union, Counter, Callable
 
-from .names import SEQ_LINE_TYPE_NAME_DICT, SEQ_LINE_TYPE_TOTAL_DICT
+from ..cidobj.names import SEQ_LINE_TYPE_NAME_DICT, SEQ_LINE_TYPE_TOTAL_DICT
 from ..cid import TOP_LEVEL_TYPES, CIDL_FORMAT_TYPES
 from ..utilities.cidobj import forgiving_dynamic_attr, SpecialError
-from .exc import CIDRWError
 from ..utilities.dataclasses import unmapify, shallow_mapify
 from ..cid import Stop
 from ..cid import CidLine
+from .exc import CIDRWError
 
 CidObj = TypeVar("CidObj")
 CidLineType = Type[CidLine]

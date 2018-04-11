@@ -1,4 +1,4 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Tests for `candejar.cidrw.cidsubobj` module."""
+"""Tests for `candejar.cidobj.cidsubobj` module."""

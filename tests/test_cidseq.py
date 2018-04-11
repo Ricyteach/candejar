@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Tests for `candejar.cidrw.cidseq` module."""
+"""Tests for `candejar.cidobj.cidseq` module."""
 import pytest
 from types import SimpleNamespace
 
-from candejar.cidrw.cidseq import SoilMaterialSeq, InterfMaterialSeq
+from candejar.cidobj.cidseq import SoilMaterialSeq, InterfMaterialSeq
 from candejar.cid.cidlineclasses import D1, D2Isotropic, D2Interface, D2Duncan
 
 

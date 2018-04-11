@@ -2,18 +2,18 @@
 
 """Module defining CidSeq base object."""
 from dataclasses import field, InitVar, make_dataclass, dataclass, asdict
-from typing import Sequence, Generic, Type, Iterator, Union, TypeVar, Optional, Counter
+from typing import Sequence, Generic, Type, Iterator, Union, TypeVar, Counter
 
 from ... import fea
 from ...cid import CidSubLine, TOP_LEVEL_TYPES
 from ...utilities.mixins import ChildRegistryBase
 from ..cidsubobj import CidSubObj, SUB_OBJ_NAMES_DICT
-from ..exc import CIDRWError
+from ..exc import CIDObjError
 from ..names import FEA_TYPE_DICT
 from .names import SEQ_CLASS_DICT
 
 
-class CIDSubSeqIndexError(CIDRWError, IndexError):
+class CIDSubSeqIndexError(CIDObjError, IndexError):
     pass
 
 

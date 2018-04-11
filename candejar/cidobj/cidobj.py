@@ -8,10 +8,10 @@ from typing import List, Any, Type, Iterator, Iterable, Optional
 
 from .cidseq.names import ALL_SEQ_CLASS_NAMES
 from .names import ALL_SEQ_NAMES
-from .write import line_strings
+from ..cidrw.write import line_strings
 from .. import fea
 from ..cid import CidLine, A1, A2, C1, C2, C3, C4, C5, D1, E1, Stop
-from .exc import CIDRWError
+from .exc import CIDObjError
 # from ..utilities.collections import ChainSequence
 from ..cidprocessing.main import process as process_cid
 from .cidseq import CidSeq
@@ -102,7 +102,7 @@ class CidObj:
             """
             if any(not issubclass(obj.fea_obj, seq_obj.type_) for obj in existing_seq_obj):
                 i, c = next(enumerate(o for o in existing_seq_obj if not issubclass(o.fea_obj, seq_obj.type_)))
-                raise CIDRWError(f"The class ({c.__name__}) of item seq[{i}] is not a {seq_obj.type_.__name__} subclass.")
+                raise CIDObjError(f"The class ({c.__name__}) of item seq[{i}] is not a {seq_obj.type_.__name__} subclass.")
             """
 
         # cid file line objects stored; other objects are views
@@ -116,7 +116,7 @@ class CidObj:
                 line_type = next(iter_line_types)
             except StopIteration:
                 if line.strip() and not isinstance(self.line_objs[-1], Stop):
-                    raise CIDRWError("End of file reached before encountering"
+                    raise CIDObjError("End of file reached before encountering"
                                      "STOP statement.")
             else:
                 self.line_objs.append(line_type.parse(line))

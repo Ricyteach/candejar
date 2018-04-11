@@ -6,7 +6,7 @@ from dataclasses import field, fields, asdict, dataclass, InitVar
 from typing import Generic, List, Type, Iterator, Union, TypeVar
 
 from ..cid import CidLine, CidSubLine
-from .exc import CIDRWError
+from .exc import CIDObjError
 from ..utilities.collections import MyCounter
 from .. import fea
 
@@ -58,7 +58,7 @@ class CidSubObj(Generic[CidObj, CidSeq, CidSubLine, fea.FEAObj]):
                 yield line
                 break
         else:
-            raise CIDRWError(f"Could not locate {self.line_type.__name__!s} object number {num!s}")
+            raise CIDObjError(f"Could not locate {self.line_type.__name__!s} object number {num!s}")
         for line in i_line_objs:
             if not isinstance(line, self.line_type):
                 yield line
