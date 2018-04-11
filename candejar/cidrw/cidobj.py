@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""CID object module for working with an entire cid file as a read/write object."""
+"""CID object module for working with an entire cid file as a read/write Python data model object."""
 
 from dataclasses import dataclass, field, InitVar
 from pathlib import Path
@@ -40,6 +40,12 @@ class AttributeDelegator:
 
 @dataclass
 class CidObj:
+    """For working with a CANDE problem as a Python data model object.
+
+    Note that the `CidObj` does not necessarily define a `dataclass` field for every cid A1, C1, and C2 field. This means,
+    for example, that an input cid file read into `CidObj` will change all non-included fields to *default values* when it
+    mapified and/or written, since mapify grabs only from `dataclass` fields (if they exist).
+    """
     # only input parameter is lines; not stored
     lines: InitVar[Optional[Iterable[str]]] = field(default=None)  # cid file line objects
 

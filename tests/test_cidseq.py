@@ -19,11 +19,6 @@ def cidmock():
     return mock
 
 
-def test_iteration():
-    # TODO: implement test
-    assert False
-
-
 def test_SoilMaterialSeq(cidmock):
     cidmock.soilmaterials = SoilMaterialSeq(cidmock)
     cidmock.interfmaterials = InterfMaterialSeq(cidmock)

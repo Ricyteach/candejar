@@ -3,7 +3,7 @@ from typing import TypeVar, Generic, Iterator, Counter
 from ... import fea
 from ...cid import CidSubLine, D1
 from ..cidsubobj import CidSubObj
-from .cidseq import CidSeq, CIDSubSeqError
+from .cidseq import CidSeq, CIDSubSeqIndexError
 
 CidObj = TypeVar("CidObj", covariant=True)
 SoilMatObj = CidSubObj[CidObj, "SoilMaterialSeq", D1, fea.Material]
@@ -29,7 +29,7 @@ class SoilMaterialSeq(CidSeq[CidObj, D1, fea.Material], Generic[CidObj]):
             ctr[main_line_candidate.model!=6] += 1
         else:
             num = idx+1
-            raise CIDSubSeqError(f"Could not locate {self.line_type.__name__!s} soil object number {num!s}")
+            raise CIDSubSeqIndexError(f"Could not locate {self.line_type.__name__!s} soil object number {num!s}")
 
     def __len__(self) -> int:
         return sum(1 for line in self.iter_main_lines if line.model!=6)
@@ -54,7 +54,7 @@ class InterfMaterialSeq(CidSeq[CidObj, D1, fea.Material], Generic[CidObj]):
             ctr[main_line_candidate.model==6] += 1
         else:
             num = idx+1
-            raise CIDSubSeqError(f"Could not locate {self.line_type.__name__!s} interface object number {num!s}")
+            raise CIDSubSeqIndexError(f"Could not locate {self.line_type.__name__!s} interface object number {num!s}")
 
     def __len__(self) -> int:
         return sum(1 for line in self.iter_main_lines if line.model==6)

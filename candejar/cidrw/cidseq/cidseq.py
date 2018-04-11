@@ -13,7 +13,7 @@ from ..names import FEA_TYPE_DICT
 from .names import SEQ_CLASS_DICT
 
 
-class CIDSubSeqError(CIDRWError):
+class CIDSubSeqIndexError(CIDRWError, IndexError):
     pass
 
 
@@ -57,7 +57,7 @@ class CidSeq(ChildRegistryBase, Sequence[SubObj], Generic[CidObj, CidSubLine, fe
                 yield line
                 break
         else:
-            raise CIDSubSeqError(f"Could not locate {self.line_type.__name__!s} object number {num!s}")
+            raise CIDSubSeqIndexError(f"Could not locate {self.line_type.__name__!s} object number {num!s}")
         for line in i_line_objs:
             if type(line) in TOP_LEVEL_TYPES:
                 break
@@ -71,7 +71,7 @@ class CidSeq(ChildRegistryBase, Sequence[SubObj], Generic[CidObj, CidSubLine, fe
             d.update(asdict(obj))
         try:
             result = CidSubObj.subclasses[SUB_OBJ_NAMES_DICT[self.line_type]](self, val, **d)
-        except CIDSubSeqError as e:
+        except CIDSubSeqIndexError as e:
             raise IndexError(f"{val!s} not an available index for {self.line_type.__name__} object") from e
         return result
 

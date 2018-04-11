@@ -150,7 +150,7 @@
         # 1.0 for in-situ materials
         ModuliAveraging: [10, 0.5]
         # Duncan: 0, Dancan/Selig: 1
-        Model: [5, 1]
+        DSModel: [5, 1]
         # Original: 0, Unloading: 1
         Unloading: [5, 1, True]
 
@@ -405,8 +405,8 @@
 
     B2Plastic:
         prefix: "B-2.Plastic"
-        ShortModulus: [10, 0.0] # psi
-        ShortStrength: [10, 0.0] # psi
+        ShortModulus: [10, 0.0, True] # psi
+        ShortStrength: [10, 0.0, True] # psi
         LongModulus: [10, 0.0] # psi
         LongStrength: [10, 0.0] # psi
         Poissons: [10, 0.3]

@@ -18,7 +18,7 @@ output_standard_text = """                      A-1!!ANALYS   3 0  3From `pip in
                B-2.Alum.A!!      0.00      0.00      0.00
                    A-2.L3!!PLASTIC       0
               B-1.Plastic!!GENERAL   HDPE          1    0
-              B-2.Plastic!!      0.00      0.00      0.00      0.00      0.30      0.00
+              B-2.Plastic!!                          0.00      0.00      0.30      0.00
      B-3.Plastic.A.Smooth!!      0.00      0.00      0.00      0.00
                    A-2.L3!!STEEL         0
                 B-1.Steel!!29.0E6          0.3033.0E3    33.0E3          0.00      0.00    0    2    0

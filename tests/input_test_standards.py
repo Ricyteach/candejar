@@ -1,10 +1,10 @@
 input_test_standard1 = """                      A-1!!ANALYS   3 0  119962-3 Weholite Inlet Pipe Run 1 (flooded)                   -99               
                    A-2.L3!!PLASTIC      36
               B-1.Plastic!!GENERAL   HDPE          2    1
-              B-2.Plastic!!                         28000   1998.62      0.45 0.0378793
-     B-3.Plastic.A.Smooth!!      5.51      1.65     6.283     2.755
+              B-2.Plastic!!                      28000.00   1998.62      0.45      0.04
+     B-3.Plastic.A.Smooth!!      5.51      1.65      6.28      2.75
                    C-1.L3!!PREP 19962-3 Weholite Inlet Pipe Run 1       
-                   C-2.L3!!   28    3    1    3    1 1471 2047   46    3    0    1
+                   C-2.L3!!   28    3    1    3    0 1471 2047   46    3    0    1
                    C-3.L3!!    1  00    -207.00   -235.00                         
                    C-3.L3!!    2  00     -70.00      0.00                         
                    C-3.L3!!    3  00     -82.00     12.00                         
@@ -3569,10 +3569,10 @@ input_test_standard1 = """                      A-1!!ANALYS   3 0  119962-3 Weho
                    C-5.L3!!  110    1      0.00    0      0.00      0.00    0                              
                    C-5.L3!!  112    1      0.00    0      0.00      0.00    0                              
                    C-5.L3!!L 113    1      0.00    0      0.00      0.00    0                              
-                      D-1!!    1    1         0In Situ               
-            D-2.Isotropic!!      2000       0.3
-                      D-1!!    2    3       115CL90                  
-               D-2.Duncan!!    0       0.5    1
-                      D-1!!L   3    3       125SW95                  
-               D-2.Duncan!!    0       0.5    1
+                      D-1!!    1    1      0.00In Situ               
+            D-2.Isotropic!!   2000.00      0.30
+                      D-1!!    2    3    115.00CL90                  
+               D-2.Duncan!!    0      0.50    1     
+                      D-1!!L   3    3    125.00SW95                  
+               D-2.Duncan!!    0      0.50    1     
 STOP"""

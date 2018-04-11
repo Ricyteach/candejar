@@ -59,7 +59,7 @@ class CidLine:
                 try:
                     result_list.append(''.join(self.cidfields[label].format(value) for label,value in asdict(self).items()))
                 except CIDError as e:
-                    msg = '\n'.join(f"{self.fields[label]!r}:\t{value!r}" for label,value in vars(self).items())
+                    msg = '\n'.join(f"{self.cidfields[label]!r}:\t{value!r}" for label,value in vars(self).items())
                     raise LineError('\n'+msg) from e
                 return ''.join(result_list)
             else:
