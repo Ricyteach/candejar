@@ -1,27 +1,27 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Tests for `candejar.cidrw.cidseq` module."""
+"""Tests for `candejar.cidobjrw.cidseq` module."""
 import pytest
 from types import SimpleNamespace
 
-from candejar.cidrw.cidseq import SoilMaterials, InterfMaterials
+from candejar.cidobjrw.cidseq import SoilMaterialSeq, InterfMaterialSeq
 from candejar.cid.cidlineclasses import D1, D2Isotropic, D2Interface, D2Duncan
 
 
 @pytest.fixture
 def cidmock():
-    cidmockdct = dict(
+    mock = SimpleNamespace(
         nsoilmaterials=3,
         ninterfmaterials=1,
         line_objs = [D1(), D2Isotropic(), D1(), D2Duncan(), D1(), D2Duncan(), D1(model=6), D2Interface()]
     )
-    return SimpleNamespace(**cidmockdct)
+    return mock
 
 
-def test_SoilMaterials(cidmock):
-    cidmock.soilmaterials = SoilMaterials(cidmock)
-    cidmock.interfmaterials = InterfMaterials(cidmock)
+def test_SoilMaterialSeq(cidmock):
+    cidmock.soilmaterials = SoilMaterialSeq(cidmock)
+    cidmock.interfmaterials = InterfMaterialSeq(cidmock)
     assert cidmock.interfmaterials[0].model == 6
     assert cidmock.soilmaterials[0].model == 1
     assert cidmock.soilmaterials[0].model == 1

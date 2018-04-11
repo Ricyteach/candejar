@@ -22,21 +22,21 @@ class ChainSequence(MutableSequence):
         try:
             del seq[new_idx]
         except IndexError:
-            raise IndexError(f"{idx!s}")
+            raise IndexError(f"{idx!s}") from None
 
     def __getitem__(self, idx: int) -> Any:
         seq, new_idx = self.get_seq_and_idx(idx)
         try:
             return seq[new_idx]
         except IndexError:
-            raise IndexError(f"{idx!s}")
+            raise IndexError(f"{idx!s}") from None
 
     def __setitem__(self, idx: int, value: Any) -> None:
         seq, new_idx = self.get_seq_and_idx(idx)
         try:
             seq[new_idx] = value
         except IndexError:
-            raise IndexError(f"{idx!s}")
+            raise IndexError(f"{idx!s}") from None
 
     def __len__(self) -> int:
         return sum(len(s) for s in self.sequences)
@@ -50,7 +50,8 @@ class ChainSequence(MutableSequence):
         try:
             s = self.sequences[map_idx]
         except IndexError:
-            raise IndexError(f"Invalid map index [{map_idx:d}] provided for {len(self.sequences):d} sequences")
+            raise IndexError(f"Invalid map index [{map_idx:d}] provided for "
+                             f"{len(self.sequences):d} sequences") from None
         else:
             s.append(item)
 

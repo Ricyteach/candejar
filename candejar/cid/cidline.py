@@ -29,7 +29,16 @@ class Parser:
         try:
             p = owner._parser
         except AttributeError:
-            p = owner._parser = re.compile("".join(f.regex(n) for n, f in owner.cidfields.items()))
+            parser_str = "".join(f.regex(n) for n, f in owner.cidfields.items())
+            if parser_str.endswith("?"):
+                # optional ending parser; tweak so captures zero up to the field with of characters and ignores trailing spaces
+                m = re.fullmatch(r"(.*?)(\d+)$", parser_str[:-3])
+                first, second = m.groups()
+                parser_str = first + "," + second + "}) *"
+            else:
+                # required ending parser; tweak so captures correct # of characters and ignores trailing spaces
+                parser_str = parser_str + " *"
+            p = owner._parser = re.compile(parser_str)
         return p
 
 
@@ -44,6 +53,7 @@ class CidLine:
                 # "L" or " " for line types C3 C4 C5 D1
                 try:
                     result_list.append({
+                                           self.start_ == 0 and "L" not in format_spec: "",
                                            self.start_ == 27 and "L" not in format_spec: "",
                                            self.start_ == 28: " ",
                                            self.start_ == 28 and "L" in format_spec: "L",
@@ -52,12 +62,13 @@ class CidLine:
                     if self.start_ in (27,28):
                         raise LineError(f"unsupported format string passed to {type(self).__name__}.__format__") from None
                     else:
-                        raise LineError("upsupported line start location provided; cid lines start at 27 or 28") from None
+                        raise LineError(f"upsupported line start location provided for {type(self).__name__} object; "
+                                        f"cid lines start at 27 or 28, not {self.start_!s}") from None
                 # fields
                 try:
                     result_list.append(''.join(self.cidfields[label].format(value) for label,value in asdict(self).items()))
                 except CIDError as e:
-                    msg = '\n'.join(f"{self.fields[label]!r}:\t{value!r}" for label,value in vars(self).items())
+                    msg = '\n'.join(f"{self.cidfields[label]!r}:\t{value!r}" for label,value in vars(self).items())
                     raise LineError('\n'+msg) from e
                 return ''.join(result_list)
             else:
@@ -65,13 +76,13 @@ class CidLine:
         else:
             return super().__format__(format_spec)
     @classmethod
-    def parse(cls: Type["CidLine"], s: str) -> "CidLine":
-        if s.startswith(cls.prefix):
-            s = s[slice(cls.start_, None)]
+    def parse(cls: Type["CidLine"], line: str) -> "CidLine":
+        if line.startswith(cls.prefix):
+            line = line[slice(cls.start_, None)]
         try:
-            return cls(**{k:cls.cidfields[k].parse(v) for k,v in cls.parser.fullmatch(s).groupdict().items()})
-        except AttributeError:
-            raise ValueError(f"{cls.__name__} failed to parse line:\n{s!r}")
+            return cls(**{k:cls.cidfields[k].parse(v) for k,v in cls.parser.fullmatch(line).groupdict().items()})
+        except AttributeError as e:
+            raise ValueError(f"{cls.__name__} failed to parse line:\n{line!r}") from e
 
 
 def make_cid_line_cls(name_, **definitions):

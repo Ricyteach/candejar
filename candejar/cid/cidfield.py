@@ -61,8 +61,8 @@ class Field:
                 self.type_ = TYPE_SPEC_DEFAULT[type(self.default)]
             else:
                 self.type_ = type_
-        except KeyError:
-            raise FieldError(f"No default settings available for field of type {type(self.default).__name__}")
+        except KeyError as e:
+            raise FieldError(f"No default settings available for field of type {type(self.default).__name__}") from e
     def parse(self, s: Optional[str]) -> FieldType:
         try:
             return type(self.default)(s.strip())

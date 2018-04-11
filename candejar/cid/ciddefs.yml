@@ -13,16 +13,16 @@
         NGroups: [3, 1]
         Heading: [60, "From `pip install candejar`: Rick Teachey, rick@teachey.org"]
         Iterations: [5, -99]
-        CulvertID: [5, 0]
-        ProcessID: [5, 0]
-        SubdomainID: [5, 0]
+        CulvertID: [5, 0, True]
+        ProcessID: [5, 0, True]
+        SubdomainID: [5, 0, True]
 
     E1:
         prefix: "E-1"
         Start: [5, 0]
         Last: [5, 0]
         Factor: [10, 1.0]
-        Comment: [40, ""]
+        Comment: [40, "", True]
 
     Stop:
         prefix: null
@@ -40,7 +40,7 @@
     C1:
         prefix: "C-1.L3"
         Prep: [5, "PREP"]
-        Title: [40, ""]
+        Title: [40, "", True]
 
     C2:
         prefix: "C-2.L3"
@@ -124,7 +124,7 @@
         # 7: Composite Link, 8: Mohr/Coulomb
         Model: [5, 1]
         Density: [10, 0.0]
-        Name: [20, ""]
+        Name: [20, "", True]
         # overburden model only
         Layers: [2, 0, True]
 
@@ -150,7 +150,7 @@
         # 1.0 for in-situ materials
         ModuliAveraging: [10, 0.5]
         # Duncan: 0, Dancan/Selig: 1
-        Model: [5, 1]
+        DSModel: [5, 1]
         # Original: 0, Unloading: 1
         Unloading: [5, 1, True]
 
@@ -346,20 +346,20 @@
         # use if JointSlip>0
         # up to 15 fields of d4 integers
         Element1: [4, 0]
-        Element2: [4, 0]
-        Element3: [4, 0]
-        Element4: [4, 0]
-        Element5: [4, 0]
-        Element6: [4, 0]
-        Element7: [4, 0]
-        Element8: [4, 0]
-        Element9: [4, 0]
-        Element10: [4, 0]
-        Element11: [4, 0]
-        Element12: [4, 0]
-        Element13: [4, 0]
-        Element14: [4, 0]
-        Element15: [4, 0]
+        Element2: [4, 0, True]
+        Element3: [4, 0, True]
+        Element4: [4, 0, True]
+        Element5: [4, 0, True]
+        Element6: [4, 0, True]
+        Element7: [4, 0, True]
+        Element8: [4, 0, True]
+        Element9: [4, 0, True]
+        Element10: [4, 0, True]
+        Element11: [4, 0, True]
+        Element12: [4, 0, True]
+        Element13: [4, 0, True]
+        Element14: [4, 0, True]
+        Element15: [4, 0, True]
 
     B2dSteel:
         prefix: "B-2d.Steel"
@@ -367,20 +367,20 @@
         # use if JointSlip>0
         # up to 15 fields of f4 floats
         LengthRatio1: [4, 0.0]
-        LengthRatio2: [4, 0.0]
-        LengthRatio3: [4, 0.0]
-        LengthRatio4: [4, 0.0]
-        LengthRatio5: [4, 0.0]
-        LengthRatio6: [4, 0.0]
-        LengthRatio7: [4, 0.0]
-        LengthRatio8: [4, 0.0]
-        LengthRatio9: [4, 0.0]
-        LengthRatio10: [4, 0.0]
-        LengthRatio11: [4, 0.0]
-        LengthRatio12: [4, 0.0]
-        LengthRatio13: [4, 0.0]
-        LengthRatio14: [4, 0.0]
-        LengthRatio15: [4, 0.0]
+        LengthRatio2: [4, 0.0, True]
+        LengthRatio3: [4, 0.0, True]
+        LengthRatio4: [4, 0.0, True]
+        LengthRatio5: [4, 0.0, True]
+        LengthRatio6: [4, 0.0, True]
+        LengthRatio7: [4, 0.0, True]
+        LengthRatio8: [4, 0.0, True]
+        LengthRatio9: [4, 0.0, True]
+        LengthRatio10: [4, 0.0, True]
+        LengthRatio11: [4, 0.0, True]
+        LengthRatio12: [4, 0.0, True]
+        LengthRatio13: [4, 0.0, True]
+        LengthRatio14: [4, 0.0, True]
+        LengthRatio15: [4, 0.0, True]
 
     B3SteelADLRFD:
         prefix: "B-3.Steel.AD.LRFD"
@@ -390,7 +390,7 @@
         Seamϕ: [10, 1.0]
         Plasticϕ: [10, 0.9]
         DeflectionPercent: [10, 5.0] # percent
-        Combined: [10, 0.9] # deep corrug only
+        Combined: [10, 0.9, True] # deep corrug only
 
     B1Plastic:
         prefix: "B-1.Plastic"
@@ -405,8 +405,8 @@
 
     B2Plastic:
         prefix: "B-2.Plastic"
-        ShortModulus: [10, 0.0] # psi
-        ShortStrength: [10, 0.0] # psi
+        ShortModulus: [10, 0.0, True] # psi
+        ShortStrength: [10, 0.0, True] # psi
         LongModulus: [10, 0.0] # psi
         LongStrength: [10, 0.0] # psi
         Poissons: [10, 0.3]
