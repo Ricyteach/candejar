@@ -4,7 +4,7 @@
 
 from dataclasses import dataclass, field, InitVar
 from pathlib import Path
-from typing import List, Any, Type, Iterator, Iterable, Optional
+from typing import List, Any, Type, Iterator, Iterable, Optional, Union
 
 from .cidseq.names import ALL_SEQ_CLASS_NAMES
 from .names import ALL_SEQ_NAMES
@@ -137,9 +137,9 @@ class CidObj:
         i_line_types = self.process_line_objs()
         yield from line_strings(self, i_line_types)
 
-    def save(self, path: Path, mode="x"):
+    def save(self, path: Union[str, Path], mode="x"):
         """Save .cid file to the path."""
-        path = path.with_suffix(".cid")
+        path = Path(path).with_suffix(".cid")
         with path.open(mode):
             path.write_text("\n".join(self.iter_lines()))
 

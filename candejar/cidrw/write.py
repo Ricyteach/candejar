@@ -98,7 +98,7 @@ def line_strings(cid: CidObj, line_types: Iterable[CidLineType]) -> Iterator[str
     i_formatting = process_formatting(cid, lines)
     yield from (format(o, f) for o,f in zip(lines,i_formatting))
 
-def file(cid: CidObj, line_types: Iterable[CidLineType], path: Path, mode: str="x") -> None:
+def file(cid: CidObj, line_types: Iterable[CidLineType], path: Union[str, Path], mode: str="x") -> None:
     i_line_types = iter(line_types)
-    with path.open(mode):
+    with Path(path).open(mode):
         path.write_text("\n".join(line_strings(cid, i_line_types)))
