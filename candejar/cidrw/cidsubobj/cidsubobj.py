@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """A viewer for a CID sub object (pipe group, node, etc) using a `SimpleNamespace` instance returned on the fly."""
-from types import SimpleNamespace, new_class
+from types import new_class
 from typing import Generic, Union, TypeVar
 
 from .names import SUB_OBJ_CLASS_DICT, TYPE_DICT
@@ -19,16 +19,37 @@ CidObj = TypeVar("CidObj")
 CidSeq = TypeVar("CidSeq")
 
 
-class CidSubObj(ChildRegistryBase, SimpleNamespace, Generic[CidObj, CidSeq, CidSubLine, fea.FEAObj]):
+class CidSubObj(ChildRegistryBase, Generic[CidObj, CidSeq, CidSubLine, fea.FEAObj]):
     """A viewer object that gets its data from the `CidLine` objects in `.cid_obj`."""
 
-    def __init__(self, container: CidSeq, **kwargs: CidData):
+    def __init__(self, _container: CidSeq, _idx: int, **kwargs: CidData):
         # make ABC
         if type(self)==CidSubObj:
             raise TypeError("Can't instantiate abstract class CidSubObj without line_type attribute")
-        self.container = container
-        super().__init__(**kwargs)
+        self._container = _container
+        self._idx = _idx
+        self.__dict__.update(kwargs)
 
+    def __repr__(self):
+        items = ("{}={!r}".format(k, v) for k,v in vars(self).items() if k not in "_container _idx".split())
+        return "{}({})".format(type(self).__name__, ", ".join(items))
+
+    def __eq__(self, other):
+        return self.__repr__() == other.__repr__()
+
+    def _asdict(self):
+        return {k:v for k,v in vars(self).items() if k not in "_container _idx".split()}
+
+    def __getattribute__(self, name):
+        try:
+            return super().__getattribute__(name)
+        except AttributeError as e:
+            new_obj = self._container[self._idx]
+            d = self.__dict__ = new_obj.__dict__
+            try:
+                return d[name]
+            except KeyError:
+                raise e
 
 def subclass_CidSubObj(sub_line_type):
     """Produce a `CidSubObj` based subclass."""

@@ -67,6 +67,7 @@ class CidObj:
     nodes: CidSeq["CidObj", C3, fea.Node] = field(default=None, init=False, repr=False)
     elements: CidSeq["CidObj", C4, fea.Element] = field(default=None, init=False, repr=False)
     boundaries: CidSeq["CidObj", C5, fea.Boundary] = field(default=None, init=False, repr=False)
+    materials: CidSeq["CidObj", D1, fea.Material] = field(default=None, init=False, repr=False)  # all element materials
     soilmaterials: CidSeq["CidObj", D1, fea.Material] = field(default=None, init=False, repr=False)  # soil element materials
     interfmaterials: CidSeq["CidObj", D1, fea.Material] = field(default=None, init=False, repr=False)  # interface element materials
     factors: CidSeq["CidObj", E1, fea.Factor] = field(default=None, init=False, repr=False)  # lrfd step factors
@@ -74,18 +75,22 @@ class CidObj:
     def __post_init__(self, lines: Optional[Iterable[str]]) -> None:
         # initialize empty cid sub object sequence types
         for seq_name, seq_cls_name in zip(SEQ_NAMES, SEQ_CLASS_NAMES):
+            """
             # skip materials sequence; consists of soil and interf material sub sequences
             if seq_name == "materials":
                 continue
             # check for already existing sequence
             existing_seq_obj = getattr(self, seq_name)
+            """
             # initialize new empty sequence
             seq_obj = CidSeq.subclasses[seq_cls_name](self)
+            """
             # point seq object to existing seq if needed
-            if isinstance(existing_seq_obj, CidSeq):
+            if isinstance(existing_seq_obj, CidSeq.subclasses[seq_cls_name]):
                 seq_obj.set_seq(existing_seq_obj.seq)
             elif existing_seq_obj:
                 seq_obj.set_seq(existing_seq_obj)
+            """
             setattr(self, seq_name, seq_obj)
             """
             if any(not issubclass(obj.fea_obj, seq_obj.type_) for obj in existing_seq_obj):
@@ -152,9 +157,11 @@ class CidObj:
         except StopIteration:
             return C2()
 
+    '''
     @property
     def materials(self) -> CidSeq["CidObj", D1, fea.Material]:
         """The combination of the `soilmaterials`  and `interfmaterials` sequences."""
         seq_obj = Materials(self)
         seq_obj.set_seq(ChainSequence(self.soilmaterials, self.interfmaterials))
         return seq_obj
+    '''

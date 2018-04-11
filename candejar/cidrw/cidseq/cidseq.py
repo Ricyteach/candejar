@@ -65,7 +65,7 @@ class CidSeq(ChildRegistryBase, Sequence[SubObj], Generic[CidObj, CidSubLine, fe
         for obj in self.iter_sublines(val):
             d.update(asdict(obj))
         try:
-            result = CidSubObj.subclasses[SUB_OBJ_NAMES_DICT[self.line_type]](self, **d)
+            result = CidSubObj.subclasses[SUB_OBJ_NAMES_DICT[self.line_type]](self, val, **d)
         except CIDSubSeqError as e:
             raise IndexError(f"{val!s} not an available index for {self.line_type.__name__} object") from e
         return result

@@ -19,15 +19,34 @@ def shallow_asdict(obj):
         raise TypeError("shallow_asdict() should be called on dataclass instances")
 
 def shallow_mapify(o: Any) -> Mapping:
-    """Shallowly onvert an object so it can be unpacked as **kwargs to another context."""
+    """Shallowly convert an object so it can be unpacked as **kwargs to another context."""
     if isinstance(o, type):
-        raise TypeError("Received command to turn the class instance of {o.__name__!s} to a mapping")
+        raise TypeError(f"Cannot turn the class object {o.__name__!s} to a mapping")
     if is_dataclass(o):
         return shallow_asdict(o)
-    elif isinstance(o, Mapping):
-        return o
+    try:
+        return o._asdict()
+    except AttributeError:
+        pass
+    try:
+        return o.asdict()
+    except AttributeError:
+        pass
+    try:
+        return dict(o)
+    except TypeError:
+        pass
+    try:
+        slots = o.__slots__
+    except AttributeError:
+        pass
     else:
+        return dict(zip(slots, (getattr(o, s) for s in slots if hasattr(o, s))))
+    try:
         return vars(o)
+    except Exception:
+        pass
+    raise TypeError(f"Failed to turn the class instance of {type(o).__name__!s} to a mapping")
 
 def unmapify(d: Mapping, f: Callable, key_validator: Callable[[Any], bool]=lambda k: True):
     """Feed a mapping to a function using only validated keys."""
