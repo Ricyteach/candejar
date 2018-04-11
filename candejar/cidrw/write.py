@@ -1,31 +1,31 @@
 # -*- coding: utf-8 -*-
 
 """Contains the procedure for writing a `CidObj` to a .cid file."""
-from itertools import chain, tee, repeat
+from itertools import chain, repeat
 from pathlib import Path
-from typing import Iterator, TypeVar, Mapping, Type, Optional, Tuple, Iterable, Collection, Union
+from typing import Iterator, TypeVar, Mapping, Type, Optional, Iterable, Collection, Union, Counter, Callable
 
-from .exc import CIDRWError
-from ..utilities.dataclasses import unmapify, mapify
-from ..cid import A1, A2, C1, C2, C3, C4, C5, D1, E1, Stop
+from ..cidobjrw.names import SEQ_LINE_TYPE_NAME_DICT, SEQ_LINE_TYPE_TOTAL_DICT
+from ..cid import TOP_LEVEL_TYPES, CIDL_FORMAT_TYPES
+from ..utilities.cidobj import forgiving_dynamic_attr, SpecialError
+from ..utilities.dataclasses import unmapify, shallow_mapify
+from ..cid import Stop
 from ..cid import CidLine
-
-SEQ_TYPES = {A2: "pipe_groups", C3: "nodes", C4: "elements", C5: "boundaries", D1: "materials", E1: "factors"}
-TOP_LEVEL_TYPES = SEQ_TYPES.keys() | {A1, C1, C2, Stop}  # marks end of B1 etc. or D2 etc. sub lines
+from .exc import CIDRWError
 
 CidObj = TypeVar("CidObj")
 CidLineType = Type[CidLine]
 
-def get_target(cid: CidObj, line_type: CidLineType) -> Union[Collection, CidObj]:
+def forgiving_cid_attr(cid: CidObj, attr_getter: Callable[[], Optional[str]]
+                       ) -> Union[CidObj, Collection, str, int, float]:
+    """Extends `forgiving_dynamic_attr` by raising `CIDRWError` when the
+    requested cid attribute name is missing.
+    """
     try:
-        target_obj_name: str = SEQ_TYPES[line_type]
-    except KeyError:
-        return cid
-    else:
-        try:
-            return getattr(cid, target_obj_name)
-        except AttributeError:
-            raise CIDRWError(f"Incomplete CidObj: {target_obj_name!s} collection is missing")
+        return forgiving_dynamic_attr(cid, attr_getter)
+    except SpecialError:
+        target_obj_name: Optional[str] = attr_getter()
+        raise CIDRWError(f"Incomplete cid object: {target_obj_name!s} is missing")
 
 def process_lines(cid: CidObj, line_types: Iterable[CidLineType]) -> Iterator[CidLine]:
     """Logic for producing `CidLine` instances from a cid object namespace and line type iterable."""
@@ -34,16 +34,16 @@ def process_lines(cid: CidObj, line_types: Iterable[CidLineType]) -> Iterator[Ci
     while True:  # top level objects loop
         try:
             line_type = next(i_line_types)
-            target_obj = get_target(cid, line_type)
+            target_obj = forgiving_cid_attr(cid, lambda: SEQ_LINE_TYPE_NAME_DICT.get(line_type))
             if target_obj is cid:
                 target_obj = [target_obj]
             if not len(target_obj):
                 raise CIDRWError(f"A {line_type.__name__} line type was encountered for processing but the "
-                                 f"cid.{SEQ_TYPES[line_type]} collection is empty.")
+                                 f"cid.{SEQ_LINE_TYPE_NAME_DICT[line_type]} collection is empty.")
             for subobj in target_obj:  # re-use same subobj for every line until new top-level line encountered
                 # `valid_fields` and `line_type` already been iterated at this point
                 # (either in top-level loop or sub level loop)
-                d: Mapping = mapify(subobj)
+                d: Mapping = shallow_mapify(subobj)
                 yield unmapify(d, line_type, lambda k: k in line_type.cidfields)  # A1, A2, C1, C2, D1, E1 yielded here
                 while True:  # sub level objects loop
                     # look ahead in `i_line_types`
@@ -66,24 +66,39 @@ def process_lines(cid: CidObj, line_types: Iterable[CidLineType]) -> Iterator[Ci
                 raise CIDRWError(f"Encountered StopIteration before Stop object; last line type was "
                                  f"{line_type.__name__!s}")
 
-def lines_w_formatting(cid: CidObj, line_types: Iterable[CidLineType]) -> Iterator[Tuple[CidLine, str]]:
+def process_formatting(cid: CidObj, i_lines: Iterable[CidLine],
+                       total_getter = lambda cid,t: forgiving_cid_attr(cid, lambda: SEQ_LINE_TYPE_TOTAL_DICT.get(t))
+                       ) -> Iterator[str]:
     """The line object and appropriate format code as a tuple: (line_obj, format_str)
 
     The number of objects in A1, C2 (steps, nodes, elements, boundaries, soils materials, and interface materials)
     are updated to match lengths of sub-object sequences.
     The `A2.num` attribute (i.e., the number of pipe elements) for each pipe group is updated.
+
+    By default the total_getter determines the correct total of each line_type (t) by a function that looks up the total
+    defined by the cid object. Alternatively a different function could be provided such as one that counts the number
+    of lines of that type in the subsequences of the cid object. Example:
+
+        process_formatting(cid, i_lines, total_getter = lambda cid,t: len(getattr(cid, SEQ_LINE_TYPE_NAME_DICT[t])))
     """
-    i_line_types = iter(line_types)
-    i_lines = process_lines(cid, i_line_types)
-    # TODO: write logic to match docstring for this generator
-    yield from zip(i_lines, repeat("cid"))
+    lines = list(i_lines)
+    types = [type(x) for x in lines]
+    type_totals = {t:total_getter(cid,t) for t in types}
+    type_counter = Counter()
+    format_strs = list(repeat("cid", len(lines)))
+    for idx,t in enumerate(types):
+        if t in CIDL_FORMAT_TYPES:
+            type_counter[t] += 1
+            if type_counter[t]>=type_totals[t]:
+                format_strs[idx] += "L"
+    yield from format_strs
 
 def line_strings(cid: CidObj, line_types: Iterable[CidLineType]) -> Iterator[str]:
-    i_line_types = iter(line_types)
-    ilines_w_formatting = lines_w_formatting(cid, i_line_types)
-    yield from (format(o, f) for o,f in ilines_w_formatting)
+    lines = list(process_lines(cid, line_types))
+    i_formatting = process_formatting(cid, lines)
+    yield from (format(o, f) for o,f in zip(lines,i_formatting))
 
-def file(cid: CidObj, line_types: Iterable[CidLineType], path: Path, mode: str="x") -> None:
+def file(cid: CidObj, line_types: Iterable[CidLineType], path: Union[str, Path], mode: str="x") -> None:
     i_line_types = iter(line_types)
-    with path.open(mode):
+    with Path(path).open(mode):
         path.write_text("\n".join(line_strings(cid, i_line_types)))

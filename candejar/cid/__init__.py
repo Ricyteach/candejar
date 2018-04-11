@@ -7,3 +7,8 @@ from .cidlineclasses import A1, A2, C1, C2, C3, C4, C5, E1, Stop, D1, D2Isotropi
 from .cidline import CidLine
 
 CidSubLine = TypeVar("CidSubLine", A2, C3, C4, C5, D1, E1)
+
+# below definitions for read/write of cid objects
+SEQ_LINE_TYPES = (A2, C3, C4, C5, D1, E1)  # note: needs to be ordered
+TOP_LEVEL_TYPES = set(SEQ_LINE_TYPES) | {A1, C1, C2, Stop}  # marks end of B1 etc. or D2 etc. sub lines
+CIDL_FORMAT_TYPES = set(SEQ_LINE_TYPES) - {A2}  # lines types that can use cidL format
