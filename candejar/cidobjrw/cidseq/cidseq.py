@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """Module defining CidSeq base object."""
+import types
 from dataclasses import field, InitVar, make_dataclass, dataclass, asdict
 from typing import Sequence, Generic, Type, Iterator, Union, TypeVar, Counter
 
@@ -93,7 +94,6 @@ def subclass_CidSeq(sub_line_type):
     SubLine = sub_line_type  # type of CidLine indicating start of an object in CID file
     FEA_Obj = FEA_TYPE_DICT[sub_line_type]  # type of FEA object corresponding to CID object
 
-    cls = make_dataclass(cls_name, (("line_type", Type[SubLine], field(default=SubLine, init=False, repr=False)),),
-                         bases = (CidSeq[CidObj, SubLine, FEA_Obj], Generic[CidObj]), eq=False)
+    cls = types.new_class(cls_name, (CidSeq[CidObj, SubLine, FEA_Obj], Generic[CidObj]), exec_body=lambda ns: ns.update(dict(line_type=SubLine)))
 
     return cls
