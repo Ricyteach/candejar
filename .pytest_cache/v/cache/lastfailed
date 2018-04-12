@@ -5,5 +5,6 @@
   "tests/test_cid.py::TestCidLine::()::test_parse": true,
   "tests/test_cidline.py::TestCidLine::()::test_format": true,
   "tests/test_cidline.py::TestCidLine::()::test_parse": true,
+  "tests/test_cidobj_abc.py::test_candebase": true,
   "tests/test_cidseq.py::test_iteration": true
 }
