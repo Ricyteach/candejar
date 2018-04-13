@@ -2,13 +2,20 @@
 
 """The interface for cid type objects expected by the module."""
 from dataclasses import dataclass, field, asdict
-from typing import Collection
+from typing import MutableMapping, Mapping, Union, Sequence
 
+from ..cidobjrw.cidsubobj.cidsubobj import CidSubObj, CidData
+from ..cidobjrw.names import ALL_SEQ_NAMES
+from ..utilities.dataclasses import shallow_mapify
 from ..utilities.collections import ChainSequence
 from ..cidobjrw.cidobj import CidObj
 
 
 class CandeError(Exception):
+    pass
+
+
+class IncompleteCandeObjError(CandeError):
     pass
 
 
@@ -32,19 +39,27 @@ class CandeObj:
     ninterfmaterials: int = field(default=0)
 
     # sequences of sub objects
-    pipe_groups: Collection = field(default_factory=list)
-    nodes: Collection = field(default_factory=list)
-    elements: Collection = field(default_factory=list)
-    boundaries: Collection = field(default_factory=list)
-    soilmaterials: Collection = field(default_factory=list)
-    interfmaterials: Collection = field(default_factory=list)
-    factors: Collection = field(default_factory=list)
+    pipe_groups: Sequence = field(default_factory=list)
+    nodes: Sequence = field(default_factory=list)
+    elements: Sequence = field(default_factory=list)
+    boundaries: Sequence = field(default_factory=list)
+    soilmaterials: Sequence = field(default_factory=list)
+    interfmaterials: Sequence = field(default_factory=list)
+    factors: Sequence = field(default_factory=list)
 
     @classmethod
-    def loadcid(cls, cid: CidObj):
-        d = asdict(cid)
-        d.pop("materials")
-        return cls(**d)
+    def loadcid(cls, cid: Union[CidObj, Mapping[str,Union[CidData, Sequence[Union[CidSubObj, Mapping[str, CidData]]]]]]) -> "CandeObj":
+        map: MutableMapping = shallow_mapify(cid)
+        map.pop("materials",None)
+        for seq_k in ALL_SEQ_NAMES:
+            try:
+                seq = map[seq_k]
+            except KeyError:
+                if seq_k == "materials":
+                    continue
+                seq = []
+            map[seq_k] = shallow_mapify(seq)
+        return cls(**map)
 
     @property
     def materials(self):

@@ -2,7 +2,7 @@
 
 """Names relating the cid line types to the CidObj attributes"""
 
-from ..cid import SEQ_LINE_TYPES, TOP_LEVEL_TYPES, CIDL_FORMAT_TYPES, A2, C3, C4, C5, E1, D1
+from ..cid import SEQ_LINE_TYPES, A2, C3, C4, C5, E1, D1
 from .. import fea
 
 # below for sequence attributes of CidObj instances

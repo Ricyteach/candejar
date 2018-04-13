@@ -2,7 +2,7 @@
 
 """A viewer for a CID sub object (pipe group, node, etc) using a `SimpleNamespace` instance returned on the fly."""
 from types import new_class
-from typing import Generic, Union, TypeVar
+from typing import Generic, Union, TypeVar, MutableMapping
 
 from ..names import FEA_TYPE_DICT
 from .names import SUB_OBJ_CLASS_DICT
@@ -31,15 +31,15 @@ class CidSubObj(ChildRegistryBase, Generic[CidObj, CidSeq, CidSubLine, fea.FEAOb
         self._idx = _idx
         self.__dict__.update(kwargs)
 
+    def _asdict(self) -> MutableMapping[str, CidData]:
+        return {k:v for k,v in vars(self).items() if k not in "_container _idx".split()}
+
     def __repr__(self):
         items = ("{}={!r}".format(k, v) for k,v in vars(self).items() if k not in "_container _idx".split())
         return "{}({})".format(type(self).__name__, ", ".join(items))
 
     def __eq__(self, other):
         return self.__repr__() == other.__repr__()
-
-    def _asdict(self):
-        return {k:v for k,v in vars(self).items() if k not in "_container _idx".split()}
 
     def __getattribute__(self, name):
         try:

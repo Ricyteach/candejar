@@ -2,14 +2,16 @@
 
 """Module defining CidSeq base object."""
 import types
-from dataclasses import field, InitVar, make_dataclass, dataclass, asdict
-from typing import Sequence, Generic, Type, Iterator, Union, TypeVar, Counter
+from dataclasses import InitVar, dataclass, asdict
+from typing import Sequence, Generic, Type, Iterator, Union, TypeVar, Counter, MutableMapping, MutableSequence, Mapping
 
 from ... import fea
 from ...cid import CidSubLine, TOP_LEVEL_TYPES
 from ...utilities.mixins import ChildRegistryBase
+from ...utilities.dataclasses import shallow_mapify
 from ..cidsubobj import CidSubObj, SUB_OBJ_NAMES_DICT
 from ..exc import CIDObjError
+from ..cidsubobj.cidsubobj import CidData
 from ..names import FEA_TYPE_DICT
 from .names import SEQ_CLASS_DICT
 
@@ -64,6 +66,9 @@ class CidSeq(ChildRegistryBase, Sequence[SubObj], Generic[CidObj, CidSubLine, fe
                 break
             else:
                 yield line
+
+    def _asdict(self) -> MutableSequence[Mapping[str,CidData]]:
+        return [shallow_mapify(i) for i in self]
 
     def __getitem__(self, val: Union[slice, int]) -> SubObj:
         # TODO: implement slicing
