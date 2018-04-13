@@ -18,16 +18,23 @@ def test_rw_cid_obj(cid_obj_standard, cid_standard_lines):
     assert len(cid_obj_standard.materials) == 3
     assert len(cid_obj_standard.soilmaterials) == 3
     assert len(cid_obj_standard.interfmaterials) == 0
+
+    assert cid_obj_standard.nnodes == 1471
+    assert cid_obj_standard.nelements == 2047
+    assert cid_obj_standard.nboundaries == 46
+    assert cid_obj_standard.nmaterials == 3
+    assert cid_obj_standard.nsoilmaterials == 3
+    assert cid_obj_standard.ninterfmaterials == 0
+
     cid_output_path = Path(__file__).resolve().parents[0].joinpath("output_test1.cid")
     cid_obj_standard.save(cid_output_path, mode="w")
     assert cid_standard_lines == cid_output_path.read_text().split("\n")
 
-def test_write_blank_cid_obj():
-    c = CidObj()
+def test_write_blank_cid_obj(cid_blank):
     p = Path(__file__).resolve().parents[0].joinpath("bad_output_test.cid")
     # raises error because sub sequences are all empty
     with pytest.raises(CIDRWError):
-        c.save(p, mode="w")
+        cid_blank.save(p, mode="w")
 
 @pytest.mark.skip(reason="only works on local machine")
 def test_open_wild_files():

@@ -11,8 +11,7 @@ from .names import ALL_SEQ_NAMES
 from ..cidrw.write import line_strings
 from .. import fea
 from ..cid import CidLine, A1, A2, C1, C2, C3, C4, C5, D1, E1, Stop
-from .exc import CIDObjError
-# from ..utilities.collections import ChainSequence
+from .exc import InvalidCIDLinesError, IncompleteCIDLinesError
 from ..cidprocessing.main import process as process_cid
 from .cidseq import CidSeq
 
@@ -40,13 +39,16 @@ class AttributeDelegator:
 
 @dataclass
 class CidObj:
-    """For working with a .cid file as a Python data model object.
+    """A data viewer for working with a .cid file as a Python data model object.
 
     Note that the `CidObj` does not necessarily define a `dataclass` field for every cid A1, C1, and C2 field. This means,
     for example, that an input cid file read into `CidObj` will change all non-included fields to *default values* when it
     mapified and/or written, since mapify grabs only from `dataclass` fields (if they exist).
+
+    A `list` of cid file line objects is stored in `line_objs`. Other members are on-the-fly views of the data contained
+    in the line objects. However `line_objs` is not a `dataclass` field.
     """
-    # only input parameter is lines; not stored
+    # only input parameter is lines; not stored (converted to cid line objects)
     lines: InitVar[Optional[Iterable[str]]] = field(default=None)  # cid file line objects
 
     # all other fields are for display/output
@@ -82,30 +84,10 @@ class CidObj:
     def __post_init__(self, lines: Optional[Iterable[str]]) -> None:
         # initialize empty cid sub object sequence types
         for seq_name, seq_cls_name in zip(ALL_SEQ_NAMES, ALL_SEQ_CLASS_NAMES):
-            """
-            # skip materials sequence; consists of soil and interf material sub sequences
-            if seq_name == "materials":
-                continue
-            # check for already existing sequence
-            existing_seq_obj = getattr(self, seq_name)
-            """
             # initialize new empty sequence
             seq_obj = CidSeq.subclasses[seq_cls_name](self)
-            """
-            # point seq object to existing seq if needed
-            if isinstance(existing_seq_obj, CidSeq.subclasses[seq_cls_name]):
-                seq_obj.set_seq(existing_seq_obj.seq)
-            elif existing_seq_obj:
-                seq_obj.set_seq(existing_seq_obj)
-            """
             setattr(self, seq_name, seq_obj)
-            """
-            if any(not issubclass(obj.fea_obj, seq_obj.type_) for obj in existing_seq_obj):
-                i, c = next(enumerate(o for o in existing_seq_obj if not issubclass(o.fea_obj, seq_obj.type_)))
-                raise CIDObjError(f"The class ({c.__name__}) of item seq[{i}] is not a {seq_obj.type_.__name__} subclass.")
-            """
 
-        # cid file line objects stored; other objects are views
         if lines is None:
             lines = []
         self.line_objs: List[CidLine] = []
@@ -116,15 +98,19 @@ class CidObj:
                 line_type = next(iter_line_types)
             except StopIteration:
                 if line.strip() and not isinstance(self.line_objs[-1], Stop):
-                    raise CIDObjError("End of file reached before encountering"
-                                     "STOP statement.")
+                    raise InvalidCIDLinesError("STOP statement reached before encountering end of file.")
+                continue
             else:
                 self.line_objs.append(line_type.parse(line))
-
-        """
-        for seq in (getattr(self, n) for n in ALL_SEQ_NAMES):
-            seq.update_seq()
-        """
+        if lines:
+            # check for completed processing
+            try:
+                next(iter_line_types)
+            except StopIteration:
+                pass
+            else:
+                raise IncompleteCIDLinesError(f"The .cid file appears to be incomplete. "
+                                              f"Last encountered line type: {line_type.__name__}")
 
     def process_line_objs(self) -> Iterator[Type[CidLine]]:
         yield from process_cid(self)
