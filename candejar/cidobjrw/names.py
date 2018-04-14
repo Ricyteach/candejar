@@ -18,5 +18,5 @@ FEA_TYPE_DICT = {A2: fea.PipeGroup, C3: fea.Node, C4: fea.Element, C5: fea.Bound
 
 # below for sequence total attributes of CidObj instances; using nmaterials (instead of nsoilmaterials and ninterface materials)
 # because nmterials is used when iterating ALL lines types of D1 (for reading/writing only since .cid file treats them the same)
-SEQ_LINE_TYPE_TOTALS = ("ngroups", "nnodes", "nelements", "nboundaries", "nmaterials", "nfactors")
+SEQ_LINE_TYPE_TOTALS = ("ngroups", "nnodes", "nelements", "nboundaries", "nmaterials", "nsteps")
 SEQ_LINE_TYPE_TOTAL_DICT = dict(zip(SEQ_LINE_TYPES, SEQ_LINE_TYPE_TOTALS))

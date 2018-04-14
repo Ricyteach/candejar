@@ -64,3 +64,7 @@ class CandeObj:
     @property
     def materials(self):
         return ChainSequence(self.soilmaterials, self.interfmaterials)
+
+    @property
+    def nmaterials(self):
+        return self.nsoilmaterials + self.ninterfmaterials
