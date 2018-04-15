@@ -1,4 +1,24 @@
-input_test_standard1 = """                      A-1!!ANALYS   3 0  119962-3 Weholite Inlet Pipe Run 1 (flooded)                   -99               
+cidmock_standard_lines = """                      A-1!!ANALYS   3 0  3From `pip install candejar`: Rick Teachey, rick@teachey.org   -99               
+                   A-2.L3!!ALUMINUM      0
+                 B-1.Alum!!10.0E6          0.3324.0E3    24.0E3          0.000.05*10E6     2    0
+               B-2.Alum.A!!      0.00      0.00      0.00
+                   A-2.L3!!PLASTIC       0
+              B-1.Plastic!!GENERAL   HDPE          1    0
+              B-2.Plastic!!                          0.00      0.00      0.30      0.00
+     B-3.Plastic.A.Smooth!!      0.00      0.00      0.00      0.00
+                   A-2.L3!!STEEL         0
+                B-1.Steel!!29.0E6          0.3033.0E3    33.0E3          0.00      0.00    0    2    0
+              B-2.Steel.A!!      0.00      0.00      0.00      0.00
+                   C-1.L3!!PREP                                         
+                   C-2.L3!!    0    3    1    3    0    0    0    0    1    1    1
+                      D-1!!    0    1      0.00                      
+            D-2.Isotropic!!      0.00      0.00
+                      D-1!!L   0    6      0.00                      
+            D-2.Interface!!      0.00      0.00      1.00      0.00
+STOP"""
+
+
+standard_lines = """                      A-1!!ANALYS   3 0  119962-3 Weholite Inlet Pipe Run 1 (flooded)                   -99               
                    A-2.L3!!PLASTIC      36
               B-1.Plastic!!GENERAL   HDPE          2    1
               B-2.Plastic!!                      28000.00   1998.62      0.45      0.04

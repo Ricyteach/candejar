@@ -6,11 +6,14 @@ class CIDObjError(Exception):
     """Base exception for `cidobjrw` module"""
     pass
 
-class InvalidCIDLinesError(CIDObjError):
-    """Raised when `StopIteration` encountered unexpectedly during cid line processing."""
+class IncompleteCIDLinesError(CIDObjError):
+    """Raised when STOP statement not reached during processing."""
     pass
 
-class IncompleteCIDLinesError(InvalidCIDLinesError):
-    """Raised when cid line file appears to be incomplete."""
+class CIDLineProcessingError(CIDObjError):
+    """Raised when error occurs during processing."""
     pass
 
+class CidRWSubclassSignatureError(CIDObjError):
+    """Raised when CidRW sublcassed with required init arguments"""
+    pass

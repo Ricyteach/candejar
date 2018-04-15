@@ -3,17 +3,17 @@
 """CID object module for working with an entire cid file as a read/write Python data model object."""
 
 from dataclasses import dataclass, field, InitVar
-from pathlib import Path
-from typing import List, Any, Type, Iterator, Iterable, Optional, Union
+from typing import List, Any, Iterable, Optional, Generator, Tuple
 
+from ..cidrw.write import CidLineStr
 from .cidseq.names import ALL_SEQ_CLASS_NAMES
 from .names import ALL_SEQ_NAMES
-from ..cidrw.write import line_strings
 from .. import fea
 from ..cid import CidLine, A1, A2, C1, C2, C3, C4, C5, D1, E1, Stop
-from .exc import InvalidCIDLinesError, IncompleteCIDLinesError
-from ..cidprocessing.main import process as process_cid
+from .exc import IncompleteCIDLinesError, CIDLineProcessingError
+from .cidrwabc import CidRW
 from .cidseq import CidSeq
+
 
 class AttributeDelegator:
     """Delegates attribute access to another named object attribute."""
@@ -38,7 +38,7 @@ class AttributeDelegator:
 
 
 @dataclass
-class CidObj:
+class CidObj(CidRW):
     """A data viewer for working with a .cid file as a Python data model object.
 
     Note that the `CidObj` does not necessarily define a `dataclass` field for every cid A1, C1, and C2 field. This means,
@@ -88,22 +88,35 @@ class CidObj:
             seq_obj = CidSeq.subclasses[seq_cls_name](self)
             setattr(self, seq_name, seq_obj)
 
-        if lines is None:
-            lines = []
+        # initialize empty line_objs list
         self.line_objs: List[CidLine] = []
+
+        if lines is None:
+            # no lines provided
+            return
+
         # build line_objs sequence
-        iter_line_types = self.process_line_objs()
-        for line in lines:
+        iter_line_types = self.process_line_types()
+        iter_lines = iter(lines)
+        line_type = None
+        for line in iter_lines:
             try:
                 line_type = next(iter_line_types)
             except StopIteration:
-                if line.strip() and not isinstance(self.line_objs[-1], Stop):
-                    raise InvalidCIDLinesError("STOP statement reached before encountering end of file.")
-                continue
+                if issubclass(line_type, Stop):
+                    break
+                else:
+                    raise CIDLineProcessingError("An error occurred before "
+                                                 "processing was completed")
             else:
                 self.line_objs.append(line_type.parse(line))
+        # check for errors
         if lines:
             # check for completed processing
+            if not issubclass(line_type, Stop):
+                raise CIDLineProcessingError("STOP statement was not reached "
+                                             "before encountering end of file.")
+            # check for STOP
             try:
                 next(iter_line_types)
             except StopIteration:
@@ -112,22 +125,26 @@ class CidObj:
                 raise IncompleteCIDLinesError(f"The .cid file appears to be incomplete. "
                                               f"Last encountered line type: {line_type.__name__}")
 
-    def process_line_objs(self) -> Iterator[Type[CidLine]]:
-        yield from process_cid(self)
+        # check for leftover lines
+        for line in iter_lines:
+            if line.strip():
+                raise CIDLineProcessingError("There appear to be extraneous "
+                                             "data lines at the end of the file.")
 
-    def iter_lines(self) -> Iterator[str]:
-        """The formatted .cid file line strings from current object state.
-
-        The number of objects in A1, C2 are updated to match lengths of sub-object sequences.
+    def process_line_strings(self) -> Generator[None, Tuple[CidLine, CidLineStr], None]:
+        """Creates the line_objs list and adds the parsed line objects that
+        constitute the object state
         """
-        i_line_types = self.process_line_objs()
-        yield from line_strings(self, i_line_types)
-
-    def save(self, path: Union[str, Path], mode="x"):
-        """Save .cid file to the path."""
-        path = Path(path).with_suffix(".cid")
-        with path.open(mode):
-            path.write_text("\n".join(self.iter_lines()))
+        # initialize empty line_objs list
+        self.line_objs: List[CidLine] = []
+        while True:
+            # receive line string
+            line_type, line = yield
+            # create line object
+            self.line_objs.append(line_type.parse(line))
+            # the STOP object signals the end of processing
+            if issubclass(line_type, Stop):
+                break
 
     @property
     def a1(self) -> A1:
@@ -149,12 +166,3 @@ class CidObj:
             return next(line_obj for line_obj in self.line_objs if isinstance(line_obj, C2))
         except StopIteration:
             return C2()
-
-    '''
-    @property
-    def materials(self) -> CidSeq["CidObj", D1, fea.Material]:
-        """The combination of the `soilmaterials`  and `interfmaterials` sequences."""
-        seq_obj = MaterialSeq(self)
-        seq_obj.set_seq(ChainSequence(self.soilmaterials, self.interfmaterials))
-        return seq_obj
-    '''

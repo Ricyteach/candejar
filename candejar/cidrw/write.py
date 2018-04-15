@@ -3,8 +3,10 @@
 """Contains the procedure for writing a `CidObj` to a .cid file."""
 from itertools import chain, repeat
 from pathlib import Path
-from typing import Iterator, TypeVar, Mapping, Type, Optional, Iterable, Collection, Union, Counter, Callable
+from typing import Iterator, TypeVar, Mapping, Type, Optional, Iterable, Collection, Union, Counter, Callable, NewType, \
+    Generator, Tuple
 
+from ..cidobjrw.exc import CIDLineProcessingError, IncompleteCIDLinesError
 from ..cidobjrw.names import SEQ_LINE_TYPE_NAME_DICT, SEQ_LINE_TYPE_TOTAL_DICT
 from ..cid import TOP_LEVEL_TYPES, CIDL_FORMAT_TYPES
 from ..utilities.cidobj import forgiving_dynamic_attr, SpecialError
@@ -15,6 +17,8 @@ from .exc import CIDRWError
 
 CidObj = TypeVar("CidObj")
 CidLineType = Type[CidLine]
+CidLineStr = NewType("CidLineStr", str)
+FormatStr = NewType("FormatStr", str)
 
 def forgiving_cid_attr(cid: CidObj, attr_getter: Callable[[], Optional[str]]
                        ) -> Union[CidObj, Collection, str, int, float]:
@@ -68,7 +72,7 @@ def process_lines(cid: CidObj, line_types: Iterable[CidLineType]) -> Iterator[Ci
 
 def process_formatting(cid: CidObj, i_lines: Iterable[CidLine],
                        total_getter = lambda cid,t: forgiving_cid_attr(cid, lambda: SEQ_LINE_TYPE_TOTAL_DICT.get(t))
-                       ) -> Iterator[str]:
+                       ) -> Iterator[FormatStr]:
     """The line object and appropriate format code as a tuple: (line_obj, format_str)
 
     The number of objects in A1, C2 (steps, nodes, elements, boundaries, soils materials, and interface materials)
@@ -93,7 +97,7 @@ def process_formatting(cid: CidObj, i_lines: Iterable[CidLine],
                 format_strs[idx] += "L"
     yield from format_strs
 
-def line_strings(cid: CidObj, line_types: Iterable[CidLineType]) -> Iterator[str]:
+def line_strings(cid: CidObj, line_types: Iterable[CidLineType]) -> Iterator[CidLineStr]:
     lines = list(process_lines(cid, line_types))
     i_formatting = process_formatting(cid, lines)
     yield from (format(o, f) for o,f in zip(lines,i_formatting))
@@ -102,3 +106,44 @@ def file(cid: CidObj, line_types: Iterable[CidLineType], path: Union[str, Path],
     i_line_types = iter(line_types)
     with Path(path).open(mode):
         path.write_text("\n".join(line_strings(cid, i_line_types)))
+
+def parse(cid: CidObj, lines: Iterable[CidLineStr],
+          iter_line_types: Iterable[CidLineType],
+          iter_line_strings_in: Generator[None, Tuple[Type[CidLine], CidLineStr], None]) -> None:
+    # start the receving generator and line iterator
+    iter_lines = iter(lines)
+    next(iter_line_strings_in)
+
+    line_type = None
+    for line in iter_lines:
+        try:
+            line_type = next(iter_line_types)
+        except StopIteration:
+            if issubclass(line_type, Stop):
+                break
+            else:
+                raise CIDLineProcessingError("An error occurred before "
+                                             "processing was completed")
+        else:
+            iter_line_strings_in.send((line_type, line))
+    # check for errors
+    else:
+        # check for completed processing
+        if not issubclass(line_type, Stop):
+            raise CIDLineProcessingError("STOP statement was not reached "
+                                         "before encountering end of file.")
+        # check for STOP
+        try:
+            next(iter_line_types)
+        except StopIteration:
+            pass
+        else:
+            raise IncompleteCIDLinesError(f"The .cid file appears to be incomplete. "
+                                          f"Last encountered line type: {line_type.__name__}")
+
+    # check for leftover lines
+    for line in iter_lines:
+        if line.strip():
+            raise CIDLineProcessingError("There appear to be extraneous "
+                                         "data lines at the end of the file.")
+    return cid

@@ -2,6 +2,7 @@
 
 """The interface for cid type objects expected by the module."""
 from dataclasses import dataclass, field, asdict
+from pathlib import Path
 from typing import MutableMapping, Mapping, Union, Sequence
 
 from ..cidobjrw.cidsubobj.cidsubobj import CidSubObj, CidData
@@ -55,6 +56,7 @@ class CandeObj:
             try:
                 seq = map[seq_k]
             except KeyError:
+                # materials is a property
                 if seq_k == "materials":
                     continue
                 seq = []
@@ -68,3 +70,10 @@ class CandeObj:
     @property
     def nmaterials(self):
         return self.nsoilmaterials + self.ninterfmaterials
+
+    def save(self, path: Union[str, Path], mode="x"):
+        """Save .cid file to the path."""
+        path = Path(path).with_suffix(".cid")
+        with path.open(mode):
+            path.write_text("\n".join(self.iter_lines()))
+
