@@ -44,8 +44,11 @@ class CidRW(ABC):
         return  obj
 
     def _post_init(self, lines: Optional[Iterable[CidLineStr]]=None) -> None:
-        # if no lines provided, result is same as cls()
-        if lines is not None:
+        """Construct the object state from lines.
+
+        If no lines are provided, result is same as cls()
+        """
+        if lines:
             iter_line_types = self.process_line_types()
             iter_line_strings_in = self.process_line_strings()
             parse(self, lines, iter_line_types, iter_line_strings_in)

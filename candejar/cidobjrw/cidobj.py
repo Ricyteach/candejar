@@ -10,7 +10,6 @@ from .cidseq.names import ALL_SEQ_CLASS_NAMES
 from .names import ALL_SEQ_NAMES
 from .. import fea
 from ..cid import CidLine, A1, A2, C1, C2, C3, C4, C5, D1, E1, Stop
-from .exc import IncompleteCIDLinesError, CIDLineProcessingError
 from .cidrwabc import CidRW
 from .cidseq import CidSeq
 
@@ -87,56 +86,16 @@ class CidObj(CidRW):
             # initialize new empty sequence
             seq_obj = CidSeq.subclasses[seq_cls_name](self)
             setattr(self, seq_name, seq_obj)
-
         # initialize empty line_objs list
         self.line_objs: List[CidLine] = []
-
-        if lines is None:
-            # no lines provided
-            return
-
-        # build line_objs sequence
-        iter_line_types = self.process_line_types()
-        iter_lines = iter(lines)
-        line_type = None
-        for line in iter_lines:
-            try:
-                line_type = next(iter_line_types)
-            except StopIteration:
-                if issubclass(line_type, Stop):
-                    break
-                else:
-                    raise CIDLineProcessingError("An error occurred before "
-                                                 "processing was completed")
-            else:
-                self.line_objs.append(line_type.parse(line))
-        # check for errors
+        # construct object state from lines
         if lines:
-            # check for completed processing
-            if not issubclass(line_type, Stop):
-                raise CIDLineProcessingError("STOP statement was not reached "
-                                             "before encountering end of file.")
-            # check for STOP
-            try:
-                next(iter_line_types)
-            except StopIteration:
-                pass
-            else:
-                raise IncompleteCIDLinesError(f"The .cid file appears to be incomplete. "
-                                              f"Last encountered line type: {line_type.__name__}")
-
-        # check for leftover lines
-        for line in iter_lines:
-            if line.strip():
-                raise CIDLineProcessingError("There appear to be extraneous "
-                                             "data lines at the end of the file.")
+            self._post_init(lines)
 
     def process_line_strings(self) -> Generator[None, Tuple[CidLine, CidLineStr], None]:
         """Creates the line_objs list and adds the parsed line objects that
         constitute the object state
         """
-        # initialize empty line_objs list
-        self.line_objs: List[CidLine] = []
         while True:
             # receive line string
             line_type, line = yield

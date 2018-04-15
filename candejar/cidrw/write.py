@@ -118,14 +118,13 @@ def parse(cid: CidObj, lines: Iterable[CidLineStr],
     for line in iter_lines:
         try:
             line_type = next(iter_line_types)
+            iter_line_strings_in.send((line_type, line))
         except StopIteration:
             if issubclass(line_type, Stop):
                 break
             else:
                 raise CIDLineProcessingError("An error occurred before "
                                              "processing was completed")
-        else:
-            iter_line_strings_in.send((line_type, line))
     # check for errors
     else:
         # check for completed processing
