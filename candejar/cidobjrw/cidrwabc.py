@@ -7,9 +7,10 @@ from pathlib import Path
 from typing import Union, Iterator, Type, Iterable, Optional, Tuple, Generator
 
 from ..cid import CidLine
-from ..cidobjrw.exc import CidRWSubclassSignatureError
 from ..cidprocessing.main import process
-from ..cidrw.write import line_strings, CidLineStr, parse
+from ..cidrw.write import line_strings as write_line_strings, CidLineStr
+from ..cidrw.read import line_strings as read_line_strings
+from .exc import CidRWSubclassSignatureError
 
 
 class CidRW(ABC):
@@ -51,7 +52,7 @@ class CidRW(ABC):
         if lines:
             iter_line_types = self.process_line_types()
             iter_line_strings_in = self.process_line_strings()
-            parse(self, lines, iter_line_types, iter_line_strings_in)
+            read_line_strings(self, lines, iter_line_types, iter_line_strings_in)
 
     def process_line_types(self) -> Iterator[Type[CidLine]]:
         """A line object type iterator that determines the next line object
@@ -65,7 +66,7 @@ class CidRW(ABC):
         The number of objects in A1, C2 are updated to match lengths of sub-object sequences.
         """
         i_line_types = self.process_line_types()
-        i_line_strings = line_strings(self, i_line_types)
+        i_line_strings = write_line_strings(self, i_line_types)
         yield from i_line_strings
 
     def save(self, path: Union[str, Path], mode="x"):

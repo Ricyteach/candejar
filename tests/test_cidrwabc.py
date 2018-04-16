@@ -3,11 +3,9 @@
 
 """Tests for `candejar.cidobjrw.cidrwabc` module."""
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
 
 from candejar.cidobjrw.cidrwabc import CidRW
 from candejar.cidobjrw.exc import CidRWSubclassSignatureError
-
 
 def test_subclass():
     class Child(CidRW):
@@ -16,11 +14,13 @@ def test_subclass():
                 yield
     assert Child()
 
-def test_subclass_fail():
+def test_subclass_fail_on_no_default_arguments():
     with pytest.raises(CidRWSubclassSignatureError):
         class _(CidRW):
-            def __init__(self, _):
-                pass
+            def __init__(self, _): ...
+            def process_line_strings(self): ...
+
+def test_subclass_fail_on_no_process_line_strings_method():
     with pytest.raises(TypeError):
         class Child(CidRW):
             pass

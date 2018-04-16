@@ -3,22 +3,17 @@
 """Module defining CidSeq base object."""
 import types
 from dataclasses import InitVar, dataclass, asdict
-from typing import Sequence, Generic, Type, Iterator, Union, TypeVar, Counter, MutableMapping, MutableSequence, Mapping
+from typing import Sequence, Generic, Type, Iterator, Union, TypeVar, Counter, MutableSequence, Mapping
 
+from .exc import CIDSubSeqIndexError
 from ... import fea
 from ...cid import CidSubLine, TOP_LEVEL_TYPES
 from ...utilities.mixins import ChildRegistryBase
 from ...utilities.dataclasses import shallow_mapify
 from ..cidsubobj import CidSubObj, SUB_OBJ_NAMES_DICT
-from ..exc import CIDObjError
 from ..cidsubobj.cidsubobj import CidData
 from ..names import FEA_TYPE_DICT
 from .names import SEQ_CLASS_DICT
-
-
-class CIDSubSeqIndexError(CIDObjError, IndexError):
-    pass
-
 
 CidObj = TypeVar("CidObj", covariant=True)
 SubObj = CidSubObj[CidObj, "CidSeq", CidSubLine, fea.FEAObj]

@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 
-"""Contains the procedure for writing a `CidObj` to a .cid file."""
+"""Contains the procedure for writing an object to a .cid file."""
+
 from itertools import chain, repeat
 from pathlib import Path
-from typing import Iterator, TypeVar, Mapping, Type, Optional, Iterable, Collection, Union, Counter, Callable, NewType, \
-    Generator, Tuple
+from typing import Iterator, Mapping, Optional, Iterable, Collection, Union, Counter, Callable
 
-from ..cidobjrw.exc import CIDLineProcessingError, IncompleteCIDLinesError
 from ..cidobjrw.names import SEQ_LINE_TYPE_NAME_DICT, SEQ_LINE_TYPE_TOTAL_DICT
 from ..cid import TOP_LEVEL_TYPES, CIDL_FORMAT_TYPES
 from ..utilities.cidobj import forgiving_dynamic_attr, SpecialError
@@ -14,11 +13,7 @@ from ..utilities.dataclasses import unmapify, shallow_mapify
 from ..cid import Stop
 from ..cid import CidLine
 from .exc import CIDRWError
-
-CidObj = TypeVar("CidObj")
-CidLineType = Type[CidLine]
-CidLineStr = NewType("CidLineStr", str)
-FormatStr = NewType("FormatStr", str)
+from . import CidObj, CidLineType, CidLineStr, FormatStr
 
 def forgiving_cid_attr(cid: CidObj, attr_getter: Callable[[], Optional[str]]
                        ) -> Union[CidObj, Collection, str, int, float]:
@@ -106,43 +101,3 @@ def file(cid: CidObj, line_types: Iterable[CidLineType], path: Union[str, Path],
     i_line_types = iter(line_types)
     with Path(path).open(mode):
         path.write_text("\n".join(line_strings(cid, i_line_types)))
-
-def parse(cid: CidObj, lines: Iterable[CidLineStr],
-          iter_line_types: Iterable[CidLineType],
-          iter_line_strings_in: Generator[None, Tuple[Type[CidLine], CidLineStr], None]) -> None:
-    # start the receving generator and line iterator
-    iter_lines = iter(lines)
-    next(iter_line_strings_in)
-
-    line_type = None
-    for line in iter_lines:
-        try:
-            line_type = next(iter_line_types)
-            iter_line_strings_in.send((line_type, line))
-        except StopIteration:
-            if issubclass(line_type, Stop):
-                break
-            else:
-                raise CIDLineProcessingError("An error occurred before "
-                                             "processing was completed")
-    # check for errors
-    else:
-        # check for completed processing
-        if not issubclass(line_type, Stop):
-            raise CIDLineProcessingError("STOP statement was not reached "
-                                         "before encountering end of file.")
-        # check for STOP
-        try:
-            next(iter_line_types)
-        except StopIteration:
-            pass
-        else:
-            raise IncompleteCIDLinesError(f"The .cid file appears to be incomplete. "
-                                          f"Last encountered line type: {line_type.__name__}")
-
-    # check for leftover lines
-    for line in iter_lines:
-        if line.strip():
-            raise CIDLineProcessingError("There appear to be extraneous "
-                                         "data lines at the end of the file.")
-    return cid
