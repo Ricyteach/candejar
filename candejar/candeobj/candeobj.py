@@ -7,13 +7,14 @@ from typing import Mapping, Union, Sequence
 
 from ..cidobjrw.cidsubobj.cidsubobj import CidSubObj, CidData
 from ..cidobjrw.names import ALL_SEQ_NAMES
+from ..cidobjrw.cidrwabc import CidRW
 from ..utilities.dataclasses import shallow_mapify
 from ..utilities.collections import ChainSequence
 from ..cidobjrw.cidobj import CidObj
 
 
 @dataclass
-class CandeObj:
+class CandeObj(CidRW):
     # top level objects
     mode: str = field(default="ANALYS")  # ANALYS or DESIGN
     level: int = field(default=3)  # 1, 2, 3
@@ -68,5 +69,4 @@ class CandeObj:
         """Save .cid file to the path."""
         path = Path(path).with_suffix(".cid")
         with path.open(mode):
-            path.write_text("\n".join(self.iter_lines()))
-
+            path.write_text("\n".join(self.iter_line_strings()))
