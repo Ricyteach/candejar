@@ -1,23 +1,15 @@
 # -*- coding: utf-8 -*-
 
 """The interface for cid type objects expected by the module."""
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import MutableMapping, Mapping, Union, Sequence
+from typing import Mapping, Union, Sequence
 
 from ..cidobjrw.cidsubobj.cidsubobj import CidSubObj, CidData
 from ..cidobjrw.names import ALL_SEQ_NAMES
 from ..utilities.dataclasses import shallow_mapify
 from ..utilities.collections import ChainSequence
 from ..cidobjrw.cidobj import CidObj
-
-
-class CandeError(Exception):
-    pass
-
-
-class IncompleteCandeObjError(CandeError):
-    pass
 
 
 @dataclass
@@ -50,14 +42,15 @@ class CandeObj:
 
     @classmethod
     def loadcid(cls, cid: Union[CidObj, Mapping[str,Union[CidData, Sequence[Union[CidSubObj, Mapping[str, CidData]]]]]]) -> "CandeObj":
-        map: MutableMapping = shallow_mapify(cid)
+        map = shallow_mapify(cid)
         map.pop("materials",None)
+        map.pop("nmaterials",None)
         for seq_k in ALL_SEQ_NAMES:
             try:
                 seq = map[seq_k]
             except KeyError:
-                # materials is a property
-                if seq_k == "materials":
+                # skip properties
+                if seq_k in ("materials", "nmaterials"):
                     continue
                 seq = []
             map[seq_k] = shallow_mapify(seq)

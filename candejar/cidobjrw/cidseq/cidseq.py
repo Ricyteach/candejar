@@ -3,9 +3,9 @@
 """Module defining CidSeq base object."""
 import types
 from dataclasses import InitVar, dataclass, asdict
-from typing import Sequence, Generic, Type, Iterator, Union, TypeVar, Counter, MutableSequence, Mapping
+from typing import Sequence, Generic, Type, Iterator, Union, TypeVar, Counter, List, Dict
 
-from .exc import CIDSubSeqIndexError
+from ...cid import CidLine
 from ... import fea
 from ...cid import CidSubLine, TOP_LEVEL_TYPES
 from ...utilities.mixins import ChildRegistryBase
@@ -14,6 +14,7 @@ from ..cidsubobj import CidSubObj, SUB_OBJ_NAMES_DICT
 from ..cidsubobj.cidsubobj import CidData
 from ..names import FEA_TYPE_DICT
 from .names import SEQ_CLASS_DICT
+from .exc import CIDSubSeqIndexError
 
 CidObj = TypeVar("CidObj", covariant=True)
 SubObj = CidSubObj[CidObj, "CidSeq", CidSubLine, fea.FEAObj]
@@ -62,7 +63,7 @@ class CidSeq(ChildRegistryBase, Sequence[SubObj], Generic[CidObj, CidSubLine, fe
             else:
                 yield line
 
-    def _asdict(self) -> MutableSequence[Mapping[str,CidData]]:
+    def _asdict(self) -> List[Dict[str,CidData]]:
         return [shallow_mapify(i) for i in self]
 
     def __getitem__(self, val: Union[slice, int]) -> SubObj:
@@ -80,7 +81,7 @@ class CidSeq(ChildRegistryBase, Sequence[SubObj], Generic[CidObj, CidSubLine, fe
         return sum(1 for _ in self.iter_main_lines)
 
 
-def subclass_CidSeq(sub_line_type):
+def subclass_CidSeq(sub_line_type: Type[CidLine]) -> Type[CidSeq]:
     """Produce a `CidSeq` based subclass `dataclass`."""
 
     # see if already exists
@@ -94,6 +95,6 @@ def subclass_CidSeq(sub_line_type):
     SubLine = sub_line_type  # type of CidLine indicating start of an object in CID file
     FEA_Obj = FEA_TYPE_DICT[sub_line_type]  # type of FEA object corresponding to CID object
 
-    cls = types.new_class(cls_name, (CidSeq[CidObj, SubLine, FEA_Obj], Generic[CidObj]), exec_body=lambda ns: ns.update(dict(line_type=SubLine)))
+    cls: Type[CidSeq] = types.new_class(cls_name, (CidSeq[CidObj, SubLine, FEA_Obj], Generic[CidObj]), exec_body=lambda ns: ns.update(dict(line_type=SubLine)))
 
     return cls

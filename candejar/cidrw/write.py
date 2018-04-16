@@ -42,7 +42,7 @@ def process_lines(cid: CidObj, line_types: Iterable[CidLineType]) -> Iterator[Ci
             for subobj in target_obj:  # re-use same subobj for every line until new top-level line encountered
                 # `valid_fields` and `line_type` already been iterated at this point
                 # (either in top-level loop or sub level loop)
-                d: Mapping = shallow_mapify(subobj)
+                d = shallow_mapify(subobj)
                 yield unmapify(d, line_type, lambda k: k in line_type.cidfields)  # A1, A2, C1, C2, D1, E1 yielded here
                 while True:  # sub level objects loop
                     # look ahead in `i_line_types`
