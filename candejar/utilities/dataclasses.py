@@ -3,8 +3,8 @@
 """Special tools for working with dataclass types."""
 
 from dataclasses import is_dataclass, fields
+from types import SimpleNamespace
 from typing import Any, Mapping, Callable, Tuple, TypeVar, Dict
-
 
 def shallow_asdict(obj) -> Dict[str, Any]:
     """Shallowly return the fields of a dataclass instance as a new dictionary mapping
@@ -24,6 +24,8 @@ def shallow_mapify(o: Any) -> Dict[str, Any]:
         raise TypeError(f"Cannot turn the class object {o.__name__!s} to a mapping")
     if is_dataclass(o):
         return shallow_asdict(o)
+    if isinstance(o, SimpleNamespace):
+        return vars(o)
     try:
         return o._asdict()
     except AttributeError:
@@ -42,10 +44,6 @@ def shallow_mapify(o: Any) -> Dict[str, Any]:
         pass
     else:
         return dict(zip(slots, (getattr(o, s) for s in slots if hasattr(o, s))))
-    try:
-        return vars(o)
-    except Exception:
-        pass
     raise TypeError(f"Failed to turn the class instance of {type(o).__name__!s} to a mapping")
 
 T = TypeVar("T")
