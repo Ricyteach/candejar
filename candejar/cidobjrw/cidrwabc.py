@@ -24,35 +24,20 @@ class CidRW(ABC):
                                               "default values provided for "
                                               "all arguments.")
 
-    @abstractmethod
-    def process_line_strings(self) -> Generator[None, Tuple[Type[CidLine], CidLineStr], None]:
-        """Handle line inputs in the process of constructing an object instance."""
-        pass
-
     @classmethod
     def open(cls, path: Union[str, Path]) -> "CidRW":
         """Make an instance from a .cid file."""
         path = Path(path).with_suffix(".cid")
         lines = path.read_text().split("\n")
-        return cls.from_lines(lines)
+        obj = cls()
+        return obj.from_lines(lines)
 
     @classmethod
-    def from_lines(cls, lines: Optional[Iterable[CidLineStr]]=None) -> "CidRW":
-        """Build an instance using line input strings"""
-        # initialize instance (should never require arguments)
-        obj = cls()
-        obj._post_init(lines)
-        return  obj
-
-    def _post_init(self, lines: Optional[Iterable[CidLineStr]]=None) -> None:
-        """Construct the object state from lines.
-
-        If no lines are provided, result is same as cls()
-        """
-        if lines:
-            iter_line_types = self.process_line_types()
-            iter_line_strings_in = self.process_line_strings()
-            read_line_strings(self, lines, iter_line_types, iter_line_strings_in)
+    @abstractmethod
+    def from_lines(cls, lines: Optional[Iterable[CidLineStr]]=None,
+                         line_types: Optional[Iterable[Type[CidLine]]]=None) -> "CidRW":
+        """Construct or edit an object instance from line string and line type inputs."""
+        pass
 
     def process_line_types(self) -> Iterator[Type[CidLine]]:
         """A line object type iterator that determines the next line object

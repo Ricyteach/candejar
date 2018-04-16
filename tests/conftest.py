@@ -17,7 +17,7 @@ def cid_standard_lines():
 @pytest.fixture(scope="session")
 def cid_obj_standard(cid_standard_lines):
     print()
-    o = CidObj(cid_standard_lines)
+    o = CidObj.from_lines(cid_standard_lines)
     print(o)
     return o
 

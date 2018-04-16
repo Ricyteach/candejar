@@ -39,5 +39,5 @@ def test_write_blank_cid_obj(cid_blank):
 @pytest.mark.skip(reason="only works on local machine")
 def test_open_wild_files():
     p = Path(r"S:\Uponor\19962 CANDE Analyses for Two Layer Weholite Pipes, Quebec, Canada\CANDE runs\run1.cid")
-    cid = CidObj(p.read_text().split("\n"))
+    cid = CidObj.from_lines(p.read_text().split("\n"))
     assert cid

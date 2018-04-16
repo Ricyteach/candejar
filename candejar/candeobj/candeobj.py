@@ -3,14 +3,16 @@
 """The interface for cid type objects expected by the module."""
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Mapping, Union, Sequence
+from typing import Mapping, Union, Sequence, Type, Optional, Iterable
 
+from ..cid import CidLine
+from ..cidrw import CidLineStr
 from ..cidobjrw.cidsubobj.cidsubobj import CidSubObj, CidData
 from ..cidobjrw.names import ALL_SEQ_NAMES
 from ..cidobjrw.cidrwabc import CidRW
+from ..cidobjrw.cidobj import CidObj
 from ..utilities.dataclasses import shallow_mapify
 from ..utilities.collections import ChainSequence
-from ..cidobjrw.cidobj import CidObj
 
 
 @dataclass
@@ -70,3 +72,10 @@ class CandeObj(CidRW):
         path = Path(path).with_suffix(".cid")
         with path.open(mode):
             path.write_text("\n".join(self.iter_line_strings()))
+
+    @classmethod
+    def from_lines(cls, lines: Optional[Iterable[CidLineStr]]=None,
+                         line_types: Optional[Iterable[Type[CidLine]]]=None) -> "CidRW":
+        """Construct or edit an object instance from line string and line type inputs."""
+        cidobj = CidObj.from_lines(lines, line_types)
+        return cls.loadcid(cidobj)
