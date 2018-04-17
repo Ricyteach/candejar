@@ -17,6 +17,7 @@ from ..utilities.collections import ChainSequence
 
 @dataclass
 class CandeObj(CidRW):
+    """The interface for .cid file representation objects."""
     # top level objects
     mode: str = field(default="ANALYS")  # ANALYS or DESIGN
     level: int = field(default=3)  # 1, 2, 3
