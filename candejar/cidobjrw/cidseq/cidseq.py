@@ -3,6 +3,7 @@
 """Module defining CidSeq base object."""
 import types
 from dataclasses import InitVar, dataclass, asdict
+from itertools import count
 from typing import Sequence, Generic, Type, Iterator, Union, TypeVar, Counter, List, Dict
 
 from ...cid import CidLine
@@ -12,7 +13,7 @@ from ...utilities.mixins import ChildRegistryBase
 from ...utilities.dataclasses import shallow_mapify
 from ..cidsubobj import CidSubObj, SUB_OBJ_NAMES_DICT
 from ..cidsubobj.cidsubobj import CidData
-from ..names import FEA_TYPE_DICT
+from ..names import FEA_TYPE_DICT, SEQ_LINE_TYPE_TOTAL_DICT
 from .names import SEQ_CLASS_DICT
 from .exc import CIDSubSeqIndexError
 
@@ -76,6 +77,12 @@ class CidSeq(ChildRegistryBase, Sequence[SubObj], Generic[CidObj, CidSubLine, fe
         except CIDSubSeqIndexError as e:
             raise IndexError(f"{val!s} not an available index for {self.line_type.__name__} object") from e
         return result
+
+    def __iter__(self):
+        total_attr_name = SEQ_LINE_TYPE_TOTAL_DICT[self.line_type]
+        seq_total = getattr(self.cid_obj, total_attr_name)
+        if seq_total:
+            yield from (CidSubObj.subclasses[SUB_OBJ_NAMES_DICT[self.line_type]](self, x) for x in count())
 
     def __len__(self) -> int:
         return sum(1 for _ in self.iter_main_lines)

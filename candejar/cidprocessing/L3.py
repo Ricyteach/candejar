@@ -1,27 +1,40 @@
 from . import exc, pipelookup, soil
 from .main import gen_line
+from . import main
 
 __all__ = 'A2 C1 C2 C3 C4 C5'.split()
 
 
 def L3(cid):
-    for group_num, _ in enumerate(range(cid.ngroups), 1):
-        try:
-            yield from A2(cid, group_num)
-        except StopIteration:
-            raise
-        except Exception as e:
-            raise exc.CIDProcessingError('cid failed at pipe group #'
-                               '{:d}'.format(group_num)) from e
-    # cid.listener.throw(exc.SequenceComplete, ('Groups completed', len(cid.pipe_groups)))
+    yield from PipeGroups(cid)
     yield from C1(cid)
     yield from C2(cid)
     yield from soil.D1(cid)
 
 
-def A2(cid, group_num):
+def PipeGroups(cid):
+    igroups = iter(cid.pipe_groups)
+    group_num = 1
+    for group_num, _ in zip(range(1,cid.ngroups+1), igroups):
+        yield from PipeGroup(cid, group_num)
+    for group_num, group in enumerate(igroups, group_num):
+        yield from PipeGroup(cid, group_num, group)
+        if isinstance(main.ERROR_STATE, exc.CIDProcessingIndexError):
+            main.ERROR_STATE = None
+            break
+
+def PipeGroup(cid, group_num, group=None):
+    try:
+        yield from A2(cid, group_num, group)
+    except StopIteration:
+        raise
+    except Exception as e:
+        raise exc.CIDProcessingError(f'cid section A2 failed at pipe group #{group_num:d}') from e
+
+def A2(cid, group_num, group=None):
     yield from gen_line('A2')
-    group = cid.pipe_groups[group_num-1]
+    if not group:
+        group = cid.pipe_groups[group_num-1]
     try:
         type_ = group.type_
         gen = pipelookup[type_]
@@ -29,8 +42,7 @@ def A2(cid, group_num):
     except StopIteration:
         raise
     except Exception as e:
-        raise exc.CIDProcessingError('cid section B failed for '
-                                     '{}'.format(group)) from e
+        raise exc.CIDProcessingError(f'cid section B failed for pipe group #{group_num:d}') from e
     # cid.listener.throw(exc.ObjectComplete)
 
 

@@ -105,17 +105,17 @@ class CidObj(CidRW):
                 raise CidObjFromLinesError(f"Cannot build a {cls.__name__} instance using only line type input")
         return obj
 
-    def process_line_strings(self) -> Generator[None, Tuple[Type[CidLine], CidLineStr], None]:
+    def process_line_strings(self) -> Generator[None, CidLine, None]:
         """Creates the line_objs list and adds the parsed line objects that
         constitute the object state
         """
         while True:
             # receive line string
-            line_type, line = yield
+            line_obj = yield
             # create line object
-            self.line_objs.append(line_type.parse(line))
+            self.line_objs.append(line_obj)
             # the STOP object signals the end of processing
-            if issubclass(line_type, Stop):
+            if issubclass(type(line_obj), Stop):
                 break
 
     @property

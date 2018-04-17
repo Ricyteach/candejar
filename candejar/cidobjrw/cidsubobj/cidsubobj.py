@@ -46,9 +46,10 @@ class CidSubObj(ChildRegistryBase, Generic[CidObj, CidSeq, CidSubLine, fea.FEAOb
             return super().__getattribute__(name)
         except AttributeError as e:
             new_obj = self._container[self._idx]
-            d = self.__dict__ = new_obj.__dict__
+            for key in (k for k in vars(new_obj) if k not in vars(self)):
+                vars(self)[key] = vars(new_obj)[key]
             try:
-                return d[name]
+                return vars(self)[name]
             except KeyError:
                 pass
             raise e
