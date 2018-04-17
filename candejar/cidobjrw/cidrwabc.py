@@ -9,12 +9,11 @@ from typing import Union, Iterator, Type, Iterable, Optional, Tuple, Generator
 from ..cid import CidLine
 from ..cidprocessing.main import process
 from ..cidrw.write import line_strings as write_line_strings, CidLineStr
-from ..cidrw.read import line_strings as read_line_strings
 from .exc import CidRWSubclassSignatureError
 
 
 class CidRW(ABC):
-    """Mixin class for read/write processing of .cid file types"""
+    """Abstract base class for read/write processing of .cid file types"""
 
     def __init_subclass__(cls, **kwargs):
         try:

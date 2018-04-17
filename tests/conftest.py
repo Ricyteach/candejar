@@ -6,8 +6,8 @@ import pytest
 from types import SimpleNamespace
 
 from candejar.cidobjrw.cidobj import CidObj
-from candejar.cid.cidlineclasses import A1, A2, B1Alum, B2AlumA, A2, B1Plastic, B2Plastic, B3PlasticAGeneral, A2, \
-    B1Steel, B2SteelA,C1, C2, C3, C4, C5, D1, D2Isotropic, D1, D2Interface, Stop
+from candejar.cid.cidlineclasses import A1, B1Alum, B2AlumA, B1Plastic, B2Plastic, B3PlasticAGeneral, \
+    B1Steel, B2SteelA, C1, C2, C3, C4, C5, D1, D2Isotropic, D2Interface, Stop
 from tests.cid_file_test_standards import standard_lines, cidmock_standard_lines
 
 @pytest.fixture(scope="session")
