@@ -3,21 +3,12 @@ from ..cid.cidlineclasses import cidlineclasses
 
 __all__ = 'A1 E1'.split()
 
-ERROR_STATE = None
-
 def process(cid):
     yield from A1(cid)
 
 def gen_line(tag):
     """Validate the CID tag against cidlineclasses"""
-    global ERROR_STATE
-    if ERROR_STATE:
-        breakpoint()
-        raise ERROR_STATE
-    try:
-        yield getattr(cidlineclasses, tag) # execution pauses here
-    except exc.CIDProcessingIndexError as e:
-        ERROR_STATE = e
+    yield getattr(cidlineclasses, tag)  # execution pauses here
 
 #@GeneratorObj
 def A1(cid):

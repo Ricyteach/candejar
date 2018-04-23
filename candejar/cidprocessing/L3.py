@@ -1,9 +1,7 @@
 from . import exc, pipelookup, soil
 from .main import gen_line
-from . import main
 
 __all__ = 'A2 C1 C2 C3 C4 C5'.split()
-
 
 def L3(cid):
     yield from PipeGroups(cid)
@@ -11,17 +9,13 @@ def L3(cid):
     yield from C2(cid)
     yield from soil.D1(cid)
 
-
 def PipeGroups(cid):
     igroups = iter(cid.pipe_groups)
     group_num = 1
     for group_num, _ in zip(range(1,cid.ngroups+1), igroups):
         yield from PipeGroup(cid, group_num)
-    for group_num, group in enumerate(igroups, group_num):
+    for group_num, group in enumerate(igroups, group_num+1):
         yield from PipeGroup(cid, group_num, group)
-        if isinstance(main.ERROR_STATE, exc.CIDProcessingIndexError):
-            main.ERROR_STATE = None
-            break
 
 def PipeGroup(cid, group_num, group=None):
     try:

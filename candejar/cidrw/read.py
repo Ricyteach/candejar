@@ -25,8 +25,6 @@ def line_strings(cid: CidObj, lines: Iterable[CidLineStr], line_types: Iterable[
             while True:
                 line_type = next(iter_line_types)
                 try:
-                    if line_type.__name__=="A2":
-                        breakpoint()
                     line_obj = line_type.parse(line)
                     break
                 except LineParseError:
