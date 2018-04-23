@@ -19,17 +19,9 @@ def PipeGroups(cid):
 
 def PipeGroup(cid, group_num, group=None):
     try:
-        yield from A2(cid, group_num, group)
-    except StopIteration:
-        raise
-    except Exception as e:
-        raise exc.CIDProcessingError(f'cid section A2 failed at pipe group #{group_num:d}') from e
-
-def A2(cid, group_num, group=None):
-    yield from gen_line('A2')
-    if not group:
-        group = cid.pipe_groups[group_num-1]
-    try:
+        yield from A2(cid)
+        if not group:
+            group = cid.pipe_groups[group_num - 1]
         type_ = group.type_
         gen = pipelookup[type_]
         yield from gen(cid, group)
@@ -38,6 +30,14 @@ def A2(cid, group_num, group=None):
     except Exception as e:
         raise exc.CIDProcessingError(f'cid section B failed for pipe group #{group_num:d}') from e
     # cid.listener.throw(exc.ObjectComplete)
+
+def A2(cid):
+    try:
+        yield from gen_line('A2')
+    except StopIteration:
+        raise
+    except Exception as e:
+        raise exc.CIDProcessingError(f'cid section A2 failed at pipe group #{group_num:d}') from e
 
 
 def C1(cid):
