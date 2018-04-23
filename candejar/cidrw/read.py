@@ -12,38 +12,24 @@ from .exc import IncompleteCIDLinesError, CIDLineProcessingError
 from . import CidObj, CidLineType, CidLineStr
 
 def line_strings(cid: CidObj, lines: Iterable[CidLineStr], line_types: Iterable[CidLineType],
-                 iter_line_strings_in: Generator[None, Tuple[Type[CidLine], CidLineStr], None]) -> None:
+                 handle_line_strs_in: Generator[None, Tuple[int, Type[CidLine]], None]) -> None:
     # start the generators and line iterator
     iter_lines = iter(lines)
     iter_line_types = iter(line_types)
-    next(iter_line_strings_in)
-    line_type_ctr = Counter()
+    next(handle_line_strs_in)
 
     line_type = None
-    for line in iter_lines:
+    for line_num,line in enumerate(iter_lines):
         try:
-            while True:
-                line_type = next(iter_line_types)
-                try:
-                    line_obj = line_type.parse(line)
-                    break
-                except LineParseError:
-                    if line_type in SEQ_LINE_TYPES:
-                    # a section of lines ended; send signal to type iterator to move on to next section
-                        iter_line_types.throw(CIDProcessingIndexError(f"Failed to retrieve {line_type.__name__} "
-                                                                      f"line #{line_type_ctr[line_type]+1:d}"))
-                    else:
-                        raise
-                    continue
-            line_type_ctr[line_type] += 1
-            iter_line_strings_in.send(line_obj)
+            line_type = next(iter_line_types)
         except StopIteration:
             if issubclass(line_type, Stop):
                 break
             else:
                 raise CIDLineProcessingError("An error occurred before "
                                              "processing was completed")
-
+        else:
+            handle_line_strs_in.send((line_num, line_type))
     # check for errors
     else:
         # check for completed processing
@@ -59,7 +45,7 @@ def line_strings(cid: CidObj, lines: Iterable[CidLineStr], line_types: Iterable[
             raise IncompleteCIDLinesError(f"The .cid file appears to be incomplete. "
                                           f"Last encountered line type: {line_type.__name__}")
 
-    # check for leftover lines
+    # check for leftover non-empty lines
     for line in iter_lines:
         if line.strip():
             raise CIDLineProcessingError("There appear to be extraneous "

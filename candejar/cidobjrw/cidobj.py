@@ -3,12 +3,14 @@
 """CID object module for working with an entire cid file as a read/write Python data model object."""
 
 from dataclasses import dataclass, field, InitVar
-from typing import List, Any, Iterable, Optional, Generator, Tuple, Type
+from typing import List, Any, Iterable, Optional, Generator, Tuple, Type, Iterator, Sequence
 
+from cid import SEQ_LINE_TYPES
 from ..cidrw.write import CidLineStr
 from ..cidrw.read import line_strings as read_line_strings
 from .. import fea
 from ..cid import CidLine, A1, A2, C1, C2, C3, C4, C5, D1, E1, Stop
+from ..cid.exc import LineParseError
 from .names import ALL_SEQ_NAMES
 from .cidrwabc import CidRW
 from .cidseq import CidSeq
@@ -88,7 +90,7 @@ class CidObj(CidRW):
         self.line_objs: List[CidLine] = []
 
     @classmethod
-    def from_lines(cls, lines: Optional[Iterable[CidLineStr]]=None,
+    def from_lines(cls, lines: Optional[Sequence[CidLineStr]]=None,
                    line_types: Optional[Iterable[Type[CidLine]]]=None) -> "CidRW":
         """Build an instance using line input strings and line types
 
@@ -97,26 +99,77 @@ class CidObj(CidRW):
         # initialize instance (should never require arguments)
         obj = cls()
         if lines:
-            iter_line_strings_in = obj.process_line_strings()
-            iter_line_types = obj.process_line_types() if line_types is None else iter(line_types)
-            read_line_strings(obj, lines, iter_line_types, iter_line_strings_in)
+            handle_line_strs_in = obj.handle_line_strs(lines)
+            iter_line_types = obj.process_line_types(lines) if line_types is None else iter(line_types)
+            read_line_strings(obj, lines, iter_line_types, handle_line_strs_in)
         else:
             if line_types is not None:
                 raise CidObjFromLinesError(f"Cannot build a {cls.__name__} instance using only line type input")
         return obj
 
-    def process_line_strings(self) -> Generator[None, CidLine, None]:
-        """Creates the line_objs list and adds the parsed line objects that
-        constitute the object state
+    def handle_line_strs(self, lines: Sequence[CidLineStr]) -> Generator[None, Tuple[int, Type[CidLine]], None]:
+        """Creates the line_objs list and adds the parsed line objects that constitute the object state.
+
+        A cidseq._COMPLETE signal is sent to the current sequence object when the next line string indicates the end of
+        a block of line types.
         """
         while True:
-            # receive line string
-            line_obj = yield
-            # create line object
-            self.line_objs.append(line_obj)
+            # receive line object
+            line_idx, line_type = yield
+            curr_line_str = lines[line_idx]
+            try:
+                # create line object
+                line_obj = line_type.parse(curr_line_str)
+            except LineParseError:
+                error = None
+                curr_section_typ = None
+                next_section_typ = A1
+                iter_line_strs = iter(lines)
+                curr_line_str = next(iter_line_strs)
+                next_line_str = None
+                for typ in super().process_line_types():
+                    if typ in SEQ_LINE_TYPES:
+                        curr_section_typ = typ
+                        next_section_typ = self.next_section_type(curr_section_typ)
+                    try:
+                        next_section_typ.parse(next_line_str)
+                    except LineParseError:
+                        flag = True
+                        while flag:
+                            try:
+                                next_section_typ = self.next_section_type(curr_section_typ)
+                            except KeyError:
+                                flag = False
+                                continue
+                            try:
+                                next_section_typ.parse(curr_line_str)
+                            except LineParseError:
+                                if next_section_typ is Stop:
+                                    flag = False
+                            else:
+                                break
+                        else:
+                            error = CidObjFromLinesError(
+                                "The proper line type could not be determined from the line string.")
+                    if error:
+                        raise error
+                    yield typ
+                    try:
+                        curr_line_str, next_line_str = next_line_str, next(iter_line_strs)
+                    except StopIteration:
+                        break
+            else:
+                # add to the line_objs collection
+                self.line_objs.append(line_obj)
             # the STOP object signals the end of processing
-            if issubclass(type(line_obj), Stop):
+            if issubclass(line_type, Stop):
                 break
+
+
+    def next_section_type(self, line_type:Type[CidLine]) -> Type[CidLine]:
+        """Calculate the line type that should be attempted for parsing next."""
+        d={A1:A2, A2:C1, C3:C4, C4:C5, C5:D1, D1:(E1 if self.method==1 else Stop), E1:Stop}
+        return d[line_type]
 
     @property
     def a1(self) -> A1:
