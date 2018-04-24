@@ -13,8 +13,9 @@ MAT_LINE_TYPES = (D1, D1)
 MAT_SEQ_NAMES = ("soilmaterials", "interfmaterials")
 ALL_SEQ_NAMES = SEQ_NAMES + MAT_SEQ_NAMES
 
-SEQ_NAMES_DICT = dict(zip(SEQ_NAMES + MAT_SEQ_NAMES, SEQ_LINE_TYPES + MAT_LINE_TYPES))
+SEQ_TYPES_DICT = dict(zip(SEQ_NAMES + MAT_SEQ_NAMES, SEQ_LINE_TYPES + MAT_LINE_TYPES))
 FEA_TYPE_DICT = {A2: fea.PipeGroup, C3: fea.Node, C4: fea.Element, C5: fea.Boundary, D1: fea.Material, E1: fea.Factor}
+SEQ_NAMES_DICT = dict(zip(SEQ_LINE_TYPES, SEQ_NAMES))
 
 # below for sequence total attributes of CidObj instances; using nmaterials (instead of nsoilmaterials and ninterface materials)
 # because nmterials is used when iterating ALL lines types of D1 (for reading/writing only since .cid file treats them the same)

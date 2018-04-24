@@ -11,10 +11,7 @@ def L3(cid):
 
 def PipeGroups(cid):
     igroups = iter(cid.pipe_groups)
-    group_num = 1
-    for group_num, _ in zip(range(1,cid.ngroups+1), igroups):
-        yield from PipeGroup(cid, group_num)
-    for group_num, group in enumerate(igroups, group_num+1):
+    for group_num, group in enumerate(igroups, 1):
         yield from PipeGroup(cid, group_num, group)
 
 def PipeGroup(cid, group_num, group=None):
