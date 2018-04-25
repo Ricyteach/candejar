@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 """Contains the procedure for reading a .cid file to an object."""
-from itertools import count
-from typing import Iterable, Generator, Tuple, Type, Counter
 
-from ..cid import CidLine, SEQ_LINE_TYPES
+from typing import Iterable, Generator, Tuple, Type
+
+from ..cid import CidLine
 from ..cid import Stop
 from .exc import IncompleteCIDLinesError, CIDLineProcessingError
 from . import CidObj, CidLineType, CidLineStr

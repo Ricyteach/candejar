@@ -4,7 +4,7 @@
 
 from itertools import chain, repeat
 from pathlib import Path
-from typing import Iterator, Mapping, Optional, Iterable, Collection, Union, Counter, Callable
+from typing import Iterator, Optional, Iterable, Collection, Union, Counter, Callable
 
 from ..cidobjrw.names import SEQ_LINE_TYPE_NAME_DICT, SEQ_LINE_TYPE_TOTAL_DICT
 from ..cid import TOP_LEVEL_TYPES, CIDL_FORMAT_TYPES
