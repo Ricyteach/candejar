@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
-"""Contains the procedure for writing a `CidObj` to a .cid file."""
+"""Contains the procedure for writing an object to a .cid file."""
+
 from itertools import chain, repeat
 from pathlib import Path
-from typing import Iterator, TypeVar, Mapping, Type, Optional, Iterable, Collection, Union, Counter, Callable
+from typing import Iterator, Optional, Iterable, Collection, Union, Counter, Callable
 
 from ..cidobjrw.names import SEQ_LINE_TYPE_NAME_DICT, SEQ_LINE_TYPE_TOTAL_DICT
 from ..cid import TOP_LEVEL_TYPES, CIDL_FORMAT_TYPES
@@ -12,9 +13,7 @@ from ..utilities.dataclasses import unmapify, shallow_mapify
 from ..cid import Stop
 from ..cid import CidLine
 from .exc import CIDRWError
-
-CidObj = TypeVar("CidObj")
-CidLineType = Type[CidLine]
+from . import CidObj, CidLineType, CidLineStr, FormatStr
 
 def forgiving_cid_attr(cid: CidObj, attr_getter: Callable[[], Optional[str]]
                        ) -> Union[CidObj, Collection, str, int, float]:
@@ -43,7 +42,7 @@ def process_lines(cid: CidObj, line_types: Iterable[CidLineType]) -> Iterator[Ci
             for subobj in target_obj:  # re-use same subobj for every line until new top-level line encountered
                 # `valid_fields` and `line_type` already been iterated at this point
                 # (either in top-level loop or sub level loop)
-                d: Mapping = shallow_mapify(subobj)
+                d = shallow_mapify(subobj)
                 yield unmapify(d, line_type, lambda k: k in line_type.cidfields)  # A1, A2, C1, C2, D1, E1 yielded here
                 while True:  # sub level objects loop
                     # look ahead in `i_line_types`
@@ -68,7 +67,7 @@ def process_lines(cid: CidObj, line_types: Iterable[CidLineType]) -> Iterator[Ci
 
 def process_formatting(cid: CidObj, i_lines: Iterable[CidLine],
                        total_getter = lambda cid,t: forgiving_cid_attr(cid, lambda: SEQ_LINE_TYPE_TOTAL_DICT.get(t))
-                       ) -> Iterator[str]:
+                       ) -> Iterator[FormatStr]:
     """The line object and appropriate format code as a tuple: (line_obj, format_str)
 
     The number of objects in A1, C2 (steps, nodes, elements, boundaries, soils materials, and interface materials)
@@ -93,7 +92,7 @@ def process_formatting(cid: CidObj, i_lines: Iterable[CidLine],
                 format_strs[idx] += "L"
     yield from format_strs
 
-def line_strings(cid: CidObj, line_types: Iterable[CidLineType]) -> Iterator[str]:
+def line_strings(cid: CidObj, line_types: Iterable[CidLineType]) -> Iterator[CidLineStr]:
     lines = list(process_lines(cid, line_types))
     i_formatting = process_formatting(cid, lines)
     yield from (format(o, f) for o,f in zip(lines,i_formatting))

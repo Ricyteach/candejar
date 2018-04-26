@@ -1,9 +1,16 @@
+# -*- coding: utf-8 -*-
+
+"""Module defining CidSeq objects for soil materials and interface materials."""
+
+# TODO: Add link element materials
+
 from typing import TypeVar, Generic, Iterator, Counter
 
 from ... import fea
 from ...cid import CidSubLine, D1
 from ..cidsubobj import CidSubObj
-from .cidseq import CidSeq, CIDSubSeqIndexError
+from .cidseq import CidSeq
+from .exc import CIDSubSeqIndexError
 
 CidObj = TypeVar("CidObj", covariant=True)
 SoilMatObj = CidSubObj[CidObj, "SoilMaterialSeq", D1, fea.Material]

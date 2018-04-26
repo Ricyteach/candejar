@@ -1,15 +1,12 @@
 # -*- coding: utf-8 -*-
 
 """CID line module for working with individual lines of a .cid file."""
+
 import re
 from dataclasses import make_dataclass, dataclass, field, asdict
 from typing import Optional, Type, Pattern
-from .exc import CIDError
+from .exc import CIDError, LineError, LineParseError
 from .cidfield import make_field_obj
-
-
-class LineError(CIDError):
-    pass
 
 
 PREFIX_TEMPLATE = "{: >25s}!!"
@@ -82,7 +79,7 @@ class CidLine:
         try:
             return cls(**{k:cls.cidfields[k].parse(v) for k,v in cls.parser.fullmatch(line).groupdict().items()})
         except AttributeError as e:
-            raise ValueError(f"{cls.__name__} failed to parse line:\n{line!r}") from e
+            raise LineParseError(f"{cls.__name__} failed:\n{line!r}") from e
 
 
 def make_cid_line_cls(name_, **definitions):

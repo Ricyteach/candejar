@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 
-"""A viewer for a CID sub object (pipe group, node, etc) using a `SimpleNamespace` instance returned on the fly."""
+"""A viewer for a CID sub object (pipe group, node, etc) using a `SimpleNamespace`
+instance returned on the fly.
+"""
+
 from types import new_class
-from typing import Generic, Union, TypeVar
+from typing import Generic, Union, TypeVar, Dict
 
 from ..names import FEA_TYPE_DICT
 from .names import SUB_OBJ_CLASS_DICT
@@ -31,6 +34,9 @@ class CidSubObj(ChildRegistryBase, Generic[CidObj, CidSeq, CidSubLine, fea.FEAOb
         self._idx = _idx
         self.__dict__.update(kwargs)
 
+    def _asdict(self) -> Dict[str, CidData]:
+        return {k:v for k,v in vars(self).items() if k not in "_container _idx".split()}
+
     def __repr__(self):
         items = ("{}={!r}".format(k, v) for k,v in vars(self).items() if k not in "_container _idx".split())
         return "{}({})".format(type(self).__name__, ", ".join(items))
@@ -38,17 +44,15 @@ class CidSubObj(ChildRegistryBase, Generic[CidObj, CidSeq, CidSubLine, fea.FEAOb
     def __eq__(self, other):
         return self.__repr__() == other.__repr__()
 
-    def _asdict(self):
-        return {k:v for k,v in vars(self).items() if k not in "_container _idx".split()}
-
     def __getattribute__(self, name):
         try:
             return super().__getattribute__(name)
         except AttributeError as e:
             new_obj = self._container[self._idx]
-            d = self.__dict__ = new_obj.__dict__
+            for key in (k for k in vars(new_obj) if k not in vars(self)):
+                vars(self)[key] = vars(new_obj)[key]
             try:
-                return d[name]
+                return vars(self)[name]
             except KeyError:
                 pass
             raise e

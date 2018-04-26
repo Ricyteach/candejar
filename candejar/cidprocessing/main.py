@@ -3,13 +3,12 @@ from ..cid.cidlineclasses import cidlineclasses
 
 __all__ = 'A1 E1'.split()
 
-
 def process(cid):
     yield from A1(cid)
 
 def gen_line(tag):
     """Validate the CID tag against cidlineclasses"""
-    yield getattr(cidlineclasses, tag) # execution pauses here
+    yield getattr(cidlineclasses, tag)  # execution pauses here
 
 #@GeneratorObj
 def A1(cid):

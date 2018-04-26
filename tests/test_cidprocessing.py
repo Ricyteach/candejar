@@ -6,35 +6,6 @@ import pytest
 from types import SimpleNamespace
 from candejar.cidprocessing.main import process
 
-@pytest.fixture
-def cidmock():
-    groupmockdcts = [
-        dict(type_="ALUMINUM"),
-        dict(type_="PLASTIC", walltype="GENERAL"),
-        dict(type_="STEEL", jointslip=True, varytravel=True)
-    ]
-    soilmaterialmockdcts = [
-        dict(model=1)
-    ]
-    interfmaterialmockdcts = [
-        dict(model=6)
-    ]
-    cidmockdct = dict(
-        level=3,
-        mode="ANALYS",
-        method=0,
-        ngroups=3,
-        pipe_groups=[SimpleNamespace(**groupmockdct) for groupmockdct in groupmockdcts],
-        nsteps=2,
-        nnodes=6,
-        nelements=6,
-        nboundaries=3,
-        nsoilmaterials=1,
-        ninterfmaterials=1,
-        materials=[SimpleNamespace(**materialmockdct) for materialmockdcts in (soilmaterialmockdcts, interfmaterialmockdcts) for materialmockdct in materialmockdcts]
-    )
-    return SimpleNamespace(**cidmockdct)
-
 def process_(cid):
     for result in process(cid):
         yield result.__name__
