@@ -3,7 +3,6 @@ from .main import gen_line
 
 __all__ = 'D1 D2Isotropic D2Duncan D2Interface D2MohrCoulomb'.split()
 
-
 def D1(cid):
     for n_objs, nxt, name in ((cid.nsoilmaterials, D1Soil, 'soil material'),
                               (cid.ninterfmaterials, D1Interf, 'interf material')):
@@ -17,7 +16,6 @@ def D1(cid):
                                              ''.format(name, cid_obj_num)) from e
         # cid.listener.throw(exc.SequenceComplete, ('{}s completed'.format(name), len(cid.materials)))
 
-
 def D1Soil(cid, material_num):
     yield from gen_line('D1')
     material = cid.materials[material_num-1]
@@ -30,7 +28,6 @@ def D1Soil(cid, material_num):
     gen = D_nxts[material.model]
     yield from gen(material)
     # cid.listener.throw(exc.ObjectComplete)
-
 
 def D1Interf(cid, material_num):
     yield from gen_line('D1')
@@ -46,7 +43,6 @@ def D1Interf(cid, material_num):
     yield from D2Interface(material)
     # cid.listener.throw(exc.ObjectComplete)
 
-
 # probably don't ever need these models
 D2Orthotropic = None
 D2Overburden = None
@@ -54,20 +50,17 @@ D2Hardin = None
 D2HardinTRIA = None
 D2Composite = None
 
-
 def D2MohrCoulomb(material):
     if material.model != 8:
         raise exc.CIDProcessingError('Model #{:d} invalid for mohr/coulomb'
                        ''.format(material.model))
     yield from gen_line('D2MohrCoulomb')
 
-
 def D2Isotropic(material):
     if material.model != 1:
         raise exc.CIDProcessingError('Model #{:d} invalid for isotropic'
                        ''.format(material.model))
     yield from gen_line('D2Isotropic')
-
 
 def D2Duncan(material):
     if material.model != 3:
@@ -86,7 +79,6 @@ def D2Duncan(material):
     elif material.name not in duncan_models + selig_models:
         raise exc.CIDProcessingError('Invalid Duncan material name for '
                        '#{}'.format(material.id))
-
 
 def D2Interface(material):
     if material.model != 6:

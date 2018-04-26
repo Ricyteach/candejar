@@ -5,12 +5,10 @@
 from dataclasses import dataclass
 from typing import Optional, TypeVar, Generic
 
-
 #  NOTE: PipeGroup objects can contain a wide variety of attributes; need to find a way to accommodate
 @dataclass
 class PipeGroup:
     type_: str = ""  # ALUMINUM, BASIC, CONCRETE, PLASTIC, STEEL, CONRIB, CONTUBE
-
 
 #  NOTE: Material objects can contain a wide variety of attributes; need to find a way to accommodate
 @dataclass
@@ -21,12 +19,10 @@ class Material:
     name: str = ""
     # layers: InitVar[Sequence[Layer]] = None <- will use for overburden soil implementation if ever needed
 
-
 @dataclass
 class Node:
     x: float = 0.0
     y: float = 0.0
-
 
 NodeORNodeNum = TypeVar("NodeORNodeNum", int, Node)
 

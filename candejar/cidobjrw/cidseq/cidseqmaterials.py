@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+
+"""Module defining CidSeq objects for soil materials and interface materials."""
+
+# TODO: Add link element materials
+
 from typing import TypeVar, Generic, Iterator, Counter
 
 from ... import fea

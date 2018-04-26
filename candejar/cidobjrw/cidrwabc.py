@@ -4,7 +4,7 @@
 
 from abc import abstractmethod, ABC
 from pathlib import Path
-from typing import Union, Iterator, Type, Iterable, Optional, Tuple, Generator
+from typing import Union, Iterator, Type, Iterable, Optional
 
 from ..cid import CidLine
 from ..cidprocessing.main import process

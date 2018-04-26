@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
-"""A viewer for a CID sub object (pipe group, node, etc) using a `SimpleNamespace` instance returned on the fly."""
+"""A viewer for a CID sub object (pipe group, node, etc) using a `SimpleNamespace`
+instance returned on the fly.
+"""
+
 from types import new_class
 from typing import Generic, Union, TypeVar, Dict
 

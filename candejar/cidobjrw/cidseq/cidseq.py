@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """Module defining CidSeq base object."""
+
 import types
 from dataclasses import InitVar, dataclass, asdict
 from itertools import count

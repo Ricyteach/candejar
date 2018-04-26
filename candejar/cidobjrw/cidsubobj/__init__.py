@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """CID sub objectmodule for working with CID sub objects (pipe grous, node, etc)."""
+
 from ..names import SEQ_TYPES_DICT
 from .names import SEQ_LINE_TYPES, SUB_OBJ_CLASS_NAMES
 from .cidsubobj import subclass_CidSubObj, CidSubObj

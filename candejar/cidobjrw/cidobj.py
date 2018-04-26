@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
-"""CID object module for working with an entire cid file as a read/write Python data model object."""
+"""CID object module for working with an entire cid file as a read/write Python
+data model object."""
 
-from dataclasses import dataclass, field, InitVar
-from typing import List, Any, Iterable, Optional, Generator, Tuple, Type, Iterator, Sequence
+from dataclasses import dataclass, field
+from typing import List, Any, Iterable, Optional, Generator, Tuple, Type, Sequence
 
 from ..cidrw.write import CidLineStr
 from ..cidrw.read import line_strings as read_line_strings
@@ -41,12 +42,15 @@ class AttributeDelegator:
 class CidObj(CidRW):
     """A data viewer for working with a .cid file as a Python data model object.
 
-    Note that the `CidObj` does not necessarily define a `dataclass` field for every cid A1, C1, and C2 field. This means,
-    for example, that an input cid file read into `CidObj` will change all non-included fields to *default values* when it
-    mapified and/or written, since mapify grabs only from `dataclass` fields (if they exist).
+    Note that the `CidObj` does not necessarily define a `dataclass` field for
+    every cid A1, C1, and C2 field. This means, for example, that an input cid
+    file read into `CidObj` will change all non-included fields to *default values*
+    when it is mapified and/or written, since mapify grabs only from `dataclass`
+    fields (if they exist).
 
-    A `list` of cid file line objects is stored in `line_objs`. Other members are on-the-fly views of the data contained
-    in the line objects. However `line_objs` is not a `dataclass` field.
+    A `list` of cid file line objects is stored in `line_objs`. Other members are
+    on-the-fly views of the data contained in the line objects. However `line_objs`
+    is not a `dataclass` field.
     """
     # fields are for display/output
     mode: str = field(default=AttributeDelegator("a1"))  # ANALYS or DESIGN
@@ -103,14 +107,16 @@ class CidObj(CidRW):
             read_line_strings(obj, lines, iter_line_types, handle_line_strs_in)
         else:
             if line_types is not None:
-                raise CidObjFromLinesError(f"Cannot build a {cls.__name__} instance using only line type input")
+                raise CidObjFromLinesError(f"Cannot build a {cls.__name__} instance "
+                                           f"using only line type input")
         return obj
 
     def handle_line_strs(self, lines: Sequence[CidLineStr]) -> Generator[None, Tuple[int, Type[CidLine]], None]:
-        """Creates the line_objs list and adds the parsed line objects that constitute the object state.
+        """Creates the line_objs list and adds the parsed line objects that
+        constitute the object state.
 
-        A cidseq._COMPLETE signal is sent to the current sequence object when the next line string indicates the end of
-        a block of line types.
+        A cidseq._COMPLETE signal is sent to the current sequence object when the
+        next line string indicates the end of a block of line types.
         """
         # for tracking sub sequence sections
         curr_section_typ = None
@@ -150,9 +156,14 @@ class CidObj(CidRW):
                     try:
                         seq = getattr(self, SEQ_NAMES_DICT[curr_section_typ])
                     except KeyError:
-                        raise CidObjFromLinesError("No sub sequence lines were detected; not a valid cid line sequence") from None
+                        raise CidObjFromLinesError("No sub sequence lines were "
+                                                   "detected; not a valid cid "
+                                                   "line sequence") from None
                     except AttributeError:
-                        raise CidObjFromLinesError(f"{type(self).__name__} object is missing {SEQ_NAMES_DICT[curr_section_typ]} sub sequence") from None
+                        raise CidObjFromLinesError(f"{type(self).__name__} "
+                                                   f"object is missing "
+                                                   f"{SEQ_NAMES_DICT[curr_section_typ]} "
+                                                   f"sub sequence") from None
                     else:
                         seq.check_complete = _COMPLETE
         # pause after Stop, before completion

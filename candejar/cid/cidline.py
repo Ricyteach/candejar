@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """CID line module for working with individual lines of a .cid file."""
+
 import re
 from dataclasses import make_dataclass, dataclass, field, asdict
 from typing import Optional, Type, Pattern

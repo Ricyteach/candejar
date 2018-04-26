@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """Load `ciddefs.yml` file into objects."""
+
 import yaml
 from pathlib import Path
 import keyword, builtins

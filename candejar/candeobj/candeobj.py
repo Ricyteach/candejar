@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """The interface for cid type objects expected by the module."""
+
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Mapping, Union, Sequence, Type, Optional, Iterable

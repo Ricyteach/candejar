@@ -1,11 +1,9 @@
 from . import exc
 from .main import gen_line
 
-
 def B1Plastic(cid, group):
     yield from gen_line('B1Plastic')
     yield from B2Plastic(cid, group)
-
 
 def B2Plastic(cid, group):
     yield from gen_line('B2Plastic')
@@ -13,12 +11,10 @@ def B2Plastic(cid, group):
     if cid.method == 1:  # LRFD
         yield from B4Plastic(cid)
 
-
 def B3PlasticGeneral(cid):
     if cid.mode != 'ANALYS':
         raise exc.CIDProcessingError('General plastic pipe type for ANALYS mode only')
     yield from gen_line('B3PlasticAGeneral')
-
 
 def B3PlasticSmooth(cid):
     if cid.mode == 'ANALYS':
@@ -29,17 +25,14 @@ def B3PlasticSmooth(cid):
         elif cid.method == 1:  # LRFD
             yield from gen_line('B3PlasticDLRFD')
 
-
 def B3PlasticProfile(cid):
     if cid.mode != 'ANALYS':
         raise exc.CIDProcessingError('Profile plastic pipe type for ANALYS mode only')
     yield from gen_line('B3PlasticAProfile')
     yield from gen_line('B3bPlasticAProfile')
 
-
 def B4Plastic(cid):
         yield from gen_line('B4Plastic')
-
 
 B3_dict = dict(
                 GENERAL=B3PlasticGeneral,

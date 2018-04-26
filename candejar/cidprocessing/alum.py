@@ -1,6 +1,5 @@
 from .main import gen_line
 
-
 def B1Alum(cid, group):
     yield from gen_line('B1Alum')
     if cid.mode == 'ANALYS':
