@@ -77,7 +77,7 @@ class CidSeq(ChildRegistryBase, Sequence[SubObj], Generic[CidObj, CidSubLine, fe
         for obj in self.iter_sublines(val):
             d.update(asdict(obj))
         try:
-            result = CidSubObj.subclasses[SUB_OBJ_NAMES_DICT[self.line_type]](self, val, **d)
+            result = CidSubObj.subclasses[SUB_OBJ_NAMES_DICT[self.line_type]][CidObj, CidSeq](self, val, **d)
         except CIDSubSeqIndexError as e:
             raise IndexError(f"{val!s} not an available index for {self.line_type.__name__} object") from e
         return result
@@ -107,7 +107,7 @@ class CidSeq(ChildRegistryBase, Sequence[SubObj], Generic[CidObj, CidSubLine, fe
             total_attr_name = SEQ_LINE_TYPE_TOTAL_DICT[self.line_type]
             seq_total = getattr(self.cid_obj, total_attr_name)
             x = count()
-            SubObjCls: Type[SubObj] = CidSubObj.subclasses[SUB_OBJ_NAMES_DICT[self.line_type]]
+            SubObjCls: Type[SubObj] = CidSubObj.subclasses[SUB_OBJ_NAMES_DICT[self.line_type]][CidObj, CidSeq]
             if seq_total:
                 # count is not zero but current_object_lines is empty; assume need to produce new sub object items
                 # during cid_obj instantiation
