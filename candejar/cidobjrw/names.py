@@ -3,7 +3,6 @@
 """Names relating the cid line types to the CidObj attributes"""
 
 from ..cid import SEQ_LINE_TYPES, A2, C3, C4, C5, E1, D1
-from .. import fea
 
 # below for sequence attributes of CidObj instances
 SEQ_NAMES = ("pipe_groups", "nodes", "elements", "boundaries", "materials", "factors")
@@ -14,8 +13,6 @@ MAT_SEQ_NAMES = ("soilmaterials", "interfmaterials")
 ALL_SEQ_NAMES = SEQ_NAMES + MAT_SEQ_NAMES
 
 SEQ_TYPES_DICT = dict(zip(SEQ_NAMES + MAT_SEQ_NAMES, SEQ_LINE_TYPES + MAT_LINE_TYPES))
-FEA_TYPE_DICT = {A2: fea.PipeGroup, C3: fea.Node, C4: fea.Element,
-                 C5: fea.Boundary, D1: fea.Material, E1: fea.Factor}
 SEQ_NAMES_DICT = dict(zip(SEQ_LINE_TYPES, SEQ_NAMES))
 
 # below for sequence total attributes of CidObj instances; using nmaterials

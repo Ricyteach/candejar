@@ -5,5 +5,5 @@
 class CandeError(Exception):
     pass
 
-class IncompleteCandeObjError(CandeError):
+class CandeValueError(CandeError, ValueError):
     pass

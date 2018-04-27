@@ -1,4 +1,5 @@
 {
+  "tests/candeobj/test_materials.py::test_something": true,
   "tests/test_candejar.py::TestCidLine::()::test_format": true,
   "tests/test_candejar.py::TestCidLine::()::test_parse": true,
   "tests/test_cid.py::TestCidLine::()::test_format": true,

@@ -8,11 +8,8 @@ from types import new_class
 from typing import Generic, Union, TypeVar, Dict, Any
 
 from .names import SUB_OBJ_CLASS_DICT
-from ..cidsubobj.names import PIPE_GROUP_CLASS_DICT, SOIL_MATERIAL_DICT
-from ..names import FEA_TYPE_DICT
 from ...utilities.mixins import ChildRegistryBase
-from ...cid import CidSubLine, A2, D1
-from ... import fea
+from ...cid import CidSubLine
 
 
 # The `SimpleNamespace` is just a current view of the combined attributes from the relevant file `CidLine`s.
@@ -24,7 +21,7 @@ CidObj = TypeVar("CidObj")
 CidSeq = TypeVar("CidSeq")
 
 
-class CidSubObj(ChildRegistryBase, Generic[CidObj, CidSeq, CidSubLine, fea.FEAObj]):
+class CidSubObj(ChildRegistryBase, Generic[CidObj, CidSeq, CidSubLine]):
     """A viewer object that gets its data from the `CidLine` objects in `.cid_obj`."""
 
     def __init__(self, _container: CidSeq, _idx: int, **kwargs: CidData) -> None:
@@ -70,39 +67,7 @@ def subclass_CidSubObj(sub_line_type):
 
     # resolve 2 of the CidSubObj generic types
     SubLine = sub_line_type  # type of CidLine indicating start of an object in CID file
-    FEA_Obj = FEA_TYPE_DICT[sub_line_type]  # type of FEA object corresponding to CID object
 
-    cls = new_class(cls_name, (CidSubObj[CidObj, CidSeq, SubLine, FEA_Obj], Generic[CidObj, CidSeq]))
-
-    return cls
-
-def subclass_PipeGroupObj(type_):
-    """Produce a `PipeGroup` based subclass."""
-
-    # see if already exists
-    pipe_group_cls_name = PIPE_GROUP_CLASS_DICT[type_]
-    PipeGroup = subclass_CidSubObj(A2)
-    try:
-        return PipeGroup.subclasses[pipe_group_cls_name]
-    except KeyError:
-        pass
-
-    cls = new_class(pipe_group_cls_name, (PipeGroup,))
+    cls = new_class(cls_name, (CidSubObj[CidObj, CidSeq, SubLine], Generic[CidObj, CidSeq]))
 
     return cls
-
-def subclass_MaterialObj(num):
-    """Produce a `Material` based subclass."""
-
-    # see if already exists
-    material_cls_name = SOIL_MATERIAL_DICT[num]
-    Material = subclass_CidSubObj(D1)
-    try:
-        return Material.subclasses[material_cls_name]
-    except KeyError:
-        pass
-
-    cls = new_class(material_cls_name, (Material,))
-
-    return cls
-

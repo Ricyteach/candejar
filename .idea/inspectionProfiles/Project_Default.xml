@@ -45,6 +45,8 @@
           <option value="cid.B2Plastic" />
           <option value="cid.B3PlasticAGeneral" />
           <option value="cid.B2SteelA" />
+          <option value="cid.D2Duncan" />
+          <option value="cid.*" />
         </list>
       </option>
     </inspection_tool>

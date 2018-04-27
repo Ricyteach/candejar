@@ -9,7 +9,6 @@ from typing import List, Any, Iterable, Optional, Generator, Tuple, Type, Sequen
 from ..utilities.descriptors import AttributeDelegator
 from ..cidrw.write import CidLineStr
 from ..cidrw.read import line_strings as read_line_strings
-from .. import fea
 from ..cid import SEQ_LINE_TYPES, CidLine, A1, A2, C1, C2, C3, C4, C5, D1, E1, Stop
 from ..cid.exc import LineParseError
 from .names import ALL_SEQ_NAMES, SEQ_NAMES_DICT
@@ -53,14 +52,14 @@ class CidObj(CidRW):
         return self.nsoilmaterials + self.ninterfmaterials
 
     # sub-sequences of other cid objects; must appear in ALL_SEQ_NAMES
-    pipe_groups: CidSeq["CidObj", A2, fea.PipeGroup] = field(default=None, repr=False)  # pipe groups
-    nodes: CidSeq["CidObj", C3, fea.Node] = field(default=None, repr=False)
-    elements: CidSeq["CidObj", C4, fea.Element] = field(default=None, repr=False)
-    boundaries: CidSeq["CidObj", C5, fea.Boundary] = field(default=None, repr=False)
-    materials: CidSeq["CidObj", D1, fea.Material] = field(default=None, repr=False)  # all element materials
-    soilmaterials: CidSeq["CidObj", D1, fea.Material] = field(default=None, repr=False)  # soil element materials
-    interfmaterials: CidSeq["CidObj", D1, fea.Material] = field(default=None, repr=False)  # interface element materials
-    factors: CidSeq["CidObj", E1, fea.Factor] = field(default=None, repr=False)  # lrfd step factors
+    pipe_groups: CidSeq["CidObj", A2] = field(default=None, repr=False)  # pipe groups
+    nodes: CidSeq["CidObj", C3] = field(default=None, repr=False)
+    elements: CidSeq["CidObj", C4] = field(default=None, repr=False)
+    boundaries: CidSeq["CidObj", C5] = field(default=None, repr=False)
+    materials: CidSeq["CidObj", D1] = field(default=None, repr=False)  # all element materials
+    soilmaterials: CidSeq["CidObj", D1] = field(default=None, repr=False)  # soil element materials
+    interfmaterials: CidSeq["CidObj", D1] = field(default=None, repr=False)  # interface element materials
+    factors: CidSeq["CidObj", E1] = field(default=None, repr=False)  # lrfd step factors
 
     def __post_init__(self) -> None:
         # initialize empty cid sub object sequence types

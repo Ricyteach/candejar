@@ -8,24 +8,23 @@ from itertools import count
 from typing import Sequence, Generic, Type, Iterator, Union, TypeVar, Counter, List, Dict
 
 from ...cid import CidLine
-from ... import fea
 from ...cid import CidSubLine, TOP_LEVEL_TYPES
 from ...utilities.mixins import ChildRegistryBase
 from ...utilities.dataclasses import shallow_mapify
 from ..cidsubobj import CidSubObj, SUB_OBJ_NAMES_DICT
 from ..cidsubobj.cidsubobj import CidData
-from ..names import FEA_TYPE_DICT, SEQ_LINE_TYPE_TOTAL_DICT
+from ..names import SEQ_LINE_TYPE_TOTAL_DICT
 from .names import SEQ_CLASS_DICT
 from .exc import CIDSubSeqIndexError
 
 CidObj = TypeVar("CidObj", covariant=True)
-SubObj = CidSubObj[CidObj, "CidSeq", CidSubLine, fea.FEAObj]
+SubObj = CidSubObj[CidObj, "CidSeq", CidSubLine]
 
 # for indicating completed sequence during object instantiation
 _COMPLETE = object()
 
 @dataclass(eq=False)
-class CidSeq(ChildRegistryBase, Sequence[SubObj], Generic[CidObj, CidSubLine, fea.FEAObj]):
+class CidSeq(ChildRegistryBase, Sequence[SubObj], Generic[CidObj, CidSubLine]):
     cid_obj: InitVar[CidObj]
 
     def __post_init__(self, cid_obj: CidObj) -> None:
@@ -37,11 +36,6 @@ class CidSeq(ChildRegistryBase, Sequence[SubObj], Generic[CidObj, CidSubLine, fe
     @property
     def line_type(self):
         return NotImplemented
-
-    @property
-    def type_(self) -> Type[fea.FEAObj]:
-        fea_type: Type[fea.FEAObj] = FEA_TYPE_DICT[self.line_type]
-        return fea_type
 
     @property
     def iter_main_lines(self) -> Iterator[CidSubLine]:
@@ -138,8 +132,7 @@ def subclass_CidSeq(sub_line_type: Type[CidLine]) -> Type[CidSeq]:
 
     # resolve 2 of the CidSeq input types
     SubLine = sub_line_type  # type of CidLine indicating start of an object in CID file
-    FEA_Obj = FEA_TYPE_DICT[sub_line_type]  # type of FEA object corresponding to CID object
 
-    cls: Type[CidSeq] = types.new_class(cls_name, (CidSeq[CidObj, SubLine, FEA_Obj], Generic[CidObj]), exec_body=lambda ns: ns.update(dict(line_type=SubLine)))
+    cls: Type[CidSeq] = types.new_class(cls_name, (CidSeq[CidObj, SubLine], Generic[CidObj]), exec_body=lambda ns: ns.update(dict(line_type=SubLine)))
 
     return cls

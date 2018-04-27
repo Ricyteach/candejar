@@ -6,18 +6,17 @@
 
 from typing import TypeVar, Generic, Iterator, Counter
 
-from ... import fea
 from ...cid import CidSubLine, D1
 from ..cidsubobj import CidSubObj
 from .cidseq import CidSeq
 from .exc import CIDSubSeqIndexError
 
 CidObj = TypeVar("CidObj", covariant=True)
-SoilMatObj = CidSubObj[CidObj, "SoilMaterialSeq", D1, fea.Material]
-InterfMatObj = CidSubObj[CidObj, "InterfMaterialSeq", D1, fea.Material]
+SoilMatObj = CidSubObj[CidObj, "SoilMaterialSeq", D1]
+InterfMatObj = CidSubObj[CidObj, "InterfMaterialSeq", D1]
 
 
-class SoilMaterialSeq(CidSeq[CidObj, D1, fea.Material], Generic[CidObj]):
+class SoilMaterialSeq(CidSeq[CidObj, D1], Generic[CidObj]):
     line_type = D1
 
     @property
@@ -42,7 +41,7 @@ class SoilMaterialSeq(CidSeq[CidObj, D1, fea.Material], Generic[CidObj]):
         return sum(1 for line in self.iter_main_lines if line.model!=6)
 
 
-class InterfMaterialSeq(CidSeq[CidObj, D1, fea.Material], Generic[CidObj]):
+class InterfMaterialSeq(CidSeq[CidObj, D1], Generic[CidObj]):
     line_type = D1
 
     @property
