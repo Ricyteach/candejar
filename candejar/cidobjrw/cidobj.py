@@ -6,6 +6,7 @@ data model object."""
 from dataclasses import dataclass, field
 from typing import List, Any, Iterable, Optional, Generator, Tuple, Type, Sequence
 
+from ..utilities.descriptors import AttributeDelegator
 from ..cidrw.write import CidLineStr
 from ..cidrw.read import line_strings as read_line_strings
 from .. import fea
@@ -16,27 +17,6 @@ from .cidrwabc import CidRW
 from .cidseq import CidSeq, _COMPLETE
 from .cidseq.names import ALL_SEQ_CLASS_NAMES
 from .exc import CidObjFromLinesError
-
-
-class AttributeDelegator:
-    """Delegates attribute access to another named object attribute."""
-    def __init__(self, delegate_name: str) -> None:
-        self.delegate_name = delegate_name
-
-    def __set_name__(self, owner, name):
-        self.name = name
-
-    def __get__(self, instance: Any, owner: Any) -> Any:
-        delegate = getattr(instance, self.delegate_name)
-        try:
-            return getattr(delegate, self.name)
-        except AttributeError:
-            return self
-
-    def __set__(self, instance: Any, value: Any) -> None:
-        delegate = getattr(instance, self.delegate_name)
-        setattr(delegate, self.name, value)
-
 
 @dataclass
 class CidObj(CidRW):
