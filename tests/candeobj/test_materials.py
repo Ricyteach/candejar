@@ -18,4 +18,6 @@ def test_wrong_material_num():
 
 def test_canned_duncan_selig():
     assert DuncanSelig.duncan
+    assert DuncanSelig.duncan.CL90
     assert DuncanSelig.selig
+    assert DuncanSelig.selig.CL90

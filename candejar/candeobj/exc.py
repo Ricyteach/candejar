@@ -7,3 +7,6 @@ class CandeError(Exception):
 
 class CandeValueError(CandeError, ValueError):
     pass
+
+class CandeAttributeError(CandeError, AttributeError):
+    pass

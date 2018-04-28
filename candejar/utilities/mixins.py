@@ -29,3 +29,25 @@ class ChildRegistryBase:
             raise ChildRegistryError(f"Attempted to overwrite the "
                                      f"{cls.__name__} child class in the "
                                      f"{parent_cls.__name__} registry")
+
+class ChildAsAttributeError(Exception):
+    pass
+
+class ChildAsAttributeBase:
+    """Mixin class that adds child classes parent class attributes."""
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        # the child will be added as a class attribute to the closest parent
+        # that is a subclass of CAAB
+        for parent_cls in cls.mro()[1:]:
+            if issubclass(parent_cls, ChildAsAttributeBase):
+                break
+        else:
+            parent_cls = ChildAsAttributeBase
+        # can't have multiple child classes with same name
+        if cls.__name__ not in vars(parent_cls):
+            setattr(parent_cls, cls.__name__, cls)
+        else:
+            raise ChildAsAttributeError(f"Attempted to overwrite the "
+                                        f"{cls.__name__} child class attribute "
+                                        f"in the {parent_cls.__name__}.__dict__")
