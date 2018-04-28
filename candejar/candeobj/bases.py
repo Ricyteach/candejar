@@ -2,11 +2,11 @@
 
 """Module for working with cande data objects."""
 
-from typing import TypeVar
+from typing import NewType
 
-NodeNum = TypeVar("NodeNum", int)
-StepNum = TypeVar("StepNum", int)
-MatNum = TypeVar("MatNum", int)
-CodeNum = TypeVar("CodeNum", int)
-CandeFloat = TypeVar("CandeFloat", float)
-CandeStr = TypeVar("CandeStr", str)
+NodeNum = NewType("NodeNum", int)
+StepNum = NewType("StepNum", int)
+MatNum = NewType("MatNum", int)
+CodeNum = NewType("CodeNum", int)
+CandeFloat = NewType("CandeFloat", float)
+CandeStr = NewType("CandeStr", str)
