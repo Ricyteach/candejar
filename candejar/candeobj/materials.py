@@ -107,16 +107,18 @@ class DuncanSeligCanned(DuncanSeligBase):
             raise DuncanSeligValueError(f"Invalid canned model name: {self.name!r} ")
 
 
-DUNCAN_MODELS = ('CA105 CA95 CA90 SM100 SM90 SM85'
-                 'SC100 SC90 SC85 CL100 CL90 CL85').split()
+DUNCAN_MODELS = ('CA105 CA95 CA90 '
+                 'SM100 SM90 SM85 '
+                 'SC100 SC90 SC85 '
+                 'CL100 CL90 CL85').split()
 
 @dataclass
 class Duncan(DuncanSeligCanned, ChildAsAttributeBase):
     _canned: ClassVar[CannedObjects] = CannedObjects(DUNCAN_MODELS)
     dsmodel: int = 0
 
-SELIG_MODELS = ('SW100 SW95 SW90 SW85 SW80'
-                'ML95 ML90 ML85 ML80 ML50'
+SELIG_MODELS = ('SW100 SW95 SW90 SW85 SW80 '
+                'ML95 ML90 ML85 ML80 ML50 '
                 'CL95 CL90 CL85 CL80').split()
 
 # init duncan canned models
