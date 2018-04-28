@@ -105,10 +105,6 @@ class DuncanSeligCanned(DuncanSeligBase):
                                         f"0 (Duncan) or 1 (Selig)") from None
         if self.name not in valid_names:
             raise DuncanSeligValueError(f"Invalid canned model name: {self.name!r} ")
-        # get specific canned instance
-        d_or_s_canned = getattr(self._canned, self.name)
-        # set obj state to specific canned instance
-        self.__dict__ = d_or_s_canned.__dict__
 
 
 DUNCAN_MODELS = ('CA105 CA95 CA90 SM100 SM90 SM85'
