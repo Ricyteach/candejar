@@ -133,7 +133,7 @@ class Selig(DuncanSeligCanned, ChildAsAttributeBase):
 SeligCanned = Selig._canned
 
 @dataclass
-class DuncanSeligCustom(DuncanSeligBase):
+class DuncanSelig(DuncanSeligBase):
     # D3
     cohesion: float =  0.0 # psi
     phi_i: float =  0.0 # degrees
