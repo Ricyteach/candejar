@@ -26,5 +26,6 @@ class ChildRegistryBase:
         if cls.__name__ not in parent_cls.subclasses:
             parent_cls.subclasses[cls.__name__] = cls
         else:
-            raise ChildRegistryError(f"Attempted to overwrite the {cls.__name__} child class "
-                                     f"in the {parent_cls.__name__} registry")
+            raise ChildRegistryError(f"Attempted to overwrite the "
+                                     f"{cls.__name__} child class in the "
+                                     f"{parent_cls.__name__} registry")

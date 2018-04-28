@@ -1,5 +1,6 @@
 from . import exc
 from .main import gen_line
+from candeobj.materials import DUNCAN_MODELS as duncan_models, SELIG_MODELS as selig_models
 
 __all__ = 'D1 D2Isotropic D2Duncan D2Interface D2MohrCoulomb'.split()
 
@@ -66,11 +67,6 @@ def D2Duncan(material):
     if material.model != 3:
         raise exc.CIDProcessingError('Model #{:d} invalid for duncan'
                        ''.format(material.model))
-    duncan_models = ('CA105 CA95 CA90 SM100 SM90 SM85'
-                     'SC100 SC90 SC85 CL100 CL90 CL85').split()
-    selig_models = ('SW100 SW95 SW90 SW85 SW80'
-                    'ML95 ML90 ML85 ML80 ML50'
-                    'CL95 CL90 CL85 CL80').split()
 
     yield from gen_line('D2Duncan')
     if material.name == 'USER':

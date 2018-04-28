@@ -15,3 +15,7 @@ def test_wrong_material_num():
         DuncanSelig(2)
         MohrCoulomb(2)
         Interface(2)
+
+def test_canned_duncan_selig():
+    assert DuncanSelig.duncan
+    assert DuncanSelig.selig
