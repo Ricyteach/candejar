@@ -1,6 +1,5 @@
 {
   "tests/candeobj/test_materials.py::test_something": true,
-  "tests/candeobj/test_pipe_groups.py::test_PipeGroup": true,
   "tests/test_candejar.py::TestCidLine::()::test_format": true,
   "tests/test_candejar.py::TestCidLine::()::test_parse": true,
   "tests/test_cid.py::TestCidLine::()::test_format": true,
