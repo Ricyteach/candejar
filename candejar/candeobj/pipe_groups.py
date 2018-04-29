@@ -33,7 +33,6 @@ class Basic(PipeGroup):
     area: float = 0.0 # in2/in
     i: float = 0.0 # in4/in
     load: float = 0.0 # lbs/in
-
     # B2Basic
     # for ANALYS mode only
     # Small Deformation: 0, Large Deformation: 1, Plus Buckling: 2
@@ -49,10 +48,87 @@ class Aluminum(PipeGroup):
 class Steel(PipeGroup):
     pass
 
-
+# TODO: finish implementing Plastic subclasses
 @dataclass
 class Plastic(PipeGroup):
-    pass
+    #B1Plastic:
+    # GENERAL, SMOOTH, PROFILE
+    walltype: float = "GENERAL"
+    # HDPE, PVC, PP, OTHER
+    pipetype: float = "HDPE"
+    # 1: Short term, 2: Long term
+    duration: int = 1
+    # Small Deformation: 0, Large Deformation: 1, Plus Buckling: 2
+    mode: int = 0
+    #B2Plastic:
+    shortmodulus: float = 0.0 # psi
+    shortstrength: float = 0.0 # psi
+    longmodulus: float = 0.0 # psi
+    longstrength: float = 0.0 # psi
+    poissons: float = 0.3
+    density: float = 0.0 # pci
+    #B3PlasticAGeneral:
+    # for ANALYS only
+    # WallType = GENERAL
+    height: float = 0.0 # in
+    area: float = 0.0 # in2/in
+    i: float = 0.0 # in4/in
+    centroid: float = 0.0 # in
+    #B3PlasticASmooth:
+    # for ANALYS only
+    # WallType = SMOOTH
+    height: float = 0.0 # in
+    #B3PlasticAProfile:
+    # for ANALYS only
+    # WallType = PROFILE
+    # repeatable (multiple properties in one pipe group)
+    period: float = 0.0 # in
+    height: float = 0.0 # in
+    webangle: float = 90.0 # degrees
+    webthickness: float = 0.0 # in
+    webk: float = 4.0
+    # 0 to 4
+    numhorizontal: int = 0
+    # 1: include, -1: ignore
+    buckling: int = 1
+    first: int = 0
+    last: int = 1
+    #B3bPlasticAProfile:
+    # for ANALYS only
+    # WallType = PROFILE
+    # Required for each NumHorizontal elements
+    # 1: inner valley, 2: inner liner, 3: outer crest, 4: outer link
+    identifier: int = 0
+    length: float = 0.0 # in
+    thickness: float = 0.0 # in
+    supportk: float = 4.0
+    #B3PlasticDWSD:
+    # for DESIGN only
+    # WallType = SMOOTH
+    # Non LRFD only
+    yieldfs: float = 2.0
+    bucklingfs: float = 3.0
+    strainfs: float = 2.0
+    deflection: float = 5.0 # percent
+    tensile: float = 0.05 # in/in
+    #B3PlasticDLRFD:
+    # for DESIGN only
+    # WallType = SMOOTH
+    # LRFD only
+    yield_: float = 1.0
+    buckling: float = 1.0
+    strain: float = 1.0
+    deflection: float = 1.0
+    tensile: float = 1.0
+    #B4Plastic:
+    # for DESIGN only
+    # WallType = SMOOTH
+    # LRFD only
+    yieldϕ: float = 1.0
+    bucklingϕ: float = 1.0
+    strainϕ: float = 1.0
+    deflectionpercent: float = 5.0 # percent
+    tensileservice: float = 0.05 # in/in
 
 
 def subclass_PipeGroupObj(type_):
