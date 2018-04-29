@@ -10,6 +10,8 @@ from .exc import CandeError
 from ..utilities.descriptors import CannedObjects
 from ..utilities.mixins import ChildAsAttributeBase
 
+CannedMaterials = CannedObjects[Material]
+
 class DuncanSeligError(CandeError):
     pass
 
@@ -21,6 +23,7 @@ class DuncanSeligInstanceError(DuncanSeligError, AttributeError):
 
 @dataclass
 class DuncanSeligBase(Material):
+    """Base class for all Duncan/Selig soil materials."""
     # D1
     model: int = 3
     # D2
@@ -40,18 +43,21 @@ class DuncanSeligBase(Material):
 
 @dataclass
 class DuncanSeligCanned(DuncanSeligBase):
-    _canned: ClassVar[Optional[CannedObjects[Material]]] = None
+    """Base class for pre-canned Duncan/Selig soil materials."""
+    _canned: ClassVar[Optional[CannedMaterials]] = None
     def __post_init__(self):
         if type(self) is DuncanSeligCanned:
             raise DuncanSeligError("Cannot instantiate DuncanSeligCanned "
                                    "directly; use Duncan or Selig")
         super().__post_init__()
+        # 1 or 0 for dsmodel number
         try:
             valid_names = [DUNCAN_MODELS, SELIG_MODELS][self.dsmodel]
         except IndexError:
             raise DuncanSeligValueError(f"Invalid dsmodel number: {self.dsmodel!s} "
                                         f"for {type(self).__name__} object; use "
                                         f"0 (Duncan) or 1 (Selig)") from None
+        # only pre-canned names allowed for canned DS models
         if self.name not in valid_names:
             raise DuncanSeligValueError(f"Invalid canned model name: {self.name!r} ")
 
@@ -63,7 +69,8 @@ DUNCAN_MODELS = ('CA105 CA95 CA90 '
 
 @dataclass
 class Duncan(DuncanSeligCanned, ChildAsAttributeBase):
-    _canned: ClassVar[CannedObjects[Material]] = CannedObjects[Material](DUNCAN_MODELS)
+    """For pre-canned Duncan soil materials."""
+    _canned: ClassVar[CannedMaterials] = CannedObjects(DUNCAN_MODELS)
     dsmodel: int = 0
 
 SELIG_MODELS = ('SW100 SW95 SW90 SW85 SW80 '
@@ -75,7 +82,8 @@ DuncanCanned = Duncan._canned
 
 @dataclass
 class Selig(DuncanSeligCanned, ChildAsAttributeBase):
-    _canned: ClassVar[CannedObjects[Material]] = CannedObjects[Material](SELIG_MODELS)
+    """For pre-canned Selig soil materials."""
+    _canned: ClassVar[CannedMaterials] = CannedObjects(SELIG_MODELS)
     dsmodel: int = 1
 
 # init selig canned models
@@ -83,6 +91,7 @@ SeligCanned = Selig._canned
 
 @dataclass
 class DuncanSelig(DuncanSeligBase):
+    """For custom Duncan/Selig soil materials."""
     # D3
     cohesion: float =  0.0 # psi
     phi_i: float =  0.0 # degrees
@@ -97,13 +106,13 @@ class DuncanSelig(DuncanSeligBase):
 
     def __post_init__(self):
         super().__post_init__()
+        # 1 or 0 for dsmodel number
         try:
             invalid_names = [DUNCAN_MODELS, SELIG_MODELS][self.dsmodel]
         except IndexError:
             raise DuncanSeligValueError(f"Invalid dsmodel number: {self.dsmodel!s} "
                                         f"for {type(self).__name__} object; use "
                                         f"0 (Duncan) or 1 (Selig)") from None
+        # pre-canned names aren't allowed for custom DS models
         if self.name in invalid_names:
             raise DuncanSeligValueError(f"Invalid user model name: {self.name!r} ")
-
-

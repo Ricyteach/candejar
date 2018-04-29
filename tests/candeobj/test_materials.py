@@ -5,10 +5,10 @@
 
 import pytest
 
-from candejar.candeobj.materials import Isotropic, DuncanSelig, Duncan, Selig, \
-    DuncanCanned, SeligCanned, MohrCoulomb, Interface
+from candejar.candeobj.materials import Isotropic, MohrCoulomb, Interface
+from candejar.candeobj.duncanselig import  DuncanSelig, Duncan, Selig, \
+    DuncanCanned, SeligCanned
 from candejar.candeobj.exc import CandeValueError
-
 
 def test_wrong_material_num():
     with pytest.raises(CandeValueError):

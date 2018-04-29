@@ -15,6 +15,26 @@ class PipeGroup(ChildRegistryBase):
     type_: str  # ALUMINUM, BASIC, CONCRETE, PLASTIC, STEEL, CONRIB, CONTUBE
 
 
+@dataclass
+class Basic(PipeGroup):
+    pass
+
+
+@dataclass
+class Aluminum(PipeGroup):
+    pass
+
+
+@dataclass
+class Steel(PipeGroup):
+    pass
+
+
+@dataclass
+class Plastic(PipeGroup):
+    pass
+
+
 def subclass_PipeGroupObj(type_):
     """Produce a `PipeGroup` based subclass."""
 
@@ -28,4 +48,3 @@ def subclass_PipeGroupObj(type_):
     cls = new_class(pipe_group_cls_name, (PipeGroup,))
 
     return cls
-
