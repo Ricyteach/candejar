@@ -5,10 +5,10 @@
 from dataclasses import dataclass, fields
 
 from .exc import CandeValueError
-from ..utilities.mixins import ChildRegistryBase
+from ..utilities.mixins import ChildRegistryMixin
 
 @dataclass
-class Material(ChildRegistryBase):
+class Material(ChildRegistryMixin):
     model: int  # 1: Isotropic, 2: Orthotropic, 3: Duncan/Selig, 4: Overburden,
                 # 5: Extended Hardin, 6: Interface, 7: Composite Link, 8: Mohr/Coulomb
     density: float = 0.0

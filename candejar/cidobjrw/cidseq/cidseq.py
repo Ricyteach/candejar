@@ -9,7 +9,7 @@ from typing import Sequence, Generic, Type, Iterator, Union, TypeVar, Counter, L
 
 from ...cid import CidLine
 from ...cid import CidSubLine, TOP_LEVEL_TYPES
-from ...utilities.mixins import ChildRegistryBase
+from ...utilities.mixins import ChildRegistryMixin, ChildRegistryError
 from ...utilities.dataclasses import shallow_mapify
 from ..cidsubobj import CidSubObj, SUB_OBJ_NAMES_DICT
 from ..cidsubobj.cidsubobj import CidData
@@ -24,7 +24,7 @@ SubObj = CidSubObj[CidObj, "CidSeq", CidSubLine]
 _COMPLETE = object()
 
 @dataclass(eq=False)
-class CidSeq(ChildRegistryBase, Sequence[SubObj], Generic[CidObj, CidSubLine]):
+class CidSeq(ChildRegistryMixin, Sequence[SubObj], Generic[CidObj, CidSubLine]):
     cid_obj: InitVar[CidObj]
 
     def __post_init__(self, cid_obj: CidObj) -> None:
@@ -71,7 +71,7 @@ class CidSeq(ChildRegistryBase, Sequence[SubObj], Generic[CidObj, CidSubLine]):
         for obj in self.iter_sublines(val):
             d.update(asdict(obj))
         try:
-            result = CidSubObj.subclasses[SUB_OBJ_NAMES_DICT[self.line_type]][CidObj, CidSeq](self, val, **d)
+            result = CidSubObj.getsubcls(SUB_OBJ_NAMES_DICT[self.line_type])[CidObj, CidSeq](self, val, **d)
         except CIDSubSeqIndexError as e:
             raise IndexError(f"{val!s} not an available index for {self.line_type.__name__} object") from e
         return result
@@ -101,7 +101,7 @@ class CidSeq(ChildRegistryBase, Sequence[SubObj], Generic[CidObj, CidSubLine]):
             total_attr_name = SEQ_LINE_TYPE_TOTAL_DICT[self.line_type]
             seq_total = getattr(self.cid_obj, total_attr_name)
             x = count()
-            SubObjCls: Type[SubObj] = CidSubObj.subclasses[SUB_OBJ_NAMES_DICT[self.line_type]][CidObj, CidSeq]
+            SubObjCls: Type[SubObj] = CidSubObj.getsubcls(SUB_OBJ_NAMES_DICT[self.line_type])[CidObj, CidSeq]
             if seq_total:
                 # count is not zero but current_object_lines is empty; assume need to produce new sub object items
                 # during cid_obj instantiation
@@ -126,8 +126,8 @@ def subclass_CidSeq(sub_line_type: Type[CidLine]) -> Type[CidSeq]:
     # see if already exists
     cls_name = SEQ_CLASS_DICT[sub_line_type]
     try:
-        return CidSeq.subclasses[cls_name]
-    except KeyError:
+        return CidSeq.getsubcls(cls_name)
+    except ChildRegistryError:
         pass
 
     # resolve 2 of the CidSeq input types

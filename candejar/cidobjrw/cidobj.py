@@ -66,7 +66,7 @@ class CidObj(CidRW):
         for seq_name, seq_cls_name in zip(ALL_SEQ_NAMES, ALL_SEQ_CLASS_NAMES):
             # initialize new empty sequence; specify "CidObj" as the Generic input type
             if getattr(self, seq_name) is None:
-                seq_obj = CidSeq.subclasses[seq_cls_name]["CidObj"](self)
+                seq_obj = CidSeq.getsubcls(seq_cls_name)["CidObj"](self)
                 setattr(self, seq_name, seq_obj)
         # initialize empty line_objs list
         self.line_objs: List[CidLine] = []

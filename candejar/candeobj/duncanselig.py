@@ -8,7 +8,7 @@ from typing import ClassVar, Optional
 from .materials import Material
 from .exc import CandeError
 from ..utilities.descriptors import CannedObjects
-from ..utilities.mixins import ChildAsAttributeBase
+from ..utilities.mixins import ChildAsAttributeMixin
 
 CannedMaterials = CannedObjects[Material]
 
@@ -68,7 +68,7 @@ DUNCAN_MODELS = ('CA105 CA95 CA90 '
                  'CL100 CL90 CL85').split()
 
 @dataclass
-class Duncan(DuncanSeligCanned, ChildAsAttributeBase):
+class Duncan(DuncanSeligCanned, ChildAsAttributeMixin):
     """For pre-canned Duncan soil materials."""
     _canned: ClassVar[CannedMaterials] = CannedObjects(DUNCAN_MODELS)
     dsmodel: int = 0
@@ -81,7 +81,7 @@ SELIG_MODELS = ('SW100 SW95 SW90 SW85 SW80 '
 DuncanCanned = Duncan._canned
 
 @dataclass
-class Selig(DuncanSeligCanned, ChildAsAttributeBase):
+class Selig(DuncanSeligCanned, ChildAsAttributeMixin):
     """For pre-canned Selig soil materials."""
     _canned: ClassVar[CannedMaterials] = CannedObjects(SELIG_MODELS)
     dsmodel: int = 1

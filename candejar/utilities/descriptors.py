@@ -3,7 +3,7 @@
 """Special descriptors for working with cande object types."""
 
 from dataclasses import make_dataclass, field
-from typing import Any, Type, TypeVar
+from typing import Any, Type, TypeVar, Generic
 
 from ..exc import CandeJarError
 
@@ -31,7 +31,7 @@ class AttributeDelegator:
 class CannedInstanceError(CandeJarError, AttributeError):
     pass
 
-class CannedObjects:
+class CannedObjects(Generic[T]):
     """A namespace holding references to canned material instances"""
     def __init__(self, child_names):
         self._child_names = child_names

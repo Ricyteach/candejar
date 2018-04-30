@@ -6,12 +6,12 @@ from dataclasses import dataclass
 from types import new_class
 
 from ..cidobjrw.cidsubobj.names import PIPE_GROUP_CLASS_DICT
-from ..utilities.mixins import ChildRegistryBase
+from ..utilities.mixins import ChildRegistryMixin
 
 
 #  TODO: PipeGroup objects can contain a wide variety of attributes; need to find a way to accommodate
 @dataclass
-class PipeGroup(ChildRegistryBase):
+class PipeGroup(ChildRegistryMixin):
     type_: str  # ALUMINUM, BASIC, CONCRETE, PLASTIC, STEEL, CONRIB, CONTUBE
     def __new__(cls, type_, *args, **kwargs):
         if cls is PipeGroup:
@@ -146,7 +146,7 @@ def subclass_PipeGroupObj(type_):
     # see if already exists
     pipe_group_cls_name = PIPE_GROUP_CLASS_DICT[type_]
     try:
-        return PipeGroup.subclasses[pipe_group_cls_name]
+        return PipeGroup.getsubcls(pipe_group_cls_name)
     except KeyError:
         pass
 

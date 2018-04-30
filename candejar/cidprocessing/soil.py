@@ -1,6 +1,6 @@
 from . import exc
 from .main import gen_line
-from candeobj.materials import DUNCAN_MODELS as duncan_models, SELIG_MODELS as selig_models
+from ..candeobj.duncanselig import DUNCAN_MODELS as duncan_models, SELIG_MODELS as selig_models
 
 __all__ = 'D1 D2Isotropic D2Duncan D2Interface D2MohrCoulomb'.split()
 

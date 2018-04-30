@@ -8,7 +8,7 @@ from types import new_class
 from typing import Generic, Union, TypeVar, Dict, Any
 
 from .names import SUB_OBJ_CLASS_DICT
-from ...utilities.mixins import ChildRegistryBase
+from ...utilities.mixins import ChildRegistryMixin, ChildRegistryError
 from ...cid import CidSubLine
 
 
@@ -21,7 +21,7 @@ CidObj = TypeVar("CidObj")
 CidSeq = TypeVar("CidSeq")
 
 
-class CidSubObj(ChildRegistryBase, Generic[CidObj, CidSeq, CidSubLine]):
+class CidSubObj(ChildRegistryMixin, Generic[CidObj, CidSeq, CidSubLine]):
     """A viewer object that gets its data from the `CidLine` objects in `.cid_obj`."""
 
     def __init__(self, _container: CidSeq, _idx: int, **kwargs: CidData) -> None:
@@ -61,8 +61,8 @@ def subclass_CidSubObj(sub_line_type):
     # see if already exists
     cls_name = SUB_OBJ_CLASS_DICT[sub_line_type]
     try:
-        return CidSubObj.subclasses[cls_name]
-    except KeyError:
+        return CidSubObj.getsubcls(cls_name)
+    except ChildRegistryError:
         pass
 
     # resolve 2 of the CidSubObj generic types
