@@ -448,7 +448,7 @@
         prefix: "B-3b.Plastic.A.Profile"
         # for ANALYS only
         # WallType = PROFILE
-        # Required for each NumHorizontal elements
+        # Required for each NumHorizontal elements in each repeated B3 line
         # 1: inner valley, 2: inner liner, 3: outer crest, 4: outer link
         Identifier: [5, 0]
         Length: [10, 0.0] # in

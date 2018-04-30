@@ -67,6 +67,16 @@ class Plastic(PipeGroup):
     longstrength: float = 0.0 # psi
     poissons: float = 0.3
     density: float = 0.0 # pci
+
+@dataclass
+class PlasticSmooth(Plastic):
+    #B3PlasticASmooth:
+    # for ANALYS only
+    # WallType = SMOOTH
+    height: float = 0.0 # in
+
+@dataclass
+class PlasticGeneral(Plastic):
     #B3PlasticAGeneral:
     # for ANALYS only
     # WallType = GENERAL
@@ -74,10 +84,9 @@ class Plastic(PipeGroup):
     area: float = 0.0 # in2/in
     i: float = 0.0 # in4/in
     centroid: float = 0.0 # in
-    #B3PlasticASmooth:
-    # for ANALYS only
-    # WallType = SMOOTH
-    height: float = 0.0 # in
+
+@dataclass
+class PlasticProfile(Plastic):
     #B3PlasticAProfile:
     # for ANALYS only
     # WallType = PROFILE
@@ -96,7 +105,7 @@ class Plastic(PipeGroup):
     #B3bPlasticAProfile:
     # for ANALYS only
     # WallType = PROFILE
-    # Required for each NumHorizontal elements
+    # Required for each NumHorizontal elements in each repeated B3 line
     # 1: inner valley, 2: inner liner, 3: outer crest, 4: outer link
     identifier: int = 0
     length: float = 0.0 # in
