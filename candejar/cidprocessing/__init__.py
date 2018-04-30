@@ -13,7 +13,7 @@ LRFD:   cid.method == 1 only
 """
 
 from . import alum
-# from . import basic
+from . import basic
 # from . import concrete
 from . import plastic
 from . import steel
@@ -21,7 +21,7 @@ from . import steel
 
 pipelookup = dict(
             ALUMINUM=alum.B1Alum,
-            BASIC=NotImplemented,
+            BASIC=basic.B1Basic,
             CONCRETE=NotImplemented,
             PLASTIC=plastic.B1Plastic,
             STEEL=steel.B1Steel,

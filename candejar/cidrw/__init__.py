@@ -5,9 +5,8 @@ object."""
 
 from typing import TypeVar, Type, NewType
 
-from ..cid import CidLine
+from ..cid import CidLine, CidLineType
 
 CidObj = TypeVar("CidObj")
-CidLineType = Type[CidLine]
 CidLineStr = NewType("CidLineStr", str)
 FormatStr = NewType("FormatStr", str)

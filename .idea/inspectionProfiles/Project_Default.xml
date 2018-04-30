@@ -47,6 +47,8 @@
           <option value="cid.B2SteelA" />
           <option value="cid.D2Duncan" />
           <option value="cid.*" />
+          <option value="candeobj.pipe_groups.subcls" />
+          <option value="candeobj.pipe_groups.Basic" />
         </list>
       </option>
     </inspection_tool>
