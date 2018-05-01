@@ -15,6 +15,10 @@ from .exc import CandeValueError
 from .bases import CandeData
 from .keyby import key_by_cid_linetype
 
+class PipeGroupComposite(ChildRegistryMixin, make_reg_key= lambda subcls: subcls.type_key):
+    pass
+
+
 #  TODO: PipeGroup objects can contain a wide variety of attributes; need to find a way to accommodate
 @dataclass
 class PipeGroup(ChildRegistryMixin):
