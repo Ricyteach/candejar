@@ -2,9 +2,11 @@
 
 """CID line module for working with individual lines of a .cid file."""
 
+from __future__ import annotations
 import re
 from dataclasses import make_dataclass, dataclass, field, asdict
 from typing import Optional, Type, Pattern
+
 from .exc import CIDError, LineError, LineParseError
 from .cidfield import make_field_obj
 
@@ -16,13 +18,13 @@ START_COLUMN["Stop"] = 0
 
 class Start:
     """The starting position for parsing a CID file line with a prefix."""
-    def __get__(self, instance: Optional["CidLine"], owner: Type["CidLine"]) -> int:
+    def __get__(self, instance: Optional[CidLine], owner: Type[CidLine]) -> int:
         return START_COLUMN.get(owner.__name__, 27)
 
 
 class Parser:
     """The compiled regex pattern parser created by combining `cidfield.Field` regex patterns."""
-    def __get__(self, instance: Optional["CidLine"], owner: Type["CidLine"]) -> Pattern[str]:
+    def __get__(self, instance: Optional[CidLine], owner: Type[CidLine]) -> Pattern[str]:
         try:
             p = owner._parser
         except AttributeError:
@@ -73,7 +75,7 @@ class CidLine:
         else:
             return super().__format__(format_spec)
     @classmethod
-    def parse(cls: Type["CidLine"], line: str) -> "CidLine":
+    def parse(cls: Type[CidLine], line: str) -> CidLine:
         if line.startswith(cls.prefix):
             line = line[slice(cls.start_, None)]
         try:

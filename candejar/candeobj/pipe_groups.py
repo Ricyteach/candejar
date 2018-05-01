@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from types import new_class
 from typing import Tuple, Callable, ClassVar
 
+from ..cidprocessing.L3 import PipeGroup as process_pipegroup
 from ..cidobjrw.cidsubobj.names import PIPE_GROUP_CLASS_DICT
 from ..utilities.mixins import ChildRegistryMixin, ChildRegistryError
 from ..cid import A2, B1Basic, B2Basic
@@ -28,7 +29,11 @@ class PipeGroup(ChildRegistryMixin):
 
 
 def make_pipe_group(cid, type_: str, **kwargs: CandeData):
-    """Make a new pipe group based on contents of the `cid` object and keyword arguments"""
+    """Make a new pipe group
+
+    The arguments are dispatched to the appropriate `PipeGroup` subclass
+    based on contents of the `cid` object and keyword arguments
+    """
     try:
         cls_name = type_.capitalize()
     except AttributeError:
@@ -40,30 +45,43 @@ def make_pipe_group(cid, type_: str, **kwargs: CandeData):
     obj = cls()
     # TODO: finish building pipe group instances using cidprocessing and composite design pattern
     if isinstance(obj, Plastic):
-        walltype = kwargs.pop("walltype") # required
+        try:
+            walltype = kwargs.pop("walltype") # required
+        except KeyError:
+            raise CandeValueError("'walltype' argument is required for Plastic"
+                                  "pipe types")
         # dispatch to Plastic processing
     elif isinstance(obj, Steel):
         if kwargs.pop("jointslip", None): # optional
             # handle jointslip - add to obj state?
             pass
+        # dispatch to Steel processing
     elif isinstance(obj, Aluminum):
         # no kwargs to handle
         pass
+        # dispatch to Aluminum processing
     elif isinstance(obj, Basic):
         # no kwargs to handle
         pass
+        # dispatch to Basic processing
+    group_num = len(cid.pipe_groups)+1
+    type_gen = process_pipegroup(cid, group_num, obj)
+    keys = tuple(type_gen)
     return obj
 
 @dataclass
-class Basic(PipeGroup, make_reg_key= lambda subcls: key_by_cid_linetype(Basic)(subcls)):
-    line_type: ClassVar[CidLineType] = A2
+class Basic(PipeGroup):
+    type_key: ClassVar[CidLineType] = A2
     type_: str  = "BASIC"
     def __new__(cls, type_: str = "BASIC"):
         return super().__new__(cls, type_)
 
+class PipeGroupComponent(ChildRegistryMixin):
+    _make_reg_key= lambda subcls: key_by_cid_linetype(Basic)(subcls)
+
 @dataclass
-class Basic1(Basic):
-    line_type: ClassVar[CidLineType] = B1Basic
+class Basic1(PipeGroupComponent):
+    type_key: ClassVar[CidLineType] = B1Basic
     # ANALYS only
     # repeatable (multiple properties in one pipe group)
     first: int = 0
@@ -75,8 +93,8 @@ class Basic1(Basic):
     load: float = 0.0 # lbs/in
 
 @dataclass
-class Basic2(Basic1):
-    line_type: ClassVar[CidLineType] = B2Basic
+class Basic2(PipeGroupComponent):
+    type_key: ClassVar[CidLineType] = B2Basic
     # for ANALYS mode only
     # Small Deformation: 0, Large Deformation: 1, Plus Buckling: 2
     mode: int = 0

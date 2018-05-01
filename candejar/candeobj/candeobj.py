@@ -2,6 +2,7 @@
 
 """The interface for cid type objects expected by the module."""
 
+from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Mapping, Union, Sequence, Type, Optional, Iterable
@@ -46,7 +47,7 @@ class CandeObj(CidRW):
     factors: Sequence = field(default_factory=list)
 
     @classmethod
-    def loadcid(cls, cid: Union[CidObj, Mapping[str,Union[CidData, Sequence[Union[CidSubObj, Mapping[str, CidData]]]]]]) -> "CandeObj":
+    def loadcid(cls, cid: Union[CidObj, Mapping[str,Union[CidData, Sequence[Union[CidSubObj, Mapping[str, CidData]]]]]]) -> CandeObj:
         map = shallow_mapify(cid)
         map.pop("materials",None)
         map.pop("nmaterials",None)
@@ -77,7 +78,7 @@ class CandeObj(CidRW):
 
     @classmethod
     def from_lines(cls, lines: Optional[Iterable[CidLineStr]]=None,
-                         line_types: Optional[Iterable[Type[CidLine]]]=None) -> "CidRW":
+                         line_types: Optional[Iterable[Type[CidLine]]]=None) -> CidRW:
         """Construct or edit an object instance from line string and line type inputs."""
         cidobj = CidObj.from_lines(lines, line_types)
         return cls.loadcid(cidobj)

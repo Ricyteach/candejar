@@ -12,5 +12,8 @@ def test_PipeGroup():
     assert isinstance(PipeGroup("PLASTIC"), Plastic)
 
 def test_make_pipe_group():
-    g = make_pipe_group(object(), "basic")
+    cid = type("C",(),{})()
+    cid.pipe_groups = []
+    cid.mode = "ANALYS"
+    g = make_pipe_group(cid, "basic")
     assert g

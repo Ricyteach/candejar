@@ -3,6 +3,7 @@
 """CID object module for working with an entire cid file as a read/write Python
 data model object."""
 
+from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import List, Any, Iterable, Optional, Generator, Tuple, Type, Sequence
 
@@ -52,28 +53,28 @@ class CidObj(CidRW):
         return self.nsoilmaterials + self.ninterfmaterials
 
     # sub-sequences of other cid objects; must appear in ALL_SEQ_NAMES
-    pipe_groups: CidSeq["CidObj", A2] = field(default=None, repr=False)  # pipe groups
-    nodes: CidSeq["CidObj", C3] = field(default=None, repr=False)
-    elements: CidSeq["CidObj", C4] = field(default=None, repr=False)
-    boundaries: CidSeq["CidObj", C5] = field(default=None, repr=False)
-    materials: CidSeq["CidObj", D1] = field(default=None, repr=False)  # all element materials
-    soilmaterials: CidSeq["CidObj", D1] = field(default=None, repr=False)  # soil element materials
-    interfmaterials: CidSeq["CidObj", D1] = field(default=None, repr=False)  # interface element materials
-    factors: CidSeq["CidObj", E1] = field(default=None, repr=False)  # lrfd step factors
+    pipe_groups: CidSeq[CidObj, A2] = field(default=None, repr=False)  # pipe groups
+    nodes: CidSeq[CidObj, C3] = field(default=None, repr=False)
+    elements: CidSeq[CidObj, C4] = field(default=None, repr=False)
+    boundaries: CidSeq[CidObj, C5] = field(default=None, repr=False)
+    materials: CidSeq[CidObj, D1] = field(default=None, repr=False)  # all element materials
+    soilmaterials: CidSeq[CidObj, D1] = field(default=None, repr=False)  # soil element materials
+    interfmaterials: CidSeq[CidObj, D1] = field(default=None, repr=False)  # interface element materials
+    factors: CidSeq[CidObj, E1] = field(default=None, repr=False)  # lrfd step factors
 
     def __post_init__(self) -> None:
         # initialize empty cid sub object sequence types
         for seq_name, seq_cls_name in zip(ALL_SEQ_NAMES, ALL_SEQ_CLASS_NAMES):
-            # initialize new empty sequence; specify "CidObj" as the Generic input type
+            # initialize new empty sequence; specify `CidObj` as the Generic input type
             if getattr(self, seq_name) is None:
-                seq_obj = CidSeq.getsubcls(seq_cls_name)["CidObj"](self)
+                seq_obj = CidSeq.getsubcls(seq_cls_name)[CidObj](self)
                 setattr(self, seq_name, seq_obj)
         # initialize empty line_objs list
         self.line_objs: List[CidLine] = []
 
     @classmethod
     def from_lines(cls, lines: Optional[Sequence[CidLineStr]]=None,
-                   line_types: Optional[Iterable[Type[CidLine]]]=None) -> "CidRW":
+                   line_types: Optional[Iterable[Type[CidLine]]]=None) -> CidRW:
         """Build an instance using line input strings and line types
 
         If no lines or existing instance are provided, result is same as cls()

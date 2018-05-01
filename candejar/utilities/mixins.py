@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 
 """Special mixin classes."""
+
+from __future__ import annotations
 from typing import Callable, Type, Any, Dict, Optional
 
 
 class ChildRegistryError(Exception):
     pass
-
-MixinSubclsType = Type["ChildRegistryMixin"]
-AnyType = Type[object] # i.e., type
 
 class ChildRegistryMixin:
     """Mixin class that creates classes which track subclasses.
@@ -72,6 +71,10 @@ class ChildRegistryMixin:
         except KeyError:
             raise ChildRegistryError(f"No child class key {key!r} in the "
                                      f"{cls.__name__} subclasses registry")
+
+
+MixinSubclsType = Type[ChildRegistryMixin]
+AnyType = Type[object] # i.e., type
 
 
 class ChildAsAttributeError(Exception):

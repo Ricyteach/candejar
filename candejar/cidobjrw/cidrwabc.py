@@ -2,6 +2,7 @@
 
 """Interface that provides reading/writing capability for .cid type objects."""
 
+from __future__ import annotations
 from abc import abstractmethod, ABC
 from pathlib import Path
 from typing import Union, Iterator, Type, Iterable, Optional
@@ -24,7 +25,7 @@ class CidRW(ABC):
                                               "all arguments.")
 
     @classmethod
-    def open(cls, path: Union[str, Path]) -> "CidRW":
+    def open(cls, path: Union[str, Path]) -> CidRW:
         """Make an instance from a .cid file."""
         path = Path(path).with_suffix(".cid")
         lines = path.read_text().split("\n")
@@ -34,7 +35,7 @@ class CidRW(ABC):
     @classmethod
     @abstractmethod
     def from_lines(cls, lines: Optional[Iterable[CidLineStr]]=None,
-                         line_types: Optional[Iterable[Type[CidLine]]]=None) -> "CidRW":
+                         line_types: Optional[Iterable[Type[CidLine]]]=None) -> CidRW:
         """Construct or edit an object instance from line string and line type inputs."""
         pass
 

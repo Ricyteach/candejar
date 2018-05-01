@@ -2,6 +2,7 @@
 
 """Special collections types."""
 
+from __future__ import annotations
 import collections
 from collections.abc import MutableSequence
 from typing import List, Tuple, Any
@@ -81,11 +82,11 @@ class ChainSequence(MutableSequence):
         f_lens = lambda i_last: sum(len(sq) for sq in self.sequences[:i_last + 1])
         return [f_lens(i_last) for i_last in range(len(self.sequences))]
 
-    def new_child(self, s: MutableSequence) -> "ChainSequence":
+    def new_child(self, s: MutableSequence) -> ChainSequence:
         return ChainSequence(*self.sequences, s)
 
     @property
-    def parents(self) -> "ChainSequence":
+    def parents(self) -> ChainSequence:
         return ChainSequence(*self.sequences[:-1])
 
 

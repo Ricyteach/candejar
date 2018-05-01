@@ -2,6 +2,7 @@
 
 """Special descriptors for working with cande object types."""
 
+from __future__ import annotations
 from dataclasses import make_dataclass, field
 from typing import Any, Type, TypeVar, Generic
 
@@ -38,7 +39,7 @@ class CannedObjects(Generic[T]):
     def __set_name__(self, owner: Type[T], name: str) -> None:
         self._cls: Type[T] = owner
         self._init_incomplete = object() # sentinel for no canned objects yet
-    def __get__(self, instance: T, owner: Type[T]) -> "CannedObjects":
+    def __get__(self, instance: T, owner: Type[T]) -> CannedObjects:
         # initialize all the instances
         if getattr(self, "_init_incomplete", None):
             for i in self._child_names:
