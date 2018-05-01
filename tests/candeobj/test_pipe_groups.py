@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Tests for `candejar.candeobj.PipeGroup` subclasses."""
+"""Tests for `candejar.candeobj.PipeGroupComponent` subclasses."""
 
 from candejar.candeobj.pipe_groups import PipeGroup, Basic, Aluminum, Steel, Plastic, make_pipe_group
 

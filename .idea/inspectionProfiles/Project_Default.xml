@@ -49,6 +49,7 @@
           <option value="cid.*" />
           <option value="candeobj.pipe_groups.subcls" />
           <option value="candeobj.pipe_groups.Basic" />
+          <option value="candeobj.pipe_group_components.subcls" />
         </list>
       </option>
     </inspection_tool>

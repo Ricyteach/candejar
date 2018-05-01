@@ -41,11 +41,16 @@ class ChildRegistryMixin:
 
     def __init_subclass__(subcls,
                           make_reg_key: Optional[Callable[[AnyType], Any]] = None,
+                          key_factory: Optional[Callable[[], Callable[[AnyType], Any]]] = None,
                           **kwargs) -> None:
+        # check for invalid argument combo
+        if make_reg_key is not None and key_factory is not None:
+            raise ChildRegistryError("Detected both a make_reg_key function and a key factory function; "
+                                     "only one should be provided")
         super().__init_subclass__(**kwargs)
         # for later child classes of the new class
         subcls._subclasses = dict()
-        # child added to the reg of closest parent that is a subclass of CRB
+        # child added to the reg of closest parent that is a subclass of CRM
         for parent_cls in subcls.mro()[1:]:
             if issubclass(parent_cls, ChildRegistryMixin):
                 break
@@ -60,9 +65,12 @@ class ChildRegistryMixin:
             raise ChildRegistryError(f"Attempted to overwrite the "
                                      f"child class key {key!r} in the "
                                      f"{parent_cls.__name__} registry")
-        # inherit the subclass' key maker from parent if one was not provided
-        subcls._make_reg_key = parent_cls._make_reg_key if make_reg_key is None \
-                                                        else make_reg_key
+        # set the new class' key maker
+        # the subclass' key maker is inherited from parent if a factory or key maker was not provided
+        if make_reg_key is not None:
+            subcls._make_reg_key = make_reg_key
+        if key_factory is not None:
+            subcls._make_reg_key = key_factory()
     @classmethod
     def getsubcls(cls, key: Any) -> MixinSubclsType:
         """Get the registered subclass from the key"""
@@ -98,3 +106,31 @@ class ChildAsAttributeMixin:
             raise ChildAsAttributeError(f"Attempted to overwrite the "
                                         f"{cls.__name__} child class attribute "
                                         f"in the {parent_cls.__name__}.__dict__")
+
+class ClsAttrKeyMakerFactory:
+    """Convenience callable object for specifying registration keys defined by ChildRegistry child classes
+
+    The returned key is the class_attr named upon ClsAttrKeyMakerFactory instantiation
+    """
+    _incomplete = True
+    def __init__(self, class_attr):
+        self.class_attr = str(class_attr)
+    def __set_name__(self, owner, name):
+        self.cls = owner
+        self._incomplete = False
+    def __get__(self, instance, owner):
+        if self._incomplete:
+            self.cls = owner
+            self._incomplete = False
+        return self.__call__
+    def __call__(self):
+        class KeyMaker:
+            def __call__(km_self, subcls):
+                try:
+                    return getattr(subcls, self.class_attr)
+                except AttributeError:
+                    clsname = self.cls.__name__
+                    caller = subcls.__name__
+                    raise ChildRegistryError(f"The {clsname} child class {caller} must define a {self.class_attr} attribute")
+        return KeyMaker()
+

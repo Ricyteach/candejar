@@ -12,3 +12,4 @@ __all__ = "level3 pipe_groups materials".split()
 
 FEA_TYPE_DICT = {A2: PipeGroup, C3: Node, C4: Element,
                  C5: Boundary, D1: Material, E1: Factor}
+
