@@ -18,7 +18,7 @@ class ChildRegistryMixin:
 
         class RegisteredByName(ChildRegistryMixin): ...
 
-        assert ChildRegistryMixin._subclasses["RegisteredByName"] is RegisteredByName
+        assert ChildRegistryMixin.getsubcls("RegisteredByName") is RegisteredByName
 
     Usage example 2:
 
@@ -31,7 +31,7 @@ class ChildRegistryMixin:
 
         class ClassName(RegisteredByPop): ...
 
-        assert RegisteredByPop._subclasses["othername"] is ClassName
+        assert RegisteredByPop.getsubcls("othername") is ClassName
 
         class InvalidName(RegisteredByPop): ... # <-- ERROR!
 
@@ -45,8 +45,9 @@ class ChildRegistryMixin:
                           **kwargs) -> None:
         # check for invalid argument combo
         if make_reg_key is not None and key_factory is not None:
-            raise ChildRegistryError("Detected both a make_reg_key function and a key factory function; "
-                                     "only one should be provided")
+            raise ChildRegistryError("Detected both a make_reg_key function and "
+                                     "a key factory function; only one should "
+                                     "be provided")
         super().__init_subclass__(**kwargs)
         # for later child classes of the new class
         subcls._subclasses = dict()
@@ -134,3 +135,24 @@ class ClsAttrKeyMakerFactory:
                     raise ChildRegistryError(f"The {clsname} child class {caller} must define a {self.class_attr} attribute")
         return KeyMaker()
 
+def child_dispatcher(WrappedCls):
+    ns=dict(WrappedCls=WrappedCls)
+    s="""def __new__(cls, type_, *args, **kwargs):
+    if cls is WrappedCls:
+        # dispatch to a registered child class
+        subcls = cls.getsubcls(type_)
+        return super(WrappedCls, subcls).__new__(subcls)
+    else:
+        return super(WrappedCls, cls).__new__(cls)"""
+    exec(s,ns,ns)
+    __new__ = ns["__new__"]
+    def __init_subclass__(subcls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        # add __new__ contructor to child class based on default type_ argument
+        def __new__(cls, type_: str = subcls.type_, *args, **kwargs):
+            return super().__new__(cls, *args, **kwargs)
+        subcls.__new__ = __new__
+
+    WrappedCls.__new__ = __new__
+    WrappedCls.__init_subclass__ = __init_subclass__
+    return WrappedCls
