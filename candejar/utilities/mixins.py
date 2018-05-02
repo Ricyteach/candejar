@@ -155,9 +155,8 @@ def __init_subclass__(subcls, **kwargs):
 def child_dispatcher(keyname):
     """A decorator to allow classes to dispatch instantiation to registered child classes
 
-    The decorated class must have:
-        1. a constructor
-        2. a `getsubcls` method in the form of `Callable[[Any], Type[WrappedCls]]`
+    The decorated class must have a `getsubcls` method in the form of `Callable[[Any], Type[WrappedCls]]` and a child
+    class registered under the decorated class `keyname` and matching first argument
     """
     def decorator(WrappedCls):
         ns=dict(WrappedCls=WrappedCls)
