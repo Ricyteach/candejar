@@ -7,6 +7,7 @@ from typing import ClassVar
 
 from ..cid import A2, B1Basic, B2Basic, B1Plastic, B2Plastic, B3PlasticASmooth, B3PlasticAGeneral, B3PlasticAProfile, B3bPlasticAProfile, B3PlasticDWSD, B3PlasticDLRFD, B4Plastic
 from ..cid import CidLineType
+from ..utilities.mixins import child_dispatcher
 from .bases import CandeComponent, LinetypeKeyFactory
 
 class PipeGroupComponent(CandeComponent, key_factory=LinetypeKeyFactory):
@@ -16,6 +17,7 @@ class PipeGroupComponent(CandeComponent, key_factory=LinetypeKeyFactory):
     """
     pass
 
+@child_dispatcher("type_")
 @dataclass
 class PipeGroupGeneralComponent(PipeGroupComponent, make_reg_key = lambda subcls: subcls.type_):
     """Base class for the top level (A2) pipe group component
@@ -24,19 +26,7 @@ class PipeGroupGeneralComponent(PipeGroupComponent, make_reg_key = lambda subcls
     """
     linetype_key: ClassVar[CidLineType] = A2
     type_: str  # ALUMINUM, BASIC, CONCRETE, PLASTIC, STEEL, CONRIB, CONTUBE
-    def __new__(cls, type_, *args, **kwargs):
-        if cls is PipeGroupGeneralComponent:
-            # dispatch to a registered child class
-            pipe_cls = cls.getsubcls(type_)
-            return super(PipeGroupGeneralComponent, pipe_cls).__new__(pipe_cls)
-        else:
-            return super(PipeGroupGeneralComponent, cls).__new__(cls)
-    def __init_subclass__(subcls, **kwargs):
-        super().__init_subclass__(**kwargs)
-        # add __new__ contructor to child class based on default type_ argument
-        def __new__(cls, type_: str = subcls.type_, *args, **kwargs):
-            return super().__new__(cls, *args, **kwargs)
-        subcls.__new__ = __new__
+
 
 @dataclass
 class BasicComponent(PipeGroupGeneralComponent):
@@ -79,6 +69,7 @@ class PlasticComponent(PipeGroupGeneralComponent):
     type_: str  = "PLASTIC"
 
 
+@child_dispatcher("walltype")
 @dataclass
 class Plastic1Component(PipeGroupComponent, make_reg_key = lambda subcls: subcls.walltype):
     linetype_key: ClassVar[CidLineType] = B1Plastic

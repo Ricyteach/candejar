@@ -135,24 +135,37 @@ class ClsAttrKeyMakerFactory:
                     raise ChildRegistryError(f"The {clsname} child class {caller} must define a {self.class_attr} attribute")
         return KeyMaker()
 
-def child_dispatcher(WrappedCls):
-    ns=dict(WrappedCls=WrappedCls)
-    s="""def __new__(cls, type_, *args, **kwargs):
+_CHILD_DISPATCHER_METHODS= """
+def __new__(cls, {arg1!s}, *args, **kwargs):
     if cls is WrappedCls:
         # dispatch to a registered child class
-        subcls = cls.getsubcls(type_)
+        subcls = cls.getsubcls({arg1!s})
         return super(WrappedCls, subcls).__new__(subcls)
     else:
-        return super(WrappedCls, cls).__new__(cls)"""
-    exec(s,ns,ns)
-    __new__ = ns["__new__"]
-    def __init_subclass__(subcls, **kwargs):
-        super().__init_subclass__(**kwargs)
-        # add __new__ contructor to child class based on default type_ argument
-        def __new__(cls, type_: str = subcls.type_, *args, **kwargs):
-            return super().__new__(cls, *args, **kwargs)
-        subcls.__new__ = __new__
+        return super(WrappedCls, cls).__new__(cls)
+def __init_subclass__(subcls, **kwargs):
+    super(WrappedCls, subcls).__init_subclass__(**kwargs)
+    # add __new__ contructor to child class based on default first argument
+    def __new__(cls, {arg1!s}: str = subcls.{arg1!s}, *args, **kwargs):
+        s = super(WrappedCls,cls).__new__(cls, *args, **kwargs)
+        return s
+    subcls.__new__ = __new__"""[1:]
 
-    WrappedCls.__new__ = __new__
-    WrappedCls.__init_subclass__ = __init_subclass__
-    return WrappedCls
+
+def child_dispatcher(keyname):
+    """A decorator to allow classes to dispatch instantiation to registered child classes
+
+    The decorated class must have:
+        1. a constructor
+        2. a `getsubcls` method in the form of `Callable[[Any], Type[WrappedCls]]`
+    """
+    def decorator(WrappedCls):
+        ns=dict(WrappedCls=WrappedCls)
+        code=_CHILD_DISPATCHER_METHODS.format(arg1 = str(keyname))
+        exec(code,ns,ns)
+        __new__ = ns["__new__"]
+        __init_subclass__ = ns["__init_subclass__"]
+        WrappedCls.__new__ = __new__
+        WrappedCls.__init_subclass__ = classmethod(__init_subclass__)
+        return WrappedCls
+    return decorator

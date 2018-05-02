@@ -17,6 +17,12 @@ def test_pipegroup_component():
     assert CandeComponent.getsubcls("PipeGroupComponent") is PipeGroupComponent
     assert PipeGroupComponent.getsubcls(A2) is PipeGroupGeneralComponent
 
+def test_pipegroup_component_instances():
+    assert type(PipeGroupGeneralComponent("BASIC")) is BasicComponent
+    assert type(PipeGroupGeneralComponent("STEEL")) is SteelComponent
+    assert type(PipeGroupGeneralComponent("ALUMINUM")) is AluminumComponent
+    assert type(PipeGroupGeneralComponent("PLASTIC")) is PlasticComponent
+
 def test_basic_pipegroup_components():
     assert PipeGroupGeneralComponent.getsubcls("BASIC") is BasicComponent
     assert PipeGroupComponent.getsubcls(B1Basic) is Basic1Component
@@ -58,6 +64,9 @@ def test_plastic_pipegroup_component_instances():
     assert PlasticComponent().type_=="PLASTIC"
     with pytest.raises(TypeError):
         assert Plastic1Component()
+    assert type(Plastic1Component("GENERAL")) is Plastic1GeneralComponent
+    assert type(Plastic1Component("SMOOTH")) is Plastic1SmoothComponent
+    assert type(Plastic1Component("PROFILE")) is Plastic1ProfileComponent
     assert Plastic1GeneralComponent().walltype=="GENERAL"
     assert Plastic1SmoothComponent().walltype=="SMOOTH"
     assert Plastic1ProfileComponent().walltype=="PROFILE"
