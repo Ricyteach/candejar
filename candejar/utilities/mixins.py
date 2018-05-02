@@ -172,7 +172,7 @@ def child_dispatcher(keyname):
 class CompositeAttributeError(AttributeError):
     pass
 
-class Composite(ChildRegistryMixin):
+class CompositeMixin:
     @property
     def _component_attrs(self):
         return [attr for comp in self.components for attr in vars(comp)]
