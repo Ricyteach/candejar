@@ -11,7 +11,7 @@ from .exc import CandeValueError
 from .bases import CandeData, CandeComposite
 # from .keyby import key_by_cid_linetype
 
-# TODO: Implement PipeGroup type dispatching
+# TODO: Implement PipeGroup type_ dispatching
 class PipeGroup(CandeComposite):
     pass
 
@@ -24,6 +24,7 @@ class Aluminum(PipeGroup):
 class Steel(PipeGroup):
     pass
 
+# TODO: Implement Plastic walltype dispatching
 class Plastic(PipeGroup):
     pass
 

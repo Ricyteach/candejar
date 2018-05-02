@@ -3,7 +3,7 @@
 """Special mixin classes."""
 
 from __future__ import annotations
-from typing import Callable, Type, Any, Dict, Optional
+from typing import Callable, Type, Any, Dict, Optional, Counter
 
 
 class ChildRegistryError(Exception):
@@ -168,3 +168,28 @@ def child_dispatcher(keyname):
         WrappedCls.__init_subclass__ = classmethod(__init_subclass__)
         return WrappedCls
     return decorator
+
+class CompositeAttributeError(AttributeError):
+    pass
+
+class Composite(ChildRegistryMixin):
+    @property
+    def _component_attrs(self):
+        return [attr for comp in self.components for attr in vars(comp)]
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.components = []
+    def __getattr__(self, item):
+        ctr = Counter(self._component_attrs)
+        if any(v!=1 for v in ctr.values()):
+            dupes = [k for k,v in ctr.items() if v!=1]
+            comps = [c for c in self.components if any(dupeattr in vars(c) for dupeattr in dupes)]
+            raise CompositeAttributeError(f"Duplicate attribute names {str(dupes)[1:-1]} detected "
+                                          f"in components {str(comps)[1:-1]}")
+        try:
+            comp = next(c for c in self.components if hasattr(c,item))
+            return getattr(comp, item)
+        except (StopIteration, AttributeError):
+            raise AttributeError("{type(self)!r} object has no attribute {item!r}") from None
+    def add_component(self, comp):
+        self.components.append(comp)

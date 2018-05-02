@@ -4,6 +4,7 @@
 
 from typing import NewType, Union
 
+from utilities.mixins import Composite
 from ..utilities.mixins import ChildRegistryMixin, ClsAttrKeyMakerFactory
 
 CandeNum = NewType("CandeNum", int)
@@ -18,7 +19,7 @@ CandeData = Union[CandeNum, CandeFloat, CandeStr]
 LinetypeKeyFactory = ClsAttrKeyMakerFactory("linetype_key")
 
 # TODO: Implement component incorporation with composite design pattern
-class CandeComposite(ChildRegistryMixin):
+class CandeComposite(ChildRegistryMixin, Composite):
     """Base class for cande objects (such as pipe groups)
 
     CandeComposite children are registered with CC by name
