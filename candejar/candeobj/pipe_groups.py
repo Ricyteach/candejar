@@ -1,19 +1,28 @@
 # -*- coding: utf-8 -*-
 
 """Module for working with cande pipe group type objects."""
+from dataclasses import fields
+# from types import new_class
+from enum import Enum
+from typing import Iterator
 
-from types import new_class
-
-from ..cidprocessing.L3 import PipeGroup as process_pipegroup
 # from ..cidobjrw.cidsubobj.names import PIPE_GROUP_CLASS_DICT
-from ..utilities.mixins import ChildRegistryError
+from ..utilities.mixins import ChildRegistryError, ChildRegistryMixin, child_dispatcher
+from ..cid import CidLineType
+from .pipe_group_components import PipeGroupComponent
 from .exc import CandeValueError
 from .bases import CandeData, CandeComposite
-# from .keyby import key_by_cid_linetype
+
+class PipeType(Enum):
+    basic="Basic"
+    aluminum="Aluminum"
+    steel="Steel"
+    plastic="Plastic"
 
 # TODO: Implement PipeGroup type_ dispatching
-class PipeGroup(CandeComposite):
-    pass
+@child_dispatcher("type_")
+class PipeGroup(ChildRegistryMixin, CandeComposite):
+    type_: PipeType
 
 class Basic(PipeGroup):
     pass
@@ -28,12 +37,22 @@ class Steel(PipeGroup):
 class Plastic(PipeGroup):
     pass
 
-def make_pipe_group(cid, type_: str, **kwargs: CandeData):
+def make_pipe_group(cid, iter_linetype: Iterator[CidLineType], **kwargs: CandeData):
     """Make a new pipe group
 
     The arguments are dispatched to the appropriate `PipeGroup` subclass
     based on contents of the `cid` object and keyword arguments
     """
+    for linetype in iter_linetype:
+        Cls=PipeGroupComponent.getsubcls(linetype)
+        cls_kwargs={k:v for k,v in kwargs.items() if k in fields(Cls)}
+        pipe_group_component=Cls(cls_kwargs)
+        while True:
+            try:
+                pipe_group.add_component(pipe_group_component)
+                break
+            except NameError:
+                pipe_group = PipeGroup()
     try:
         cls_name = type_.capitalize()
     except AttributeError:
@@ -65,8 +84,6 @@ def make_pipe_group(cid, type_: str, **kwargs: CandeData):
         pass
         # dispatch to Basic processing
     group_num = len(cid.pipe_groups)+1
-    type_gen = process_pipegroup(cid, group_num, obj)
-    keys = tuple(type_gen)
     return obj
 
 '''

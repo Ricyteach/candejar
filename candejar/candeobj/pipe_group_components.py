@@ -187,5 +187,3 @@ class Plastic4DSmoothLRFDComponent(PipeGroupComponent):
     strainϕ: float = 1.0
     deflectionpercent: float = 5.0 # percent
     tensileservice: float = 0.05 # in/in
-
-
