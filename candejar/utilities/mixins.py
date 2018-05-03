@@ -3,13 +3,15 @@
 """Special mixin classes."""
 
 from __future__ import annotations
-from typing import Callable, Type, Any, Dict, Optional, Counter
+from typing import Callable, Type, Any, Dict, Optional, Counter, TypeVar, Generic
 
 
 class ChildRegistryError(Exception):
     pass
 
-class ChildRegistryMixin:
+MixinSubclsType = TypeVar("MixinSubclsType", bound="ChildRegistryMixin")
+
+class ChildRegistryMixin(Generic[MixinSubclsType]):
     """Mixin class that creates classes which track subclasses.
 
     Each new child class will track its own children.
@@ -82,7 +84,6 @@ class ChildRegistryMixin:
                                      f"{cls.__name__} subclasses registry")
 
 
-MixinSubclsType = Type[ChildRegistryMixin]
 AnyType = Type[object] # i.e., type
 
 

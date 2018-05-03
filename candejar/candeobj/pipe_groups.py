@@ -1,28 +1,33 @@
 # -*- coding: utf-8 -*-
 
 """Module for working with cande pipe group type objects."""
+
 from dataclasses import fields
 # from types import new_class
 from enum import Enum
-from typing import Iterator
+from typing import Iterator, Type
 
 # from ..cidobjrw.cidsubobj.names import PIPE_GROUP_CLASS_DICT
-from ..utilities.mixins import ChildRegistryError, ChildRegistryMixin, child_dispatcher
+from ..utilities.mixins import ChildRegistryError
+from ..utilities.enumtools import CapitalizedEnumMixin, callable_enum_dispatcher
+from ..utilities.decorators import case_insensitive_arguments
 from ..cid import CidLineType
+from ..cidprocessing.L3 import PipeGroup as process_PipeGroup
 from .pipe_group_components import PipeGroupComponent
 from .exc import CandeValueError
-from .bases import CandeData, CandeComposite
-
-class PipeType(Enum):
-    basic="Basic"
-    aluminum="Aluminum"
-    steel="Steel"
-    plastic="Plastic"
+from .bases import CandeData, CandeComposite, CandeComponent
 
 # TODO: Implement PipeGroup type_ dispatching
-@child_dispatcher("type_")
-class PipeGroup(ChildRegistryMixin, CandeComposite):
-    type_: PipeType
+class PipeGroup(CandeComposite):
+    pass
+
+@case_insensitive_arguments()
+@callable_enum_dispatcher(dispatch_func=PipeGroup.getsubcls)
+class PipeType(CapitalizedEnumMixin):
+    BASIC="Basic"
+    ALUMINUM="Aluminum"
+    STEEL="Steel"
+    PLASTIC="Plastic"
 
 class Basic(PipeGroup):
     pass
@@ -37,22 +42,32 @@ class Steel(PipeGroup):
 class Plastic(PipeGroup):
     pass
 
-def make_pipe_group(cid, iter_linetype: Iterator[CidLineType], **kwargs: CandeData):
+@case_insensitive_arguments()
+@callable_enum_dispatcher(dispatch_func=Plastic.getsubcls)
+class PlasticType(Enum):
+    GENERAL="GENERAL"
+    SMOOTH="SMOOTH"
+    PROFILE="PROFILE"
+
+# TODO: Implement Concrete pipe material pipe groups (Concrete, Conrib, Contube)
+
+def make_pipe_group(cid, **kwargs: CandeData):
     """Make a new pipe group
 
     The arguments are dispatched to the appropriate `PipeGroup` subclass
     based on contents of the `cid` object and keyword arguments
     """
+    pipe_group = PipeGroup()
+    group_num = len(getattr(pipe_group,"pipe_groups",[]))+1
+    iter_linetype = process_PipeGroup(cid, group_num, pipe_group)
     for linetype in iter_linetype:
-        Cls=PipeGroupComponent.getsubcls(linetype)
-        cls_kwargs={k:v for k,v in kwargs.items() if k in fields(Cls)}
-        pipe_group_component=Cls(cls_kwargs)
-        while True:
-            try:
-                pipe_group.add_component(pipe_group_component)
-                break
-            except NameError:
-                pipe_group = PipeGroup()
+        ComponentCls: Type[CandeComponent] = PipeGroupComponent.getsubcls(linetype)
+        field_names = [f.name for f in fields(ComponentCls)]
+        cls_kwargs={kwargs.pop(k):v for k,v in kwargs.copy().items() if k in field_names}
+        pipe_group_component=ComponentCls(cls_kwargs)
+        pipe_group.add_component(pipe_group_component)
+        del ComponentCls
+    return pipe_group
     try:
         cls_name = type_.capitalize()
     except AttributeError:
