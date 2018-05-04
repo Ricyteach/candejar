@@ -10,6 +10,5 @@
   "tests/test_cidline.py::TestCidLine::()::test_parse": true,
   "tests/test_cidobj_abc.py::test_candebase": true,
   "tests/test_cidrwabc.py::test_from_lines": true,
-  "tests/test_cidseq.py::test_iteration": true,
-  "tests/utilities/test_decorators.py::test_decorator_errors": true
+  "tests/test_cidseq.py::test_iteration": true
 }
