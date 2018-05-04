@@ -11,5 +11,8 @@
   "tests/test_cidobj_abc.py::test_candebase": true,
   "tests/test_cidrwabc.py::test_from_lines": true,
   "tests/test_cidseq.py::test_iteration": true,
-  "tests/utilities/test_metaclasses.py": true
+  "tests/utilities/test_metaclasses.py::test_1": true,
+  "tests/utilities/test_metaclasses.py::test_3": true,
+  "tests/utilities/test_metaclasses.py::test_with_dataclasses_1": true,
+  "tests/utilities/test_metaclasses.py::test_with_dataclasses_2": true
 }

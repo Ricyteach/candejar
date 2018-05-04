@@ -1,8 +1,26 @@
 from dataclasses import dataclass
 
+import pytest
+
 from candejar.utilities.metaclasses import SlottedWithDefaultsMeta
 
-def test_1():
+@pytest.fixture
+def member_descriptor():
+    class C:
+        __slots__ = "x"
+    return type(C.x)
+
+def test_1(member_descriptor):
+    class C(metaclass=SlottedWithDefaultsMeta):
+        # noinspection PyDataclass
+        __slots__ = ("x", "y", "z", "__dict__")
+
+    c = C()
+
+    assert not vars(c)
+    assert all(isinstance(getattr(C,slot),member_descriptor) for slot in C.__slots__)
+
+def test_with_dataclasses_1(member_descriptor):
     @dataclass(init=False)
     class C(metaclass=SlottedWithDefaultsMeta):
         # noinspection PyDataclass
@@ -11,9 +29,10 @@ def test_1():
         y = 1
         z: int = 1
 
-    C()
+    assert C()
+    assert all(isinstance(getattr(C,slot),member_descriptor) for slot in C.__slots__)
 
-def test_2():
+def test_with_dataclasses_2(member_descriptor):
     @dataclass
     class C(metaclass=SlottedWithDefaultsMeta):
         # noinspection PyDataclass
@@ -22,4 +41,7 @@ def test_2():
         y = 1
         z: int = 1
 
-    C(2,2)
+    c = C(2, 2)
+
+    assert not vars(c)
+    assert all(isinstance(getattr(C,slot),member_descriptor) for slot in C.__slots__)
