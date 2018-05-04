@@ -4,7 +4,7 @@
 
 from inspect import getfullargspec
 from functools import wraps
-from typing import Callable, Generator, Any, Optional, Union, Type, Iterable
+from typing import Callable, Generator, Any, Optional, Union, Type, Iterable, Counter
 
 _NO_CALLABLE_TYPE = type("_NO_CALLABLE_TYPE", (), {})
 _NO_CALLABLE = _NO_CALLABLE_TYPE()
@@ -49,7 +49,13 @@ def case_insensitive_arguments(callable: Union[_NO_CALLABLE_TYPE, AnyCallable] =
             raise CaseInsensitiveDecoratorError(f"Invalid argument name(s): {str(invalid_names)[1:-1]}")
         @wraps(callable)
         def wrapped(*args, **kwargs):
-            # lookup actual version of argument name based on lowercase version of provided name
+            # make sure no kwargs conflict with the case-insensitive args
+            lower_arg_names_ctr = Counter([k.lower() for k in kwargs])
+            if any(v!=1 and k.lower() in insensitive_arg_names_dict for k,v in lower_arg_names_ctr.items()):
+                conflicting = [k for k,v in lower_arg_names_ctr.items() if k.lower() in insensitive_arg_names_dict and v!=1]
+                raise CaseInsensitiveDecoratorError(f"received keyword arguments that conflict with the specified case-"
+                                                    f"insensitive argument names: {str(conflicting)[1:-1]}")
+            # lookup actual version of argument names based on lowercase version of provided name
             kwargs = {insensitive_arg_names_dict.get(n.lower(),n):v for n,v in kwargs.items()}
             return callable(*args, **kwargs)
         return wrapped
