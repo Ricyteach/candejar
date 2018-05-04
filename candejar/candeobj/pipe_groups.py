@@ -63,7 +63,7 @@ def make_pipe_group(cid, **kwargs: CandeData):
     for linetype in iter_linetype:
         ComponentCls: Type[CandeComponent] = PipeGroupComponent.getsubcls(linetype)
         field_names = [f.name for f in fields(ComponentCls)]
-        cls_kwargs={kwargs.pop(k):v for k,v in kwargs.copy().items() if k in field_names}
+        cls_kwargs={k:kwargs.pop(k) for k in kwargs.copy().keys() if k in field_names}
         pipe_group_component=ComponentCls(cls_kwargs)
         pipe_group.add_component(pipe_group_component)
         del ComponentCls
