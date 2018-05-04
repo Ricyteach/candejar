@@ -38,9 +38,8 @@ def test_decorator_error_unused_args(f: CallableAny, kwargs_upper: Dict):
         f(**kwargs_upper, D=0, E=0)
 
 def test_decorator_error_invalid_insensitive_args(f: CallableAny):
-    f=case_insensitive_arguments(insensitive_arg_names="X")(f)
     with pytest.raises(CaseInsensitiveDecoratorError):
-        f(**kwargs_lower, D=0, E=0)
+        case_insensitive_arguments(insensitive_arg_names="X")(f)
 
 def test_decorator(f: CallableAny, kwargs_lower: Dict):
     f=case_insensitive_arguments(f)
