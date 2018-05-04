@@ -23,10 +23,12 @@ def test_decorator_called_args(f: CallableAny, kwargs_lower: Dict):
     f=case_insensitive_arguments(insensitive_arg_names=kwargs_lower.keys())(f)
     assert f(**kwargs_lower) == tuple(kwargs_lower.values())
 
-def test_decorator_errors(f: CallableAny, kwargs_lower: Dict):
+def test_decorator_errors_conflicting_args(f: CallableAny, kwargs_lower: Dict):
     f=case_insensitive_arguments(insensitive_arg_names=kwargs_lower.keys())(f)
     with pytest.raises(CaseInsensitiveDecoratorError):
         f(**kwargs_lower, D=0, E=0)
+
+def test_decorator_errors(f: CallableAny, kwargs_lower: Dict):
     g=case_insensitive_arguments(insensitive_arg_names="ABC")(f)
     with pytest.raises(CaseInsensitiveDecoratorError):
         f(**{k:v for k,v in kwargs_lower.items() if k in "abc"}, D=0, E=0, F=0)
