@@ -20,7 +20,9 @@ class CapitalizedEnumMixin(Enum):
                 raise CapitalizedEnumError("use {s.capitalize!r} instead?")
         except AttributeError:
             raise CapitalizedEnumError("string expected for s argument, not {type(s).__name__}")
-        return super().__new__(cls, s, *args, **kwargs)
+        obj = object.__new__(cls)
+        obj._value_ = s
+        return obj
 
 def callable_enum_dispatcher(*, dispatch_func: Callable[[Any], Any]):
     """Makes enum members callable and sends arguments to the supplied dispatch function"""

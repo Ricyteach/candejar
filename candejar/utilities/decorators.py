@@ -4,22 +4,26 @@
 
 from inspect import getfullargspec
 from functools import wraps
-from typing import Callable, Generator, Any, Optional, Union, Type
+from typing import Callable, Generator, Any, Optional, Union, Type, Iterable
 
+_NO_CALLABLE_TYPE = type("_NO_CALLABLE_TYPE", (), {})
+_NO_CALLABLE = _NO_CALLABLE_TYPE()
 
 class CaseInsensitiveDecoratorError(Exception):
     pass
 
-def case_insensitive_arguments(*insensitive_arg_names, ignore_error=False):
+AnyCallable = Callable[...,Any]
+
+def case_insensitive_arguments(callable: Union[_NO_CALLABLE_TYPE, AnyCallable] = _NO_CALLABLE,
+                               *, insensitive_arg_names: Optional[Iterable[str]] = None):
     """Makes keyword arguments case-insensitive. The argument name list will be stringified.
 
     NOTE: The case_insensitive_arguments decorator must be called even if there are no arguments provided. If it is
     desired to use a stringified object of type `type` as a specified argument name, use ignore_error=True.
     """
     # check for accidental usage as @case_insensitive_arguments
-    if insensitive_arg_names and not ignore_error and [type(arg) for arg in insensitive_arg_names[:1]] == [type]:
-        raise CaseInsensitiveDecoratorError(f"Decorator appears not to have been called; use ignore_error=True to force "
-                                            f"usage of {str(insensitive_arg_names)[1:-1]} as argument name(s)")
+    if insensitive_arg_names is None:
+        insensitive_arg_names = []
     insensitive_arg_names_lower = [str(n).lower() for n in insensitive_arg_names]
     def wrapped_callable(callable):
         # get all names arguments in callable signature
@@ -49,7 +53,10 @@ def case_insensitive_arguments(*insensitive_arg_names, ignore_error=False):
             kwargs = {insensitive_arg_names_dict.get(n.lower(),n):v for n,v in kwargs.items()}
             return callable(*args, **kwargs)
         return wrapped
-    return wrapped_callable
+    if callable is _NO_CALLABLE:
+        return wrapped_callable
+    else:
+        return wrapped_callable(callable)
 
 # this thing below is stupid and broken. no idea if it's even worth doing. what a freaking waste of time.
 '''
