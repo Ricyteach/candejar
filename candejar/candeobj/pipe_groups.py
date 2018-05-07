@@ -2,24 +2,27 @@
 
 """Module for working with cande pipe group type objects."""
 
-from dataclasses import fields
+from dataclasses import fields, dataclass, InitVar, field
 # from types import new_class
 from enum import Enum
 from typing import Iterator, Type
 
 # from ..cidobjrw.cidsubobj.names import PIPE_GROUP_CLASS_DICT
-from ..utilities.mixins import ChildRegistryError
+from ..utilities.mixins import ChildRegistryError, child_dispatcher
 from ..utilities.enumtools import CapitalizedEnumMixin, callable_enum_dispatcher
 from ..utilities.decorators import case_insensitive_arguments
 from ..cid import CidLineType
 from ..cidprocessing.L3 import PipeGroup as process_PipeGroup
 from .pipe_group_components import PipeGroupComponent
 from .exc import CandeValueError
-from .bases import CandeData, CandeComposite, CandeComponent
+from .bases import CandeData, CandeComposite, CandeComponent, CandeStr, CandeNum
 
 # TODO: Implement PipeGroup type_ dispatching
+@child_dispatcher("type_")
+@dataclass(eq=False)
 class PipeGroup(CandeComposite):
-    pass
+    type_: CandeStr
+    num: CandeNum
 
 @case_insensitive_arguments()
 @callable_enum_dispatcher(dispatch_func=PipeGroup.getsubcls)
@@ -29,18 +32,22 @@ class PipeType(CapitalizedEnumMixin):
     STEEL="Steel"
     PLASTIC="Plastic"
 
+@dataclass
 class Basic(PipeGroup):
-    pass
+    type_: CandeStr = field(default="BASIC", repr=False, init=False)
 
+@dataclass
 class Aluminum(PipeGroup):
-    pass
+    type_: CandeStr = field(default="ALUMINUM", repr=False, init=False)
 
+@dataclass
 class Steel(PipeGroup):
-    pass
+    type_: CandeStr = field(default="STEEL", repr=False, init=False)
 
 # TODO: Implement Plastic walltype dispatching
+@dataclass
 class Plastic(PipeGroup):
-    pass
+    type_: CandeStr = field(default="PLASTIC", repr=False, init=False)
 
 @case_insensitive_arguments()
 @callable_enum_dispatcher(dispatch_func=Plastic.getsubcls)

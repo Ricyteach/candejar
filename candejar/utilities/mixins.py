@@ -3,7 +3,7 @@
 """Special mixin classes."""
 
 from __future__ import annotations
-from typing import Callable, Type, Any, Dict, Optional, Counter, TypeVar, Generic
+from typing import Callable, Any, Dict, Optional, Counter, TypeVar, Generic
 
 
 class ChildRegistryError(Exception):
@@ -39,11 +39,11 @@ class ChildRegistryMixin(Generic[MixinSubclsType]):
 
     """
     _subclasses: Dict[Any, MixinSubclsType] = dict()
-    _make_reg_key: Callable[[AnyType], Any] = lambda subcls: getattr(subcls, "__name__")
+    _make_reg_key: Callable[[type], Any] = lambda subcls: getattr(subcls, "__name__")
 
     def __init_subclass__(subcls,
-                          make_reg_key: Optional[Callable[[AnyType], Any]] = None,
-                          key_factory: Optional[Callable[[], Callable[[AnyType], Any]]] = None,
+                          make_reg_key: Optional[Callable[[type], Any]] = None,
+                          key_factory: Optional[Callable[[], Callable[[type], Any]]] = None,
                           **kwargs) -> None:
         # check for invalid argument combo
         if make_reg_key is not None and key_factory is not None:
@@ -82,9 +82,6 @@ class ChildRegistryMixin(Generic[MixinSubclsType]):
         except KeyError:
             raise ChildRegistryError(f"No child class key {key!r} in the "
                                      f"{cls.__name__} subclasses registry")
-
-
-AnyType = Type[object] # i.e., type
 
 
 class ChildAsAttributeError(Exception):

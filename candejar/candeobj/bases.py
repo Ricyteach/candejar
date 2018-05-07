@@ -36,6 +36,6 @@ class CandeComponent(ChildRegistryMixin["CandeComponent"]):
     CandeComponent children are registered with CC by name
     """
     @classmethod
-    def getsubcls(cls, key: CidLineType) -> Type[CandeComponent]:
+    def getsubcls(cls, key: Any) -> Type[CandeComponent]:
         """Get the registered component from the key"""
         return super().getsubcls(key)
