@@ -21,8 +21,8 @@ from .bases import CandeData, CandeComposite, CandeComponent, CandeStr, CandeNum
 @child_dispatcher("type_")
 @dataclass(eq=False)
 class PipeGroup(CandeComposite):
-    type_: CandeStr
-    num: CandeNum
+    type_: CandeStr = field(default="PLASTIC", repr=False)
+    num: CandeNum = 0
 
 @case_insensitive_arguments()
 @callable_enum_dispatcher(dispatch_func=PipeGroup.getsubcls)
@@ -34,20 +34,20 @@ class PipeType(CapitalizedEnumMixin):
 
 @dataclass
 class Basic(PipeGroup):
-    type_: CandeStr = field(default="BASIC", repr=False, init=False)
+    type_: CandeStr = field(default="BASIC", repr=False)
 
 @dataclass
 class Aluminum(PipeGroup):
-    type_: CandeStr = field(default="ALUMINUM", repr=False, init=False)
+    type_: CandeStr = field(default="ALUMINUM", repr=False)
 
 @dataclass
 class Steel(PipeGroup):
-    type_: CandeStr = field(default="STEEL", repr=False, init=False)
+    type_: CandeStr = field(default="STEEL", repr=False)
 
 # TODO: Implement Plastic walltype dispatching
 @dataclass
 class Plastic(PipeGroup):
-    type_: CandeStr = field(default="PLASTIC", repr=False, init=False)
+    type_: CandeStr = field(default="PLASTIC", repr=False)
 
 @case_insensitive_arguments()
 @callable_enum_dispatcher(dispatch_func=Plastic.getsubcls)
@@ -71,7 +71,7 @@ def make_pipe_group(cid, **kwargs: CandeData):
         ComponentCls: Type[CandeComponent] = PipeGroupComponent.getsubcls(linetype)
         field_names = [f.name for f in fields(ComponentCls)]
         cls_kwargs={k:kwargs.pop(k) for k in kwargs.copy().keys() if k in field_names}
-        pipe_group_component=ComponentCls(cls_kwargs)
+        pipe_group_component=ComponentCls(**cls_kwargs)
         pipe_group.add_component(pipe_group_component)
         del ComponentCls
     return pipe_group

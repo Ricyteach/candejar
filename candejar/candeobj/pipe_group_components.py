@@ -27,12 +27,12 @@ class PipeGroupGeneralComponent(PipeGroupComponent):
     _make_reg_key: ClassVar[Callable[[Type[PipeGroupComponent]],CandeStr]] = lambda subcls: subcls.type_.default
     linetype_key: ClassVar[CidLineType] = A2
     type_: CandeStr  # ALUMINUM, BASIC, CONCRETE, PLASTIC, STEEL, CONRIB, CONTUBE
-    num: CandeNum
+    num: CandeNum = 0
 
 
 @dataclass
 class BasicComponent(PipeGroupGeneralComponent):
-    type_: CandeStr  = field(default="BASIC", repr=False, init=False)
+    type_: CandeStr  = field(default="BASIC", repr=False)
 
 
 @dataclass
@@ -58,18 +58,18 @@ class Basic2Component(PipeGroupComponent):
 # TODO: Finish all aluminium components
 @dataclass
 class AluminumComponent(PipeGroupGeneralComponent):
-    type_: CandeStr  = field(default="ALUMINUM", repr=False, init=False)
+    type_: CandeStr  = field(default="ALUMINUM", repr=False)
 
 
 # TODO: Finish all steel components
 @dataclass
 class SteelComponent(PipeGroupGeneralComponent):
-    type_: CandeStr  = field(default="STEEL", repr=False, init=False)
+    type_: CandeStr  = field(default="STEEL", repr=False)
 
 
 @dataclass
 class PlasticComponent(PipeGroupGeneralComponent):
-    type_: CandeStr  = field(default="PLASTIC", repr=False, init=False)
+    type_: CandeStr  = field(default="PLASTIC", repr=False)
 
 
 @child_dispatcher("walltype")

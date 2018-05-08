@@ -22,5 +22,5 @@ def test_make_pipe_group():
     cid = type("C",(),{})()
     cid.pipe_groups = []
     cid.mode = "ANALYS"
-    g = make_pipe_group(cid, "basic")
+    g = make_pipe_group(cid, type_=CandeStr("basic"), num=CandeNum(10))
     assert g
