@@ -64,7 +64,7 @@ def make_pipe_group(cid, **kwargs: CandeData):
     The arguments are dispatched to the appropriate `PipeGroup` subclass
     based on contents of the `cid` object and keyword arguments
     """
-    pipe_group = PipeGroup()
+    pipe_group = PipeGroup(kwargs.pop("type_"), kwargs.pop("num",0))
     group_num = len(getattr(pipe_group,"pipe_groups",[]))+1
     iter_linetype = process_PipeGroup(cid, group_num, pipe_group)
     for linetype in iter_linetype:
