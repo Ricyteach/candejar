@@ -2,7 +2,6 @@
 
 """Module for working with the components that make up cande pipe group type objects."""
 
-from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import ClassVar, Callable, Type, TypeVar, Generic
 
@@ -32,10 +31,10 @@ class PipeGroupGeneralComponent(Generic[PGrpGenSubcls], PipeGroupComponent["Pipe
 
     The child components are [Aluminum, Basic, Concrete, Plastic, Steel, Conrib, Contube]Component
     """
-    type_: CandeStr  # ALUMINUM, BASIC, CONCRETE, PLASTIC, STEEL, CONRIB, CONTUBE
-    num: CandeNum = 0
     _make_reg_key: ClassVar[Callable[[Type[PGrpGenSubcls]],CandeStr]] = lambda subcls: subcls.type_.default.lower()
     linetype_key: ClassVar[CidLineType] = A2
+    type_: CandeStr  # ALUMINUM, BASIC, CONCRETE, PLASTIC, STEEL, CONRIB, CONTUBE
+    num: CandeNum = 0
     @classmethod
     def getsubcls(cls, key: str) -> Type[PGrpGenSubcls]:
         """Get the non case-sensitive pipe group component from the key"""
@@ -87,6 +86,7 @@ class PlasticComponent(PipeGroupGeneralComponent["PlasticComponent"]):
 @child_dispatcher("walltype")
 @dataclass
 class Plastic1Component(PipeGroupComponent["Plastic1Component"], make_reg_key = lambda subcls: subcls.walltype):
+    linetype_key: ClassVar[CidLineType] = B1Plastic
     # GENERAL, SMOOTH, PROFILE
     walltype: CandeStr
     # HDPE, PVC, PP, OTHER
@@ -95,7 +95,6 @@ class Plastic1Component(PipeGroupComponent["Plastic1Component"], make_reg_key = 
     duration: CandeNum = 1
     # Small Deformation: 0, Large Deformation: 1, Plus Buckling: 2
     mode: CandeNum = 0
-    linetype_key: ClassVar[CidLineType] = B1Plastic
 
 
 @dataclass
