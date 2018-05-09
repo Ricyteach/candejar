@@ -22,7 +22,7 @@ class PipeGroup(CandeComposite):
     type_: InitVar[CandeStr]
     num: InitVar[CandeNum] = 0
     def __post_init__(self, type_: CandeStr, num: CandeNum):
-        super().__init__()
+        CandeComposite.__init__(self)
         comp=PipeGroupGeneralComponent(type_,num)
         self.add_component(comp)
 
