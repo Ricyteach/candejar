@@ -3,11 +3,8 @@
 """Module for working with cande data objects."""
 
 from __future__ import annotations
+from typing import NewType, Union, TypeVar, Generic, Type
 
-from dataclasses import dataclass
-from typing import NewType, Union, Type, Any
-
-from ..cid import CidLineType
 from ..utilities.mixins import ChildRegistryMixin, ClsAttrKeyMakerFactory, CompositeMixin
 
 CandeNum = NewType("CandeNum", int)
@@ -29,13 +26,14 @@ class CandeComposite(ChildRegistryMixin["CandeComposite"], CompositeMixin):
     """
     pass
 
-@dataclass
-class CandeComponent(ChildRegistryMixin["CandeComponent"]):
+CCompSubcls = TypeVar("CCompSubcls", bound="CandeComponent")
+
+class CandeComponent(Generic[CCompSubcls], ChildRegistryMixin["CandeComponent"]):
     """Base class for components that make up cande objects (such as pipe groups)
 
     CandeComponent children are registered with CC by name
     """
     @classmethod
-    def getsubcls(cls, key: Any) -> Type[CandeComponent]:
+    def getsubcls(cls, key: str) -> Type[CCompSubcls]:
         """Get the registered component from the key"""
         return super().getsubcls(key)

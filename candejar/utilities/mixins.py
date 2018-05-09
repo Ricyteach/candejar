@@ -3,15 +3,15 @@
 """Special mixin classes."""
 
 from __future__ import annotations
-from typing import Callable, Any, Dict, Optional, Counter, TypeVar, Generic
+from typing import Callable, Any, Dict, Optional, Counter, TypeVar, Generic, Type
 
 
 class ChildRegistryError(Exception):
     pass
 
-MixinSubclsType = TypeVar("MixinSubclsType", bound="ChildRegistryMixin")
+MixinSubcls = TypeVar("MixinSubcls", bound="ChildRegistryMixin")
 
-class ChildRegistryMixin(Generic[MixinSubclsType]):
+class ChildRegistryMixin(Generic[MixinSubcls]):
     """Mixin class that creates classes which track subclasses.
 
     Each new child class will track its own children.
@@ -38,7 +38,7 @@ class ChildRegistryMixin(Generic[MixinSubclsType]):
         class InvalidName(RegisteredByPop): ... # <-- ERROR!
 
     """
-    _subclasses: Dict[Any, MixinSubclsType] = dict()
+    _subclasses: Dict[Any, Type[ChildRegistryMixin]] = dict()
     _make_reg_key: Callable[[type], Any] = lambda subcls: getattr(subcls, "__name__")
 
     def __init_subclass__(subcls,
@@ -52,7 +52,7 @@ class ChildRegistryMixin(Generic[MixinSubclsType]):
                                      "be provided")
         super().__init_subclass__(**kwargs)
         # for later child classes of the new class
-        subcls._subclasses = dict()
+        subcls._subclasses: Dict[Any,Type[MixinSubcls]] = dict()
         # child added to the reg of closest parent that is a subclass of CRM
         for parent_cls in subcls.mro()[1:]:
             if issubclass(parent_cls, ChildRegistryMixin):
@@ -75,7 +75,7 @@ class ChildRegistryMixin(Generic[MixinSubclsType]):
         if key_factory is not None:
             subcls._make_reg_key = key_factory()
     @classmethod
-    def getsubcls(cls, key: Any) -> MixinSubclsType:
+    def getsubcls(cls, key: Any) -> Type[MixinSubcls]:
         """Get the registered subclass from the key"""
         try:
             return cls._subclasses[key]

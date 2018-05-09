@@ -2,8 +2,7 @@
 
 """Module for working with cande pipe group type objects."""
 
-from dataclasses import fields, dataclass, InitVar, field
-# from types import new_class
+from dataclasses import fields, dataclass, InitVar
 from enum import Enum
 from typing import Iterator, Type
 
@@ -11,9 +10,8 @@ from typing import Iterator, Type
 from ..utilities.mixins import ChildRegistryError, child_dispatcher
 from ..utilities.enumtools import CapitalizedEnumMixin, callable_enum_dispatcher
 from ..utilities.decorators import case_insensitive_arguments
-from ..cid import CidLineType
 from ..cidprocessing.L3 import PipeGroup as process_PipeGroup
-from .pipe_group_components import PipeGroupComponent
+from .pipe_group_components import PipeGroupComponent, PipeGroupGeneralComponent
 from .exc import CandeValueError
 from .bases import CandeData, CandeComposite, CandeComponent, CandeStr, CandeNum
 
@@ -21,8 +19,11 @@ from .bases import CandeData, CandeComposite, CandeComponent, CandeStr, CandeNum
 @child_dispatcher("type_")
 @dataclass(eq=False)
 class PipeGroup(CandeComposite):
-    type_: CandeStr = field(default="PLASTIC", repr=False)
-    num: CandeNum = 0
+    type_: InitVar[CandeStr]
+    num: InitVar[CandeNum] = 0
+    def __post_init__(self, type_: CandeStr, num: CandeNum):
+        comp=PipeGroupGeneralComponent(type_,num)
+        self.add_component(comp)
 
 @case_insensitive_arguments()
 @callable_enum_dispatcher(dispatch_func=PipeGroup.getsubcls)
@@ -34,20 +35,20 @@ class PipeType(CapitalizedEnumMixin):
 
 @dataclass
 class Basic(PipeGroup):
-    type_: CandeStr = field(default="BASIC", repr=False)
+    type_: InitVar[CandeStr] = "BASIC"
 
 @dataclass
 class Aluminum(PipeGroup):
-    type_: CandeStr = field(default="ALUMINUM", repr=False)
+    type_: InitVar[CandeStr] = "ALUMINUM"
 
 @dataclass
 class Steel(PipeGroup):
-    type_: CandeStr = field(default="STEEL", repr=False)
+    type_: InitVar[CandeStr] = "STEEL"
 
 # TODO: Implement Plastic walltype dispatching
 @dataclass
 class Plastic(PipeGroup):
-    type_: CandeStr = field(default="PLASTIC", repr=False)
+    type_: InitVar[CandeStr] = "PLASTIC"
 
 @case_insensitive_arguments()
 @callable_enum_dispatcher(dispatch_func=Plastic.getsubcls)
