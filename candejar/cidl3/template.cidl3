@@ -1,0 +1,752 @@
+# CANDE Level 3 problem template
+# ANALYS or DESIGN
+Mode: "ANALYS"
+# 0 = WSD, 1 = LRFD
+Method: 0
+# number of pipe type groups
+NGroups: 0
+# 60 character limit
+Heading: "From `candejar` by: Rick Teachey, rick@teachey.org"
+# 40 character limit
+Title: ""
+Iterations: -99
+# number of load steps
+NSteps: 1
+NNodes: 0
+NElements: 0
+NBoundaries: 0
+NSoilMaterials: 0
+NInterfMaterials: 0
+# 0: run, 1: check only
+Check: 1
+# 0: none, 1: minimize, 2: minimize and print
+Bandwidth: 1
+# 1: control data, 2: input data,
+# 3: created data, 4: maximum
+MeshOutput: 3
+# 0: minimal, 1: standard, 2: plus Duncan,
+# 3: plus interface, 4: plus Mohr Coulomb
+ResponseOutput: 0
+
+PipeGroups:
+    # repeat this section for each pipe group
+    -
+        # ALUMINUM, BASIC, CONCRETE, PLASTIC, STEEL, CONRIB, CONTUBE
+        Type: ""
+        # number of elements in group
+        Num: 0
+
+        # B1Alum
+        # for Aluminum only
+        # psi
+        Modulus: 10.0E6
+        Poissons: 0.33
+        # psi
+        Yield: 24.0E3
+        # psi
+        Seam: 24.0E3
+        # pci
+        Density: 0.0
+        # psi
+        UpperModulus: 0.05*10E6
+        # Linear: 1, Bilinear: 2
+        Behavior: 2
+        # Small Deformation: 0, Large Deformation: 1, Plus Buckling: 2
+        Mode: 0
+
+        # B2AlumA
+        # for ANALYS mode only
+        # in2/in
+        Area: 0.0
+        # in4/in
+        I: 0.0
+        # in3/in
+        S: 0.0
+
+        # B2AlumDWSD
+        # for DESIGN mode only and no LRFD only
+        YieldFS: 3.0
+        BucklingFS: 2.0
+        SeamFS: 2.0
+        PlasticFS: 4.0
+        # percent
+        Deflection: 5.0
+
+        # B2AlumDLRFD
+        # for DESIGN mode and LRFD mode only
+        Yield: 1.0
+        Buckling: 1.0
+        Seam: 1.0
+        Plastic: 1.0
+        Deflection: 1.0
+
+        # B3AlumADLRFD
+        # LRFD only
+        Yieldϕ: 1.0
+        Bucklingϕ: 1.0
+        Seamϕ: 0.67
+        Plasticϕ: 0.85
+        # percent
+        DeflectionPercent: 5.0
+
+        # B1Steel
+        # for Steel only
+        # psi
+        Modulus: 29.0E6
+        Poissons: 0.3
+        # psi
+        Yield: 33.0E3
+        # psi
+        Seam: 33.0E3
+        # pci
+        Density: 0.0
+        # psi
+        UpperModulus: 0.0
+        # None: 0, Yes: 1, Yes, print trace: 2
+        JointSlip: 0
+        # Linear: 1, Bilinear: 2
+        Behavior: 2
+        # Small Deformation AASHTO Buckling: 0
+        # Large Deformation AASHTO Buckling: 1
+        # Large Deformation CANDE Buckling:  2
+        # Small Deformation Deep Corrugation Buckling: 3
+        # Large Deformation Deep Corrugation Buckling: 4
+        Mode: 0
+
+        # B2SteelA
+        # for ANALYS only
+        # in2/in
+        Area: 0.0
+        # in4/in
+        I: 0.0
+        # in3/in
+        S: 0.0
+        # in3/in
+        Z: 0.0
+
+        # B2SteelDWSD
+        # for DESIGN only
+        # Non LRFD only
+        YieldFS: 2.0
+        BucklingFS: 2.0
+        SeamFS: 2.0
+        PlasticFS: 3.0
+        # percent
+        Deflection: 5.0
+
+        # B2SteelDLRFD
+        # for DESIGN only
+        # LRFD only
+        Yield: 1.0
+        Buckling: 1.0
+        Seam: 1.0
+        Plastic: 1.0
+        Deflection: 1.0
+
+        # B2bSteel
+        # use if JointSlip>0
+        # psi
+        Slip: 4950.0
+        # psi
+        Yield: 33.0E3
+        SlipRatio: 0.0003
+        PostSlipRatio: 0.5
+        YieldRatio: 0.0
+        # in
+        Travel: 1.0
+        # max 15
+        NumJoints: 1
+        # Same lengths: 0; Different: 1
+        VaryTravel: 0
+
+        # B2cSteel
+        # Level 2 or 3 only
+        # use if JointSlip>0
+        # up to 15 fields of integers
+        Element1: 0
+        Element2: 0
+        Element3: 0
+        Element4: 0
+        Element5: 0
+        Element6: 0
+        Element7: 0
+        Element8: 0
+        Element9: 0
+        Element10: 0
+        Element11: 0
+        Element12: 0
+        Element13: 0
+        Element14: 0
+        Element15: 0
+
+        # B2dSteel
+        # Level 2 or 3 only
+        # use if JointSlip>0
+        # up to 15 fields of floats
+        LengthRatio1: 0.0
+        LengthRatio2: 0.0
+        LengthRatio3: 0.0
+        LengthRatio4: 0.0
+        LengthRatio5: 0.0
+        LengthRatio6: 0.0
+        LengthRatio7: 0.0
+        LengthRatio8: 0.0
+        LengthRatio9: 0.0
+        LengthRatio10: 0.0
+        LengthRatio11: 0.0
+        LengthRatio12: 0.0
+        LengthRatio13: 0.0
+        LengthRatio14: 0.0
+        LengthRatio15: 0.0
+
+        # B3SteelADLRFD
+        # LRFD only
+        Yieldϕ: 1.0
+        Bucklingϕ: 1.0
+        Seamϕ: 1.0
+        Plasticϕ: 0.9
+        # percent
+        DeflectionPercent: 5.0
+        # deep corrugation?
+        Combined: True
+
+        # B1Plastic
+        # for Plastic only
+        # GENERAL, SMOOTH, PROFILE
+        WallType: "GENERAL"
+        # HDPE, PVC, PP, OTHER
+        PipeType: "HDPE"
+        # 1: Short term, 2: Long term
+        Duration: 1
+        # Small Deformation: 0, Large Deformation: 1, Plus Buckling: 2
+        Mode: 0
+
+        # B2Plastic
+        # psi
+        ShortModulus: 0.0
+        # psi
+        ShortStrength: 0.0
+        # psi
+        LongModulus: 0.0
+        # psi
+        LongStrength: 0.0
+        Poissons: 0.3
+        # pci
+        Density: 0.0
+
+        # B3PlasticAGeneral
+        # for ANALYS only
+        # WallType = GENERAL
+        # in
+        Height: 0.0
+        # in2/in
+        Area: 0.0
+        # in4/in
+        I: 0.0
+        # in
+        Centroid: 0.0
+
+        # B3PlasticASmooth
+        # for ANALYS only
+        # WallType = SMOOTH
+        # in
+        Height: 0.0
+
+        PlasticProfileAnalysis:
+        # B3PlasticAProfile
+        # for ANALYS only
+        # WallType = PROFILE
+        # repeatable (multiple properties in one pipe group)
+        # repeat section for each segment
+        -
+            # in
+            Period: 0.0
+            # in
+            Height: 0.0
+            # degrees
+            WebAngle: 90.0
+            # in
+            WebThickness: 0.0
+            WebK: 4.0
+            # 0 to 4
+            NumHorizontal: 0
+            # 1: include, -1: ignore
+            Buckling: 1
+            First: 0
+            Last: 1
+
+            PlasticProfileHorizontalAnalysis:
+            # B3bPlasticAProfile
+            # for ANALYS only
+            # WallType = PROFILE
+            # Required for each NumHorizontal elements in each repeated B3 line
+            # repeatable (multiple properties in one pipe group)
+            # repeat section for each horizontal element
+            -
+                # 1: inner valley, 2: inner liner, 3: outer crest, 4: outer link
+                Identifier: 0
+                # in
+                Length: 0.0
+                # in
+                Thickness: 0.0
+                SupportK: 4.0
+
+        # B3PlasticDWSD
+        # for DESIGN only
+        # WallType = SMOOTH
+        # Non LRFD only
+        YieldFS: 2.0
+        BucklingFS: 3.0
+        StrainFS: 2.0
+        # percent
+        Deflection: 5.0
+        # in/in
+        Tensile: 0.05
+
+        # B3PlasticDLRFD
+        # for DESIGN only
+        # WallType = SMOOTH
+        # LRFD only
+        Yield: 1.0
+        Buckling: 1.0
+        Strain: 1.0
+        Deflection: 1.0
+        Tensile: 1.0
+
+        # B4Plastic
+        # for DESIGN only
+        # WallType = SMOOTH
+        # LRFD only
+        Yieldϕ: 1.0
+        Bucklingϕ: 1.0
+        Strainϕ: 1.0
+        # percent
+        DeflectionPercent: 5.0
+        # in/in
+        TensileService: 0.05
+
+        # B1Concrete
+        # psi
+        fc: 4.0E6
+        # psi
+        Modulus: 33*150**1.5*4000**0.5
+        Poissons: 0.17
+        ShearFactor: 0.0
+        # 1: pipes/arches, 2: boxes/3 sided structures with >= 2 feet fill, 3: boxes/3 sided structures with < 2 feet fill
+        ShearEquation: 1
+
+        # B2Concrete
+        # in/in
+        TensionStrain: 0.0
+        # in/in
+        CompressiveStrain: 0.5*4000**0.5/(33*150**1.5)
+        # in/in
+        LimitStrain: 0.002
+        UnitWeight: 0.0
+        # 0: Heger-McGrath, -1: Gergely-Lutz, >0: specified crack spacing length
+        # inches if positive
+        CrackModel: 0.0
+        # Small Deformation: 0, Large Deformation: 1, Plus Buckling: 2
+        Mode: 0
+
+        # B3Concrete
+        # STAND, ELLIP, ARBIT, BOXES
+        Shape: "STAND"
+        # psi
+        Yield: 60.0E3
+        # psi
+        Modulus: 29.0E6
+        Poissons: 0.3
+        # in
+        SpacingInner: 2.0
+        # in
+        SpacingOuter: 2.0
+        NumInner: 1
+        NumOuter: 1
+        # 1: Smooth wire/Plain bars, 2: Welded/Deformed wire, 3: Deformed bars or with stirrups
+        Type: 2
+        # 1: Cracking only, 2: Add concrete plastic behavior, 3: Add steel yielding behavior
+        Behavior: 3
+
+        # B4ConcreteCase1_2
+        # for ANALYS only
+        # for Shape = STAND, or ELLIP only
+        # in
+        Thickness: 0.0
+        # in2/in
+        Area1: 0.0
+        # in2/in
+        Area2: 0.0
+        # in
+        Cover1: 1.25
+        # in
+        Cover2: 1.25
+        First: 0
+        Last: 0
+
+        ConcreteAnalysisARBIT:
+        # B4ConcreteCase1_2_ARBIT
+        # for ANALYS only
+        # for Shape = ARBIT
+        # repeatable (multiple properties in one pipe group)
+        # repeat section for each node in the pipe group
+        -
+            # in
+            Thickness: 0.0
+            # in2/in
+            Area1: 0.0
+            # in2/in
+            Area2: 0.0
+            # in
+            Cover1: 1.25
+            # in
+            Cover2: 1.25
+            First: 0
+            Last: 0
+
+        # B4ConcreteCase3
+        # for Level 2 only
+        # ANALYS only
+        # Shape = BOXES only
+        # in
+        Thickness: 0.0
+        # in
+        Top: 0.0
+        # in
+        Sides: 0.0
+        # in
+        Bottom: 0.0
+        # in
+        HorizontalHaunch: 0.0
+        # in
+        VerticalHaunch: 0.0
+
+        # B4bConcreteCase3
+        # for Level 2 only
+        # ANALYS only
+        # Shape = BOXES only
+        # in2/in
+        AreaOuterSides: 0.0
+        # in2/in
+        AreaInnerTop: 0.0
+        # in2/in
+        AreaInnerBottom: 0.0
+        # in2/in
+        AreaInnerSides: 0.0
+        LengthRatio: 0.0
+        # in
+        Cover: 1.25
+
+        # B4ConcreteCase4
+        # DESIGN only
+        # Non LRFD only
+        # Shape = STAND or ELLIP
+        # in
+        Thickness: 0.0
+        YieldFS: 1.5
+        CrushingFS: 2.0
+        ShearFS: 2.0
+        TensionFS: 2.0
+        # in
+        CrackAllow: 0.01
+        # in
+        Cover: 1.25
+        OuterInnerRatio: 0.75
+
+        # B4ConcreteCase5
+        # DESIGN only
+        # LRFD only
+        # Shape = STAND or ELLIP
+        # in
+        Thickness: 0.0
+        Yield: 1.0
+        Crushing: 1.0
+        Shear: 1.0
+        Tension: 1.0
+        CrackAllow: 1.0
+        # in
+        Cover: 1.25
+        OuterInnerRatio: 0.75
+
+        # B5Concrete
+        prefix: "B-5.Concrete"
+        # LRFD only
+        Yieldϕ: 0.9
+        Crushingϕ: 0.75
+        Shearϕ: 0.9
+        Tensionϕ: 0.9
+        # in
+        CrackAllow: 0.01
+
+        # B1Basic
+        # ANALYS only
+        # psi
+        Modulus: 0.0
+        Poissons: 0.0
+        # in2/in
+        Area: 0.0
+        # in4/in
+        I: 0.0
+        # lbs/in
+        Load: 0.0
+
+        BasicAnalysis:
+        # B1Basic
+        # ANALYS only
+        # repeatable (multiple properties in one pipe group)
+        # repeat section for each First,Last sequence in the pipe group
+        -
+            First: 0
+            Last: 0
+            # psi
+            Modulus: 0.0
+            Poissons: 0.0
+            # in2/in
+            Area: 0.0
+            # in4/in
+            I: 0.0
+            # lbs/in
+            Load: 0.0
+
+        # B2Basic
+        # for ANALYS mode only
+        # Small Deformation: 0, Large Deformation: 1, Plus Buckling: 2
+        Mode: 0
+
+Nodes:
+    # repeat section for each
+    -
+        # optionally leave out Num for auto-numbering
+        Num: 0
+        X: 0.0
+        Y: 0.0
+        Increment: 0
+        Spacing: 0.0
+        Radius: 0.0
+        SpecialReferenceCode: 0
+        SpecialGenerationCode: 0
+        BasicGenerationCode: 0
+
+PipeElements:
+    # repeat section for each
+    -
+        # optionally leave out Num for auto-numbering
+        Num: 0
+        I: 0
+        J: 0
+        Mat: 0
+        Step: 0
+        IncrementAdded: 0
+        RowsAdded: 0
+        IncrementBetween: 0
+        Death: 0
+
+SoilElements:
+    -
+        # optionally leave out Num for auto-numbering
+        Num: 0
+        I: 0
+        J: 0
+        K: 0
+        # L is optional; only include for Quad elements
+        L: 0
+        Mat: 0
+        Step: 0
+        IncrementAdded: 0
+        RowsAdded: 0
+        IncrementBetween: 0
+        Death: 0
+
+InterfElements:
+    # repeat section for each
+    -
+        # optionally leave out Num for auto-numbering
+        Num: 0
+        I: 0
+        J: 0
+        K: 0
+        L: 0
+        Mat: 0
+        Step: 0
+        IncrementAdded: 0
+        RowsAdded: 0
+        IncrementBetween: 0
+        Death: 0
+
+CompositeElements:
+    # repeat section for each
+    -
+        # optionally leave out Num for auto-numbering
+        Num: 0
+        I: 0
+        J: 0
+        K: 0
+        L: 0
+        Mat: 0
+        Step: 0
+        IncrementAdded: 0
+        RowsAdded: 0
+        IncrementBetween: 0
+        Death: 0
+        # 8 for fixed, 9 for pinned
+        LinkType: 9
+
+Boundaries:
+    # repeat section for each
+    -
+        Node: 0
+        Xcode: 0
+        Xvalue: 0.0
+        Ycode: 0
+        Yvalue: 0.0
+        # degrees
+        Angle: 0.0
+        Step: 0
+        EndNode: 0
+        Increment: 0
+        # psi
+        Pressure1: 0.0
+        Pressure2: 0.0
+
+SoilMaterials:
+    # repeat section for each
+    -
+        # material number/identifier
+        ID: 0
+        # Isotropic, Orthotropic, Duncan, Selig, Overburden, Extended Hardin, MohrCoulomb
+        Model: ""
+        Density: 0.0
+        # User defined or "canned" names, 20 character limit
+        Name: ""
+        # required for Overburden model only
+        Layers: 0
+
+        # D2Isotropic:
+        # psi
+        Modulus: 0.0
+        Poissons: 0.0
+
+        # D2Orthotropic:
+        # psi
+        ModulusX: 0.0
+        # psi
+        ModulusZ: 0.0
+        # psi
+        ModulusY: 0.0
+        # psi
+        ModulusG: 0.0
+        # degrees
+        Angle: 0.0
+
+        # D2Duncan:
+        LRFDControl: 0
+        # 1.0 for in-situ materials
+        ModuliAveraging: 0.5
+        # Duncan: 0, Dancan/Selig: 1
+        DSModel: 1
+        # Original: 0, Unloading: 1
+        Unloading: 1
+
+        # D3Duncan or Selig:
+        # psi
+        Cohesion: 0.0
+        # degrees
+        Phi_i: 0.0
+        # degrees
+        Delta_Phi: 0.0
+        Modulus_i: 0.0
+        Modulus_n: 0.0
+        Ratio: 0.0
+
+        # D4Duncan or Selig:
+        Bulk_i: 0.0
+        Bulk_m: 0.0
+        Poissons: 0.0
+
+        # D2Over:
+        # use if SoilMaterials Layers=1
+        Pressure: 0.0
+        # psi
+        Modulus: 0.0
+        # granular: 0.3-0.35, mixed: 0.3-0.4,
+        # cohesive: 0.33-0.4
+        Poissons: 0.0
+
+        # D2Over:
+        # use if SoilMaterials Layers>1
+        # repeat section for each material layer
+        OverburdenLayers:
+        -
+            Pressure: 0.0
+            # psi
+            Modulus: 0.0
+            # granular: 0.3-0.35, mixed: 0.3-0.4,
+            # cohesive: 0.33-0.4
+            Poissons: 0.0
+
+        # D2Hardin:
+        PoissonsLow: 0.01
+        PoissonsHigh: 0.49
+        Shape: 0.26
+        # GRAN: 0.60, MIXE: 0.5, COHE: 1.0
+        VoidRatio: 0.6
+        # GRAN: 0, MIXE: 0.5, COHE: 0.9
+        Saturation: 0.0
+        # GRAN: 0, MIXE: 0.05, COHE: 0.20
+        PI: 0.0
+        # ignored
+        Nonlinear: 0
+
+        # D2HardinTRIA:
+        PoissonsLow: 0.01
+        PoissonsHigh: 0.49
+        Shape: 0.26
+        S1: 0.0
+        C1: 0.0
+        A: 0.0
+        # ignored
+        Nonlinear: 0
+
+        # D2MohrCoulomb:
+        # psi
+        Modulus: 0.0
+        Poissons: 0.0
+        # psi
+        Cohesion: 0.0
+        # degrees
+        Phi: 0.0
+
+CompositeMaterials:
+    # repeat section for each
+    -
+        # material number/identifier
+        ID: 0
+        # 20 character limit
+        Name: ""
+        Group1: 0
+        Group2: 0
+        Fraction: 0.0
+
+InterfMaterials:
+    # repeat section for each
+    -
+        # material number/identifier
+        ID: 0
+        # 20 character limit
+        Name: ""
+        # degrees
+        Angle: 0.0
+        Friction: 0.0
+        # lbs/in
+        Tensile: 1.0
+        # in
+        Gap: 0.0
+
+Factors:
+    # repeat section for each
+    -
+        Start: 0
+        Last: 0
+        Factor: 1.0
+        # 40 character limit
+        Comment: ""
