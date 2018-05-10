@@ -175,7 +175,6 @@
         prefix: "D-2.Over"
         # only for Model = 4
         # repeatable
-        Limit: [1, " "]
         Pressure: [9, 0.0]
         Modulus: [10, 0.0] # psi
         # granular: 0.3-0.35, mixed: 0.3-0.4,
@@ -582,7 +581,7 @@
         # Shape = STAND or ELLIP
         Thickness: [10, 0.0] # in
         Yield: [10, 1.0]
-        Crusing: [10, 1.0]
+        Crushing: [10, 1.0]
         Shear: [10, 1.0]
         Tension: [10, 1.0]
         CrackAllow: [10, 1.0]
