@@ -16,7 +16,7 @@ from candejar.candeobj.bases import CandeNum, CandeStr
     ("Plastic", Plastic),
 ])
 def test_PipeGroup(name, Cls):
-    assert isinstance(PipeGroup(CandeStr(name), CandeNum(0)), Cls)
+    assert isinstance(PipeGroup(CandeStr(name)), Cls)
 
 def test_make_pipe_group():
     cid = type("C",(),{})()

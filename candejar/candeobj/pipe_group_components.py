@@ -12,6 +12,7 @@ from .bases import CandeComponent, LinetypeKeyFactory, CandeStr, CandeNum, Cande
 
 PGrpSubcls = TypeVar("PGrpSubcls", bound="PipeGroupComponent")
 
+@dataclass
 class PipeGroupComponent(Generic[PGrpSubcls], CandeComponent["PipeGroupComponent"], key_factory=LinetypeKeyFactory):
     """Base class for all components of pipe group objects
 
@@ -19,8 +20,8 @@ class PipeGroupComponent(Generic[PGrpSubcls], CandeComponent["PipeGroupComponent
     """
     @classmethod
     def getsubcls(cls, key: CidLineType) -> Type[PGrpSubcls]:
-        """Get the non case-sensitive pipe group component from the key"""
-        return super().getsubcls(key.lower())
+        """Get the pipe group component corresponding to the cid line type"""
+        return super().getsubcls(key)
 
 PGrpGenSubcls = TypeVar("PGrpGenSubcls", bound="PipeGroupGeneralComponent")
 
@@ -36,7 +37,7 @@ class PipeGroupGeneralComponent(Generic[PGrpGenSubcls], PipeGroupComponent["Pipe
     type_: CandeStr  # ALUMINUM, BASIC, CONCRETE, PLASTIC, STEEL, CONRIB, CONTUBE
     num: CandeNum = 0
     @classmethod
-    def getsubcls(cls, key: str) -> Type[PGrpGenSubcls]:
+    def getsubcls(cls, key: CidLineType) -> Type[PGrpGenSubcls]:
         """Get the non case-sensitive pipe group component from the key"""
         return super().getsubcls(key.lower())
 

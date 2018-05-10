@@ -4,7 +4,7 @@
 
 from dataclasses import fields, dataclass, InitVar
 from enum import Enum
-from typing import Iterator, Type
+from typing import Type
 
 # from ..cidobjrw.cidsubobj.names import PIPE_GROUP_CLASS_DICT
 from ..utilities.mixins import ChildRegistryError, child_dispatcher
@@ -20,11 +20,8 @@ from .bases import CandeData, CandeComposite, CandeComponent, CandeStr, CandeNum
 @dataclass(eq=False)
 class PipeGroup(CandeComposite):
     type_: InitVar[CandeStr]
-    num: InitVar[CandeNum] = 0
-    def __post_init__(self, type_: CandeStr, num: CandeNum):
+    def __post_init__(self, type_: CandeStr):
         CandeComposite.__init__(self)
-        comp=PipeGroupGeneralComponent(type_,num)
-        self.add_component(comp)
 
 @case_insensitive_arguments()
 @callable_enum_dispatcher(dispatch_func=PipeGroup.getsubcls)
@@ -60,33 +57,26 @@ class PlasticType(Enum):
 
 # TODO: Implement Concrete pipe material pipe groups (Concrete, Conrib, Contube)
 
-def make_pipe_group(cid, **kwargs: CandeData):
+def make_pipe_group(cid, type_, **kwargs: CandeData):
     """Make a new pipe group
 
     The arguments are dispatched to the appropriate `PipeGroup` subclass
     based on contents of the `cid` object and keyword arguments
     """
-    pipe_group = PipeGroup(kwargs.pop("type_"), kwargs.pop("num",0))
+    pipe_group = PipeGroup(type_)
+    kwargs.update(type_=type_)
     group_num = len(getattr(pipe_group,"pipe_groups",[]))+1
     iter_linetype = process_PipeGroup(cid, group_num, pipe_group)
     for linetype in iter_linetype:
-        ComponentCls: Type[CandeComponent] = PipeGroupComponent.getsubcls(linetype)
+        ComponentCls: Type[PipeGroupComponent] = PipeGroupComponent.getsubcls(linetype)
         field_names = [f.name for f in fields(ComponentCls)]
         cls_kwargs={k:kwargs.pop(k) for k in kwargs.copy().keys() if k in field_names}
         pipe_group_component=ComponentCls(**cls_kwargs)
         pipe_group.add_component(pipe_group_component)
         del ComponentCls
+    if kwargs:
+        raise CandeValueError(f"Unusable arguments values were provided: {str(kwargs)[1:-1]}")
     return pipe_group
-    try:
-        cls_name = type_.capitalize()
-    except AttributeError:
-        raise CandeValueError("Invalid pipe group name type: {type(type_).__name__}")
-    try:
-        cls = PipeGroup.getsubcls(cls_name)
-    except ChildRegistryError:
-        raise CandeValueError("Invalid pipe group  name: {type_!r}")
-    obj = cls()
-    # TODO: finish building pipe group instances using cidprocessing and composite design pattern
     if isinstance(obj, Plastic):
         try:
             walltype = kwargs.pop("walltype") # required
