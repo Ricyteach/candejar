@@ -58,13 +58,26 @@ class PlasticType(Enum):
 
 # TODO: Implement Concrete pipe material pipe groups (Concrete, Conrib, Contube)
 
-def make_pipe_group(cid, type_: Union[str, PipeType], **kwargs: CandeData):
+def make_pipe_group(cid, type_: Union[str, PipeType, PlasticType], **kwargs: CandeData):
     """Make a new pipe group
 
     The arguments are dispatched to the appropriate `PipeGroup` subclass
     based on contents of the `cid` object and keyword arguments
     """
-    type_ = PipeType(type_).value
+    try:
+        type_ = PipeType(type_).value
+    except ValueError as e:
+        if isinstance(type_,PlasticType):
+            type_ = PipeType.PLASTIC.value
+            walltype = PlasticType(type_).value
+            if kwargs.get("walltype","") != walltype:
+                raise CandeValueError(f"conflicting plastic walltypes detected: {kwargs['walltype']!r} and {walltype!r}")
+            else:
+                kwargs.update(walltype=walltype)
+        else:
+            raise e
+    finally:
+        kwargs.update(type_=type_)
     pipe_group = PipeGroup(type_)
     if isinstance(pipe_group, Plastic):
         if "walltype" not in kwargs:
@@ -73,13 +86,12 @@ def make_pipe_group(cid, type_: Union[str, PipeType], **kwargs: CandeData):
         # TODO: handle multiple B3PlasticAProfile and B3bPlasticAProfile components
     elif isinstance(pipe_group, Steel):
         if "jointslip" not in kwargs:
-            # TODO: decide wetherh to add jointslip to pipe_group state if missing
+            # TODO: decide whether to add jointslip to pipe_group state if missing
             pass
     elif isinstance(pipe_group, Basic):
         # TODO: handle multiple B1Basic components
         pass
-        # dispatch to Basic processing
-    kwargs.update(type_=type_)
+    # TODO: handle various concrete components/types
     group_num = len(getattr(pipe_group,"pipe_groups",[]))+1
     iter_linetype = process_PipeGroup(cid, group_num, pipe_group)
     for linetype in iter_linetype:
