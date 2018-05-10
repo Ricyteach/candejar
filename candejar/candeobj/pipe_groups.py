@@ -4,16 +4,18 @@
 
 from dataclasses import fields, dataclass, InitVar
 from enum import Enum
-from typing import Type, Union
+from typing import Union
 
-# from ..cidobjrw.cidsubobj.names import PIPE_GROUP_CLASS_DICT
-from ..utilities.mixins import ChildRegistryError, child_dispatcher
+from ..utilities.mixins import child_dispatcher
 from ..utilities.enumtools import CapitalizedEnumMixin, callable_enum_dispatcher
 from ..utilities.decorators import case_insensitive_arguments
 from ..cidprocessing.L3 import PipeGroup as process_PipeGroup
-from .pipe_group_components import PipeGroupComponent, PipeGroupGeneralComponent
+from .pipe_group_components import PipeGroupComponent
 from .exc import CandeValueError
-from .bases import CandeData, CandeComposite, CandeComponent, CandeStr, CandeNum
+from .bases import CandeData, CandeComposite, CandeStr
+
+# the type_: InitVar[CandeStr] fields below are used by the PipeGroup __new__ constructor
+# for dispatching to its child classes; no __post_init__ handling is needed
 
 @child_dispatcher("type_")
 @dataclass(eq=False)
@@ -29,9 +31,6 @@ class PipeType(CapitalizedEnumMixin):
     ALUMINUM="Aluminum"
     STEEL="Steel"
     PLASTIC="Plastic"
-
-# the type_: InitVar[CandeStr] fields below are used by the PipeGroup __new__ constructor
-# for dispatching to its child classes; no __post_init__ handling is needed
 
 @dataclass
 class Basic(PipeGroup):
@@ -93,19 +92,3 @@ def make_pipe_group(cid, type_: Union[str, PipeType], **kwargs: CandeData):
     if kwargs:
         raise CandeValueError(f"Unusable arguments values were provided: {str(kwargs)[1:-1]}")
     return pipe_group
-
-'''
-def subclass_PipeGroupObj(type_):
-    """Produce a `PipeGroup` based subclass."""
-
-    # see if already exists
-    pipe_group_cls_name = PIPE_GROUP_CLASS_DICT[type_]
-    try:
-        return PipeGroup.getsubcls(pipe_group_cls_name)
-    except ChildRegistryError:
-        pass
-
-    cls = new_class(pipe_group_cls_name, (PipeGroup,))
-
-    return cls
-'''
