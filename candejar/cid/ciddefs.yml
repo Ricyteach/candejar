@@ -213,7 +213,7 @@
         # only for Model = 6
         Angle: [10, 0.0] # degrees
         Friction: [10, 0.0]
-        Tensile: [10, 1.0] # lbs/in
+        Tensile: [10, 0.01] # lbs/in
         Gap: [10, 0.0] # in
 
     D2Composite:

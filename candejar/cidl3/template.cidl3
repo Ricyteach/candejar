@@ -642,7 +642,7 @@ SoilMaterials:
         LRFDControl: 0
         # 1.0 for in-situ materials
         ModuliAveraging: 0.5
-        # Duncan: 0, Dancan/Selig: 1
+        # Duncan: 0, Duncan/Selig: 1
         DSModel: 1
         # Original: 0, Unloading: 1
         Unloading: 1
