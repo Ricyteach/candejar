@@ -26,7 +26,8 @@ class CapitalizedEnumMixin(Enum):
 T = TypeVar("T") # called Member return type
 M = TypeVar("M") # Member value type
 
-def callable_enum_dispatcher(*, dispatch_func: Callable[[M], Callable[...,T]]):
+def callable_enum_dispatcher(*, dispatch_func: Callable[[M], Callable[...,T]],
+                             dispatch_name: str = "callable"):
     """Makes enum members callable and sends arguments to the supplied dispatch function"""
     def enum_decorator(EnumCls: Type[Enum]) -> Type[Enum]:
         if not issubclass(EnumCls, Enum):
@@ -38,6 +39,6 @@ def callable_enum_dispatcher(*, dispatch_func: Callable[[M], Callable[...,T]]):
         def callable(self) -> Callable[...,T]:
             return dispatch_func(self.value)
         EnumCls.__call__ = __call__
-        EnumCls.callable = callable
+        setattr(EnumCls,dispatch_name,callable)
         return EnumCls
     return enum_decorator

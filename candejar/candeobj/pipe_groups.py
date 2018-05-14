@@ -25,7 +25,7 @@ class PipeGroup(CandeComposite):
         CandeComposite.__init__(self)
 
 @case_insensitive_arguments
-@callable_enum_dispatcher(dispatch_func=PipeGroup.getsubcls)
+@callable_enum_dispatcher(dispatch_func=PipeGroup.getsubcls, dispatch_name="cls")
 class PipeType(CapitalizedEnumMixin):
     BASIC="Basic"
     ALUMINUM="Aluminum"
