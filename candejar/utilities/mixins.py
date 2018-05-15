@@ -67,7 +67,7 @@ class ChildRegistryMixin(Generic[MixinSubcls]):
         else:
             raise ChildRegistryError(f"Attempted to overwrite the "
                                      f"child class key {key!r} in the "
-                                     f"{parent_cls.__name__} registry")
+                                     f"{parent_cls.__qualname__} registry")
         # set the new class' key maker
         # the subclass' key maker is inherited from parent if a factory or key maker was not provided
         if make_reg_key is not None:

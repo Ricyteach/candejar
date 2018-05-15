@@ -9,7 +9,10 @@ from .candeobj.candeobj import CandeObj
 
 def open(path: Union[str, Path]):
     path = Path(path)
-    open_path = {'.cid':CandeObj.open, '.cidl3': from_cidl3}[path.suffix.lower()]
+    try:
+        open_path = {".cid":CandeObj.open, ".cidl3": from_cidl3}[path.suffix.lower()]
+    except KeyError:
+        raise TypeError(f"{path.suffix!r} file not yet supported") from None
     return open_path(path)
 
 def from_cidl3(path: Path):
