@@ -1,7 +1,4 @@
 {
-  "tests/candeobj/test_candeobj.py::test_candebase": true,
-  "tests/candeobj/test_candeobj.py::test_load_blank_cidobj": true,
-  "tests/candeobj/test_candeobj.py::test_load_cid_standard": true,
   "tests/candeobj/test_materials.py::test_something": true,
   "tests/candeobj/test_pipe_groups.py::test_PipeGroup": true,
   "tests/candeobj/test_pipe_groups.py::test_PipeGroup[ALUMINUM-Aluminum]": true,

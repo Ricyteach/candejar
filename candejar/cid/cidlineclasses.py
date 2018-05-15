@@ -5,7 +5,7 @@
 from types import SimpleNamespace
 from typing import Any, List
 
-from .loadyml import load_yml_objs
+from ..utilities.loadyml import load_yml_objs
 from .cidline import make_cid_line_cls
 
 def make_cid_line_classes() -> SimpleNamespace:

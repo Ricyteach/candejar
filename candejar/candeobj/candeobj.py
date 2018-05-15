@@ -2,7 +2,6 @@
 
 """The interface for cid type objects expected by the module."""
 
-from __future__ import annotations
 from dataclasses import dataclass, InitVar
 from pathlib import Path
 from typing import Mapping, Union, Sequence, Type, Optional, Iterable
@@ -54,7 +53,7 @@ class CandeObj(CidRW):
             setattr(self, k, cande_sub_seq)
 
     @classmethod
-    def load_cidobj(cls, cid: Union[CidObj, Mapping[str,Union[CidData, Sequence[Union[CidSubObj, Mapping[str, CidData]]]]]]) -> CandeObj:
+    def load_cidobj(cls, cid: Union[CidObj, Mapping[str,Union[CidData, Sequence[Union[CidSubObj, Mapping[str, CidData]]]]]]) -> "CandeObj":
         map = shallow_mapify(cid)
         map.pop("materials",None)
         map.pop("nmaterials",None)
