@@ -9,6 +9,7 @@ from ..utilities.loadyml import load_yml_objs
 from ..utilities.mapping_tools import lowerify_mapping
 
 def candeobj(path:Path) -> CandeObj:
+    """Turn a CIDL3 file (YAML formatted) into a cande object"""
     path = Path(path)
     yml_objs = load_yml_objs(path)
     try:
