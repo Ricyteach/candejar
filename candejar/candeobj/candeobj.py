@@ -3,7 +3,7 @@
 """The interface for cid type objects expected by the module."""
 
 from __future__ import annotations
-from dataclasses import dataclass, field
+from dataclasses import dataclass, InitVar
 from pathlib import Path
 from typing import Mapping, Union, Sequence, Type, Optional, Iterable
 
@@ -21,33 +21,40 @@ from ..utilities.collections import ChainSequence
 class CandeObj(CidRW):
     """The interface for .cid file representation objects."""
     # top level objects
-    mode: str = field(default="ANALYS")  # ANALYS or DESIGN
-    level: int = field(default=3)  # 1, 2, 3
-    method: int = field(default=0)  # 0=WSD, 1=LRFD
-    ngroups: int = field(default=0)  # pipe groups
-    heading: str = field(default="From `pip install candejar`: "
-                                 "Rick Teachey, rick@teachey.org")
-    iterations: int = field(default=-99)
-    title: str = field(default="")
-    check: int = field(default=1)
-    nsteps: int = field(default=0)  # load steps
-    nnodes: int = field(default=0)
-    nelements: int = field(default=0)
-    nboundaries: int = field(default=0)
-    nsoilmaterials: int = field(default=0)
-    ninterfmaterials: int = field(default=0)
+    mode: str = "ANALYS"  # ANALYS or DESIGN
+    level: int = 3  # 1, 2, 3
+    method: int = 0  # 0=WSD, 1=LRFD
+    ngroups: int = 0  # pipe groups
+    heading: str = "From `pip install candejar`: Rick Teachey, rick@teachey.org"
+    iterations: int = -99
+    title: str = ""
+    check: int = 1
+    nsteps: int = 0  # load steps
+    nnodes: int = 0
+    nelements: int = 0
+    nboundaries: int = 0
+    nsoilmaterials: int = 0
+    ninterfmaterials: int = 0
 
-    # sequences of sub objects
-    pipe_groups: Sequence = field(default_factory=list)
-    nodes: Sequence = field(default_factory=list)
-    elements: Sequence = field(default_factory=list)
-    boundaries: Sequence = field(default_factory=list)
-    soilmaterials: Sequence = field(default_factory=list)
-    interfmaterials: Sequence = field(default_factory=list)
-    factors: Sequence = field(default_factory=list)
+    # sub object iterables
+    pipe_groups: InitVar[Optional[Iterable]] = None
+    nodes: InitVar[Optional[Iterable]] = None
+    elements: InitVar[Optional[Iterable]] = None
+    boundaries: InitVar[Optional[Iterable]] = None
+    soilmaterials: InitVar[Optional[Iterable]] = None
+    interfmaterials: InitVar[Optional[Iterable]] = None
+    factors: InitVar[Optional[Iterable]] = None
+
+    def __post_init__(self, pipe_groups, nodes, elements, boundaries, soilmaterials, interfmaterials, factors):
+        kwargs = dict(pipe_groups=pipe_groups, nodes=nodes, elements=elements, boundaries=boundaries,
+                      soilmaterials=soilmaterials, interfmaterials=interfmaterials, factors=factors)
+        for k,v in kwargs.items():
+            # TODO: change `list` below to a better data structure?
+            cande_sub_seq = list(v if v is not None else ())
+            setattr(self, k, cande_sub_seq)
 
     @classmethod
-    def loadcid(cls, cid: Union[CidObj, Mapping[str,Union[CidData, Sequence[Union[CidSubObj, Mapping[str, CidData]]]]]]) -> CandeObj:
+    def load_cidobj(cls, cid: Union[CidObj, Mapping[str,Union[CidData, Sequence[Union[CidSubObj, Mapping[str, CidData]]]]]]) -> CandeObj:
         map = shallow_mapify(cid)
         map.pop("materials",None)
         map.pop("nmaterials",None)

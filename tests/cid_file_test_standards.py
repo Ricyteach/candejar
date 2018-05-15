@@ -14,7 +14,7 @@ cidmock_standard_lines = """                      A-1!!ANALYS   3 0  3From `pip 
                       D-1!!    0    1      0.00                      
             D-2.Isotropic!!      0.00      0.00
                       D-1!!L   0    6      0.00                      
-            D-2.Interface!!      0.00      0.00      1.00      0.00
+            D-2.Interface!!      0.00      0.00      0.01      0.00
 STOP"""
 
 
