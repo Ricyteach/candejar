@@ -21,10 +21,10 @@ def lowerify_mapping(obj: T, *, recursive: Union[RECURSION_SENTINEL_TYPE,bool]=R
     # recursion and a mapping
     elif isinstance(obj, Mapping):
         obj = type(obj)((k.lower(), lowerify_mapping(v, recursive=recursive)) for k, v in obj.items())
-    # no recursion and not a mapping: error
+    # no recursion argument and not a mapping: error
     elif recursive is RECURSION_SENTINEL:
         raise TypeError(f"Non-mapping {type(obj).__qualname__!r} object detected")
-    # recursive and not a mapping
+    # recursion and not a mapping
     elif recursive and not isinstance(obj,str) and not isinstance(obj,Iterator) and isinstance(obj,Iterable):
         obj = type(obj)(lowerify_mapping(i, recursive=True) for i in obj)
     return obj
