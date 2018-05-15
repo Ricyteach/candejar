@@ -14,4 +14,4 @@ def open(path: Union[str, Path]):
 
 def from_cidl3(path: Path):
     from .cidl3 import candeobj
-    return candeobj
+    return candeobj(path)
