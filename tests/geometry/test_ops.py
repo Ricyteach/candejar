@@ -18,7 +18,7 @@ def splitter():
 
 @pytest.fixture
 def rev_splitter(splitter):
-    return geo.LineString(reversed(list(splitter.boundary.coords)))
+    return geo.LineString(reversed(list(splitter.coords)))
 
 @pytest.fixture
 def two_triangles():
