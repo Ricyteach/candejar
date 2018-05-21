@@ -40,6 +40,9 @@ def test_splitLR(simple_get_LRsides, box, splitter, two_triangles):
     assert split.equals(two_triangles)
 
 def test_get_LRsides(two_triangles, splitter, rev_splitter):
-    A, B = ops._get_LRsides(*two_triangles, splitter)
-    assert A.equals(two_triangles[1])
-    assert B.equals(two_triangles[0])
+    Left, Right = ops._get_LRsides(*two_triangles, splitter)
+    assert Left.equals(two_triangles[1])
+    assert Right.equals(two_triangles[0])
+    Left, Right = ops._get_LRsides(*two_triangles, rev_splitter)
+    assert Left.equals(two_triangles[0])
+    assert Right.equals(two_triangles[1])

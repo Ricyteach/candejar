@@ -43,9 +43,12 @@ def splitLR(geom: geo.base.BaseGeometry,
 def _orient_line_string(line_string: geo.LineString, path_string: geo.LineString) -> geo.LineString:
     # get rid of any duplicate path coordinates
     seen = set()
-    path_string_coords = [pair for pair in path_string.coords if not (pair in seen or seen.add(pair))]
-    # check that at least 2 path_string nodes are in the line_string
+    seenadd = seen.add  # optimization
+    path_string_coords = [pair for pair in path_string.coords if not (pair in seen or seenadd(pair))]
+    path_string_points = geo.MultiPoint(path_string_coords)
+    # check that at least 2 line_string nodes are on the path_string
     line_string_coords = tuple(line_string.coords)
+    line_string_points = geo.MultiPoint(line_string.coords)
     common_coords = [pair for pair in path_string_coords if pair in line_string_coords]
     if len(common_coords)<2:
         raise GeometryError("The path_string must have at minimum two nodes that appear in the line_string")
