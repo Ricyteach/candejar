@@ -67,7 +67,7 @@ def _orient_line_string(line_string: geo.LineString, path_string: geo.LineString
 
 
 def iter_segments(line_string: geo.LineString) -> Iterator[geo.LineString]:
-    yield from (geo.LineString(line_string.coords[x:x+2]) for x in range(len(line_string.coords)))
+    yield from (geo.LineString(line_string.coords[x:x+2]) for x in range(len(line_string.coords)-1))
 
 def _get_LRsides(Aside: geo.base.BaseGeometry,
                  Bside: geo.base.BaseGeometry,
