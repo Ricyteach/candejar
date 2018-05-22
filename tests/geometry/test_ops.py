@@ -8,6 +8,7 @@ import shapely.ops as shops
 
 from candejar.geometry import ops
 
+
 @pytest.fixture
 def box():
     return geo.box(0,0,1,1)
@@ -32,8 +33,22 @@ def simple_get_LRsides(monkeypatch):
     monkeypatch.setattr(ops, '_get_LRsides', f)
     return
 
+@pytest.fixture
+def line_coords():
+    return [(0, 0), (0, 0), (1, 1), (2, 2)]
+
+@pytest.fixture
+def line(line_coords):
+    return geo.LineString(line_coords)
+
 def test_shapely_fixtures(box, two_triangles, splitter):
     assert shops.split(box, splitter).equals(two_triangles)
+
+def test_iter_segments(line, line_coords):
+    strings = list(ops.iter_segments(line))
+    assert len(strings) == 3
+    assert line_coords[:-1] == [list(s.coords)[0] for s in strings]
+    assert line_coords[1:] == [list(s.coords)[1] for s in strings]
 
 def test_splitLR(simple_get_LRsides, box, splitter, two_triangles):
     split = geo.GeometryCollection(list(ops.splitLR(box, splitter)))
