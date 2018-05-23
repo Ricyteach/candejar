@@ -4,11 +4,11 @@
 
 from typing import NamedTuple, Tuple, Iterator, Optional
 
-import itertools
 import shapely.geometry as geo
 import shapely.ops as ops
 import shapely.affinity as affine
 
+from ..utilities.sequence_tools import iter_nn
 from .exc import GeometryError
 
 class SplitGeometry(NamedTuple):
@@ -43,32 +43,21 @@ def splitLR(geom: geo.base.BaseGeometry,
 
 def _orient_line_string(line_string: geo.LineString, path_string: geo.LineString,
                         buffer: Optional[float]=None) -> geo.LineString:
-    # get rid of any duplicate path coordinates
     line_string_points = geo.MultiPoint(line_string.coords)
     path_string_segments = geo.MultiLineString(iter_segments(path_string))
-    if buffer is not None:
-
-    for line_string_point in line_string_points:
-        for path_interior in
+    if buffer is None:
+        buffer = 0
+    segment_distances = {}
+    for idx,line_string_point in enumerate(line_string_points):
+        point_dict = {}
+        for s_idx,(s,d) in enumerate(iter_nn(line_string_point, path_string_segments, lambda p,l: p.distance(l))):
+            if d<=buffer:
+                point_dict[s_idx] = d
+                segment_distances[idx] = closest_segment,d
 
 
 def iter_segments(line_string: geo.LineString) -> Iterator[geo.LineString]:
     yield from (geo.LineString(line_string.coords[x:x+2]) for x in range(len(line_string.coords)-1))
-
-def iter_buffered_segments(line_string: geo.LineString,
-                           buffer: Optional[float] = None) -> Iterator[geo.LineString]:
-    fsegments, bsegments = itertools.tee(iter_segments(line_string))
-    next(bsegments)
-    for back,front in zip(bsegments,fsegments):
-        # yield trimmed buffered segments
-        intersections = back.boundary.intersection(front.boundary)
-
-    try:
-        single = next(fsegments)
-    except StopIteration:
-        pass
-    else:
-        yield single.buffer(buffer)
 
 def _get_LRsides(Aside: geo.base.BaseGeometry,
                  Bside: geo.base.BaseGeometry,
