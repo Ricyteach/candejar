@@ -2,8 +2,9 @@
 
 """Operations for working with geometries."""
 
-from typing import NamedTuple, Tuple, Iterator
+from typing import NamedTuple, Tuple, Iterator, Optional
 
+import itertools
 import shapely.geometry as geo
 import shapely.ops as ops
 import shapely.affinity as affine
@@ -40,34 +41,34 @@ def splitLR(geom: geo.base.BaseGeometry,
     Lside, Rside = _get_LRsides(Aside, Bside, splitter)
     return SplitGeometry(*(side.intersection(geom) for side in (Lside, Rside)))
 
-def _orient_line_string(line_string: geo.LineString, path_string: geo.LineString) -> geo.LineString:
+def _orient_line_string(line_string: geo.LineString, path_string: geo.LineString,
+                        buffer: Optional[float]=None) -> geo.LineString:
     # get rid of any duplicate path coordinates
-    seen = set()
-    seenadd = seen.add  # optimization
-    path_string_coords = [pair for pair in path_string.coords if not (pair in seen or seenadd(pair))]
-    path_string_points = geo.MultiPoint(path_string_coords)
-    # check that at least 2 line_string nodes are on the path_string
-    line_string_coords = tuple(line_string.coords)
     line_string_points = geo.MultiPoint(line_string.coords)
-    common_coords = [pair for pair in path_string_coords if pair in line_string_coords]
-    if len(common_coords)<2:
-        raise GeometryError("The path_string must have at minimum two nodes that appear in the line_string")
-    for line_coord,line_coord_idx in enumerate(line_string_coords):
-        if line_coord == common_coords[0]:
-            first_idx = line_coord_idx
-            break
-    for line_coord,line_coord_idx in enumerate(line_string_coords):
-        if line_coord == common_coords[1]:
-            second_idx = line_coord_idx
-            break
-    if first_idx<second_idx:
-        return line_string
-    else:
-        return geo.LineString(reversed(line_string_coords))
+    path_string_segments = geo.MultiLineString(iter_segments(path_string))
+    if buffer is not None:
+
+    for line_string_point in line_string_points:
+        for path_interior in
 
 
 def iter_segments(line_string: geo.LineString) -> Iterator[geo.LineString]:
     yield from (geo.LineString(line_string.coords[x:x+2]) for x in range(len(line_string.coords)-1))
+
+def iter_buffered_segments(line_string: geo.LineString,
+                           buffer: Optional[float] = None) -> Iterator[geo.LineString]:
+    fsegments, bsegments = itertools.tee(iter_segments(line_string))
+    next(bsegments)
+    for back,front in zip(bsegments,fsegments):
+        # yield trimmed buffered segments
+        intersections = back.boundary.intersection(front.boundary)
+
+    try:
+        single = next(fsegments)
+    except StopIteration:
+        pass
+    else:
+        yield single.buffer(buffer)
 
 def _get_LRsides(Aside: geo.base.BaseGeometry,
                  Bside: geo.base.BaseGeometry,
