@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """Operations for working with geometries."""
-
+import collections
 from typing import NamedTuple, Tuple, Iterator, Optional
 
 import shapely.geometry as geo
@@ -52,8 +52,8 @@ def _orient_line_string(line_string: geo.LineString, path_string: geo.LineString
         buffer = float(buffer)
     line_string_points = geo.MultiPoint(line_string.coords)
     path_string_segments = geo.MultiLineString(iter_segments(path_string))
-    segments_distances = {}
-    for point_idx,line_string_point in enumerate(line_string_points):
+    sdx_pdx_dist_list = []
+    for p_idx,line_string_point in enumerate(line_string_points):
         point_dict = {}
         for s_idx,(s,d) in enumerate(iter_nn(line_string_point, path_string_segments, lambda p,l: p.distance(l))):
             if d<=buffer:
@@ -62,26 +62,36 @@ def _orient_line_string(line_string: geo.LineString, path_string: geo.LineString
             closest_distance = min(point_dict.values())
         except ValueError as e:
             continue
-        closest_segments = [(s_idx,d) for s_idx,d in point_dict.items() if d==closest_distance]
-        segments_distances[point_idx] = closest_segments
-    if len(segments_distances) < 2:
-        raise GeometryError(f"The line_string must have at minimum two nodes that are within the buffer "
-                            f"({buffer:.4f}) of the path_string")
-    if all(len(closest_segments)==1 for closest_segments in segments_distances.values()):
-        # 1 to 1 relationship for points and segments
-        segment_indexes = [s_idx for p_idx,((s_idx,d),) in segments_distances.items()]
+        # point may fall on multiple segments
+        # the Jacqueline Rule: the first segment in the series captures the point
+        sdx_pdx_dist = min((s_idx,p_idx,d) for s_idx,d in point_dict.items() if d==closest_distance)
+        # now a 1 to 1 relationship for points and segments
+        sdx_pdx_dist_list.append((p_idx, *sdx_pdx_dist))
+    if len(sdx_pdx_dist_list) < 2:
+        raise GeometryError(f"The line_string must have at minimum two nodes that are within the buffer ({buffer:.4f}) "
+                            f"of the path_string")
+    sdx_sorted,pdx_sorted = zip(*sorted((s_idx,p_idx) for p_idx, s_idx, d in sdx_pdx_dist_list))
+    sdx_ctr = collections.Counter(sdx_sorted)
+    if all(ct==1 for ct in sdx_ctr.values()):
+        # no points share a segment: will iterate based on segment indexes
+        yield from pdx_sorted
     else:
-        # points fall on multiple segments
-        segment_indexes = []
-        for p_idx,closest_segments in segments_distances.items():
-            if len(closest_segments) == 1:
-                segment_indexes.append(closest_segments[0][0])
+        # some points share a segment: will iterate based on distance to first segment points
+        ipdx_sorted = iter(pdx_sorted)
+        isdx_sorted = iter(sdx_sorted)
+        for sdx,pdx in zip(isdx_sorted,ipdx_sorted):
+            ct = sdx_ctr[sdx]
+            if ct == 1:
+                yield pdx
             else:
-                # handle point falling on multiple segments
-                raise NotImplementedError()
-    current_order = [point_idx for point_idx in range(len(line_string_points)) if point_idx in segments_distances]
+                pdxs = [pdx]
+                for _ in range(ct-1):
+                    _,pdx = next(isdx_sorted), next(ipdx_sorted)
+                    pdxs.append(pdx)
+            # yield from pdxs in order of distance to sdx 1st node
+            yield from iter_nn("The 1st node",pdxs,"distance formula")
+    current_order = [point_idx for point_idx in range(len(line_string_points)) if point_idx in sdx_pdx_dist_sorted]
     correct_order = []
-    for s_idx in segment_indexes:
 
 
 
