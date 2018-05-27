@@ -43,11 +43,6 @@ def splitLR(geom: geo.base.BaseGeometry,
     return SplitGeometry(*(side.intersection(geom) for side in (Lside, Rside)))
 
 
-def _orient_line_string(line_string: geo.LineString, path_string: geo.LineString, buffer: Optional[float]=None
-                        ) -> geo.LineString:
-    pass
-
-
 def _iter_oriented_line_pt_idx(line_string: geo.LineString,
                                 path_string: geo.LineString,
                                 buffer: Optional[float] = None

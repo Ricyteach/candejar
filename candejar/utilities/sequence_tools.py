@@ -2,13 +2,18 @@
 
 """Special tools for working with sequence types."""
 
-from typing import TypeVar, Sequence, Callable, Dict, Iterator, Generator, Tuple
+from typing import TypeVar, Sequence, Callable, Dict, Iterator, Generator, Tuple, Iterable
 
 import itertools
 
 T = TypeVar("T")
 S = TypeVar("S")
 D = TypeVar("D")
+
+
+def orient_seq(seq: Sequence[T], idx_order: Iterable[int]) -> Sequence[T]:
+    pass
+
 
 # default distance function
 DISTANCE_F = lambda a,b: b-a
