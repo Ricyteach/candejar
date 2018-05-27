@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """Operations for working with geometries."""
-import collections
-from typing import NamedTuple, Tuple, Iterator, Optional
+from typing import NamedTuple, Tuple, Iterator, Optional, Dict, List, DefaultDict, Counter, Set
 
 import shapely.geometry as geo
 import shapely.ops as ops
@@ -44,55 +43,75 @@ def splitLR(geom: geo.base.BaseGeometry,
     return SplitGeometry(*(side.intersection(geom) for side in (Lside, Rside)))
 
 
-def _orient_line_string(line_string: geo.LineString, path_string: geo.LineString,
-                        buffer: Optional[float]=None) -> geo.LineString:
+def _orient_line_string(line_string: geo.LineString, path_string: geo.LineString, buffer: Optional[float]=None
+                        ) -> geo.LineString:
+    pass
+
+
+def _iter_oreiented_line_pt_idx(line_string: geo.LineString,
+                                path_string: geo.LineString,
+                                buffer: Optional[float] = None
+                                ) -> Iterator[int]:
+    """Yields a subset of the point indexes of a line string based upon the orientation of the path string. Note: if no
+    buffer is provided the  line points must be on the path string.
+
+    Point indexes are iterated based upon the order in which they are captured by the path string. A point index is
+    captured and yielded if its associated point:
+
+        1. Has not been captured by a previous segment (the first capturing path segment lays claim to each line point)
+        2. Is within the buffer distance of the current path string segment
+        3. Is the next closest point to the first path string segment point (if a segment captures multiple points)
+
+    """
     if buffer is None:
         buffer = 0
     else:
         buffer = float(buffer)
     line_string_points = geo.MultiPoint(line_string.coords)
     path_string_segments = geo.MultiLineString(iter_segments(path_string))
-    sdx_pdx_dist_list = []
-    for p_idx,line_string_point in enumerate(line_string_points):
-        point_dict = {}
-        for s_idx,(s,d) in enumerate(iter_nn(line_string_point, path_string_segments, lambda p,l: p.distance(l))):
-            if d<=buffer:
-                point_dict[s_idx] = d
-        try:
-            closest_distance = min(point_dict.values())
-        except ValueError as e:
-            continue
-        # point may fall on multiple segments
-        # the Jacqueline Rule: the first segment in the series captures the point
-        sdx_pdx_dist = min((s_idx,p_idx,d) for s_idx,d in point_dict.items() if d==closest_distance)
-        # now a 1 to 1 relationship for points and segments
-        sdx_pdx_dist_list.append((p_idx, *sdx_pdx_dist))
-    if len(sdx_pdx_dist_list) < 2:
-        raise GeometryError(f"The line_string must have at minimum two nodes that are within the buffer ({buffer:.4f}) "
-                            f"of the path_string")
-    sdx_sorted,pdx_sorted = zip(*sorted((s_idx,p_idx) for p_idx, s_idx, d in sdx_pdx_dist_list))
-    sdx_ctr = collections.Counter(sdx_sorted)
-    if all(ct==1 for ct in sdx_ctr.values()):
-        # no points share a segment: will iterate based on segment indexes
-        yield from pdx_sorted
-    else:
-        # some points share a segment: will iterate based on distance to first segment points
-        ipdx_sorted = iter(pdx_sorted)
-        isdx_sorted = iter(sdx_sorted)
-        for sdx,pdx in zip(isdx_sorted,ipdx_sorted):
-            ct = sdx_ctr[sdx]
-            if ct == 1:
-                yield pdx
-            else:
-                pdxs = [pdx]
-                for _ in range(ct-1):
-                    _,pdx = next(isdx_sorted), next(ipdx_sorted)
-                    pdxs.append(pdx)
-            # yield from pdxs in order of distance to sdx 1st node
-            yield from iter_nn("The 1st node",pdxs,"distance formula")
-    current_order = [point_idx for point_idx in range(len(line_string_points)) if point_idx in sdx_pdx_dist_sorted]
-    correct_order = []
 
+    lpdx_to_sdx_dict: DefaultDict[int,Set[int]] = DefaultDict(set)
+    lpdx_to_min_dist_dict: Dict[int,float] = dict()
+    sdx_to_lpdx_dict: Dict[int, List[int]] = DefaultDict(list)
+    lp: geo.Point
+    for (lpdx,lp) in enumerate(line_string_points):
+        seg: geo.LineString
+        # match line point indexes with path segment indexes
+        for sdx, seg in enumerate(path_string_segments):
+            d: float = lp.distance(seg)
+            # associate each line point index with path segment indexes within the buffer
+            # keep only the closest path segment
+            if d<=lpdx_to_min_dist_dict.get(lpdx,buffer):
+                lpdx_to_sdx_dict[lpdx].add(sdx)
+        # point may fall on multiple segments
+        try:
+            # the Jacqueline Rule: the first segment in the series captures the point
+            closest_sdx = min(lpdx_to_sdx_dict[lpdx])
+        except ValueError:
+            # un-captured lp (lp not within buffer for any segments)
+            pass
+        else:
+            # captured lp
+            sdx_to_lpdx_dict[closest_sdx].append(lpdx)
+    sdx_to_lpdx_sorted = dict(sorted(sdx_to_lpdx_dict.items()))
+    # now how a 1 to 1 relationship for segments and points (but may be multiple points per segment)
+    if all(len(lpdx_bag)==1 for lpdx_bag in sdx_to_lpdx_sorted.values()):
+        # ALL 1 to 1
+        yield from (lpdx for (lpdx,) in sdx_to_lpdx_sorted.values())
+    else:
+        # some not 1 to 1
+        for sdx, lpdx_bag in sdx_to_lpdx_sorted.items():
+            if len(lpdx_bag)==1:
+                # 1 to 1
+                yield lpdx_bag[0]
+            else:
+                # not 1 to 1; iterate based on distance to first segment point
+                dist_lpdx_sub_list: List[Tuple[float,int]] = []
+                seg_point = geo.Point(next(path_string_segments[sdx].coords))
+                for lpdx in lpdx_bag:
+                    d = seg_point.distance(lp)
+                    dist_lpdx_sub_list.append((d,lpdx))
+                yield from (lpdx for _,lpdx in sorted(dist_lpdx_sub_list))
 
 
 def iter_segments(line_string: geo.LineString) -> Iterator[geo.LineString]:
