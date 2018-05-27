@@ -48,7 +48,7 @@ def _orient_line_string(line_string: geo.LineString, path_string: geo.LineString
     pass
 
 
-def _iter_oreiented_line_pt_idx(line_string: geo.LineString,
+def _iter_oriented_line_pt_idx(line_string: geo.LineString,
                                 path_string: geo.LineString,
                                 buffer: Optional[float] = None
                                 ) -> Iterator[int]:
@@ -61,7 +61,6 @@ def _iter_oreiented_line_pt_idx(line_string: geo.LineString,
         1. Has not been captured by a previous segment (the first capturing path segment lays claim to each line point)
         2. Is within the buffer distance of the current path string segment
         3. Is the next closest point to the first path string segment point (if a segment captures multiple points)
-
     """
     if buffer is None:
         buffer = 0
