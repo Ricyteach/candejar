@@ -12,7 +12,24 @@ D = TypeVar("D")
 
 
 def orient_seq(seq: Sequence[T], idx_order: Iterable[int]) -> Sequence[T]:
-    pass
+    """Return a sequence in an order determined by idx_order"""
+    order_list = list(idx_order)
+    if any(i>len(seq)-1 for i in order_list):
+        raise IndexError("invalid indexes detected in sequence")
+    if any(i<0 for i in order_list):
+        raise ValueError("negative indexes not allowed")
+    order_list_sorted = sorted(int(i) for i in order_list)
+    order_list_sorted_reversed = list(reversed(order_list_sorted))
+    sort_key: (bool, bool) = (order_list == order_list_sorted, order_list == order_list_sorted_reversed)
+    lookup_order: Dict[Tuple[bool, bool], Sequence[T]] = {(True,False): seq,
+                                                         (False,True): type(seq)(reversed(seq))}
+    try:
+        return lookup_order[sort_key]
+    except KeyError:
+        msg_dict = {(False,False): "idx_order incorrectly sorted; must be in increasing or decreasing order",
+                     (True,True): "sort order of idx_order could not be determined"}
+        msg = msg_dict[sort_key]
+        raise ValueError(msg)
 
 
 # default distance function
