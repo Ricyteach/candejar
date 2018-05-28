@@ -22,13 +22,21 @@ def rev_splitter(splitter):
     return geo.LineString(reversed(list(splitter.coords)))
 
 @pytest.fixture
+def two_points_to_orient():
+    return geo.LineString(((0,0),(1,1)))
+
+@pytest.fixture
+def four_points_to_orient():
+    return geo.LineString(((0,0),(1,0),(1,1),(0,0)))
+
+@pytest.fixture
 def two_triangles():
     t1 = geo.Polygon(((0,0),(1,0),(1,1)))
     t2 = geo.Polygon(((0,0),(0,1),(1,1)))
     return geo.GeometryCollection([t1,t2])
 
 @pytest.fixture
-def simple_get_LRsides(monkeypatch):
+def do_patch_get_LRsides(monkeypatch):
     f=lambda x,y,z: (x,y)
     monkeypatch.setattr(ops, 'get_LRsides', f)
     return
@@ -50,8 +58,24 @@ def test_iter_segments(line, line_coords):
     assert line_coords[:-1] == [list(s.coords)[0] for s in strings]
     assert line_coords[1:] == [list(s.coords)[1] for s in strings]
 
-def test_splitLR(simple_get_LRsides, box, splitter, two_triangles):
+def test_iter_oriented_line_pt_idx(splitter, rev_splitter, two_points_to_orient):
+    idxs_list = list(ops.iter_oriented_line_pt_idx(two_points_to_orient, splitter))
+    assert idxs_list==[0,1]
+    idxs_list_rev = list(ops.iter_oriented_line_pt_idx(two_points_to_orient, rev_splitter))
+    assert idxs_list_rev==[1,0]
+
+def test_iter_oriented_line_pt_idx_hard(splitter, rev_splitter, four_points_to_orient):
+    idxs_list = list(ops.iter_oriented_line_pt_idx(four_points_to_orient, splitter))
+    assert idxs_list==[3,2,0]
+    idxs_list_rev = list(ops.iter_oriented_line_pt_idx(four_points_to_orient, rev_splitter))
+    assert idxs_list_rev==[0,2,3]
+
+def test_splitLR(do_patch_get_LRsides, box, splitter, two_triangles):
     split = geo.GeometryCollection(list(ops.splitLR(box, splitter)))
+    assert split.equals(two_triangles)
+
+def test_splitLR_(box, splitter, two_triangles):
+    split = geo.GeometryCollection(list(ops.splitLR_(box, splitter)))
     assert split.equals(two_triangles)
 
 def test_get_LRsides(two_triangles, splitter, rev_splitter):

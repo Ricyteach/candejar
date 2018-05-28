@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 
 """Operations for working with geometries."""
-from typing import NamedTuple, Tuple, Iterator, Optional, Dict, List, DefaultDict, Counter, Set
+from typing import NamedTuple, Tuple, Iterator, Optional, Dict, List, DefaultDict, Counter, Set, Union, TypeVar
 
 import shapely.geometry as geo
 import shapely.ops as ops
 import shapely.affinity as affine
 
 from utilities.sequence_tools import orient_seq
-from ..utilities.sequence_tools import iter_nn
 from .exc import GeometryError
 
 
@@ -44,38 +43,50 @@ def splitLR(geom: geo.base.BaseGeometry,
     return SplitGeometry(*(side.intersection(geom) for side in (Lside, Rside)))
 
 
-def iter_oriented_line_pt_idx(line_string: geo.LineString,
-                              path_string: geo.LineString,
-                              buffer: Optional[float] = None) -> Iterator[int]:
-    """Yields a subset of the point indexes of a line string based upon the orientation of the path string. Note: if no
-    buffer is provided the  line points must be on the path string.
+geoLine = TypeVar("geoLine", geo.LineString, geo.LinearRing)
+String_or_Ring = Union[geo.LineString, geo.LinearRing]
 
-    Point indexes are iterated based upon the order in which they are captured by the path string. A point index is
+def iter_oriented_line_pt_idx(to_orient: String_or_Ring, path: String_or_Ring,
+                              buffer: Optional[float] = None) -> Iterator[int]:
+    """Yields a subset of the point indexes of a line based upon the orientation of the path. Note: if no
+    buffer is provided the line points must be on the path.
+
+    Point indexes are iterated based upon the order in which they are captured by the path. A point index is
     captured and yielded if its associated point:
 
-        1. Has not been captured by a previous segment (the first capturing path segment lays claim to each line point)
-        2. Is within the buffer distance of the current path string segment
-        3. Is the next closest point to the first path string segment point (if a segment captures multiple points)
+        1. Is within the buffer distance of the current path segment (default buffer is zero)
+        2. Has not been captured by a previous segment (the first capturing path segment lays claim to each line point)
+        3. If a segment captures multiple points: is the next closest point to the *first* path segment point
+
+    If a line is ring-like the final ring point will be removed.
     """
     if buffer is None:
         buffer = 0
     else:
         buffer = float(buffer)
-    line_string_points = geo.MultiPoint(line_string.coords)
-    path_string_segments = geo.MultiLineString(list(iter_segments(path_string)))
+    coords_to_orient = to_orient.coords
+    # note: even after the following block, a LineString could still be ring-like; more handling required way below
+    if isinstance(to_orient,geo.LinearRing):
+        coords_to_orient=coords_to_orient[:-1]
+    points_to_orient = geo.MultiPoint(coords_to_orient)
+    path_segments = geo.MultiLineString(list(iter_segments(path)))
 
     lpdx_to_sdx_dict: DefaultDict[int,Set[int]] = DefaultDict(set)
     lpdx_to_min_dist_dict: Dict[int,float] = dict()
     sdx_to_lpdx_dict: Dict[int, List[int]] = DefaultDict(list)
+    lpdx: int
     lp: geo.Point
-    for (lpdx,lp) in enumerate(line_string_points):
+    for (lpdx,lp) in enumerate(points_to_orient):
         seg: geo.LineString
         # match line point indexes with path segment indexes
-        for sdx, seg in enumerate(path_string_segments):
+        for sdx, seg in enumerate(path_segments):
             d: float = lp.distance(seg)
             # associate each line point index with path segment indexes within the buffer
-            # keep only the closest path segment
             if d<=lpdx_to_min_dist_dict.get(lpdx,buffer):
+                if d<lpdx_to_min_dist_dict.get(lpdx, buffer):
+                    # keep only the closest path segment
+                    lpdx_to_sdx_dict[lpdx].clear()
+                lpdx_to_min_dist_dict[lpdx]=d
                 lpdx_to_sdx_dict[lpdx].add(sdx)
         # point may fall on multiple segments
         try:
@@ -87,13 +98,16 @@ def iter_oriented_line_pt_idx(line_string: geo.LineString,
         else:
             # captured lp
             sdx_to_lpdx_dict[closest_sdx].append(lpdx)
+    del lpdx,lp
     sdx_to_lpdx_sorted = dict(sorted(sdx_to_lpdx_dict.items()))
-    # now how a 1 to 1 relationship for segments and points (but may be multiple points per segment)
+    # now have a 1 to 1 relationship for segments and points (but may be multiple points per segment)
+    lpdx_bag: List[int]
     if all(len(lpdx_bag)==1 for lpdx_bag in sdx_to_lpdx_sorted.values()):
         # ALL 1 to 1
         yield from (lpdx for (lpdx,) in sdx_to_lpdx_sorted.values())
     else:
         # some not 1 to 1
+        sdx: int
         for sdx, lpdx_bag in sdx_to_lpdx_sorted.items():
             if len(lpdx_bag)==1:
                 # 1 to 1
@@ -101,15 +115,20 @@ def iter_oriented_line_pt_idx(line_string: geo.LineString,
             else:
                 # not 1 to 1; iterate based on distance to first segment point
                 dist_lpdx_sub_list: List[Tuple[float,int]] = []
-                seg_point = geo.Point(path_string_segments[sdx].coords[0])
+                seg_point = geo.Point(path_segments[sdx].coords[0])
+                lpdx: int
                 for lpdx in lpdx_bag:
-                    d = seg_point.distance(lp)
+                    d = seg_point.distance(points_to_orient[lpdx])
                     dist_lpdx_sub_list.append((d,lpdx))
-                yield from (lpdx for _,lpdx in sorted(dist_lpdx_sub_list))
+                dist_lpdx_sub_list_sorted = sorted(dist_lpdx_sub_list)
+                yield from (lpdx for _,lpdx in dist_lpdx_sub_list_sorted)
 
 
-def iter_segments(line_string: geo.LineString) -> Iterator[geo.LineString]:
-    yield from (geo.LineString(line_string.coords[x:x+2]) for x in range(len(line_string.coords)-1))
+def iter_segments(line: geoLine) -> Iterator[geo.LineString]:
+    """Yield the line segments that make up some geometric line or ring."""
+    if isinstance(line,geo.LinearRing):
+        line=geo.LineString(line.coords[:-1])
+    yield from (geo.LineString(line.coords[x:x + 2]) for x in range(len(line.coords) - 1))
 
 
 def get_LRsides(Aside: geo.base.BaseGeometry,
@@ -121,9 +140,9 @@ def get_LRsides(Aside: geo.base.BaseGeometry,
     result_dict = dict(A = dict(right=(Bside, Aside), left=(Aside, Bside)),
                        B = dict(right=(Aside, Bside), left=(Bside, Aside)))
     for sidelist, side_name in zip((Alist,Blist),("A","B")):
-        for x in sidelist:
+        for p in sidelist:
             # step 1: get the line strings that make up the common edges of the sides and the splitter
-            common_edges = x.boundary.intersection(splitter)
+            common_edges = p.boundary.intersection(splitter)
             common_edges = list(common_edges) if hasattr(common_edges, "__iter__") else [common_edges]
             # step 2: iterate over the common_edges
             for common_edge in common_edges:
@@ -168,3 +187,44 @@ def get_LRsides(Aside: geo.base.BaseGeometry,
                         continue
     else:
         raise GeometryError("Failed to figure out which side is which (left and right)")
+
+
+def splitLR_(geom: geo.base.BaseGeometry, splitter: geo.base.BaseGeometry):
+    left,right = [],[]
+    split_geom = ops.split(geom, splitter)
+    if len(split_geom)==1:
+        raise GeometryError("splitter did not split the geometry")
+    pdx: int
+    p: geo.Polygon
+    for pdx,p in enumerate(split_geom):
+        if not isinstance(p,geo.Polygon):
+            raise GeometryError("split operation resulted in a non-polygon (not supported)")
+        common_edges = p.boundary.intersection(splitter)
+        common_edges = list(common_edges) if hasattr(common_edges, "__iter__") else [common_edges]
+        ceidx: int
+        common_edge: geo.LineString
+        ccw_orientations: Dict[int,bool] = dict()
+        for ceidx, common_edge in enumerate(common_edges):
+            i_points_idxs = iter_oriented_line_pt_idx(common_edge, splitter)
+            common_edge_oriented = geo.LineString(orient_seq(list(common_edge.coords), i_points_idxs))
+            p_points_idxs = iter_oriented_line_pt_idx(p.boundary, common_edge_oriented)
+            p_oriented = geo.Polygon(orient_seq(list(p.boundary.coords), p_points_idxs))
+            p_boundary: geo.LinearRing = p_oriented.boundary
+            ccw_orientations[ceidx]=p_boundary.is_ccw
+        if all(ccw_orientations.values()):
+            left.append(p)
+        elif all(not ccw for ccw in ccw_orientations.values()):
+            right.append(p)
+        else:
+            lookup_text = {True:"CCW", False:"CW"}
+            ambiguity_explanation = ", ".join(f"{ceidx}: {lookup_text[is_ccw]}" for ceidx,is_ccw in ccw_orientations.items())
+            raise GeometryError(f"split polygon index {pdx:d} has ambiguous orientation\n\tcommon edge index {ambiguity_explanation}")
+    if len(left)==1:
+        left = left[0]
+    else:
+        left = geo.MultiPolygon(left)
+    if len(right)==1:
+        right = right[0]
+    else:
+        right = geo.MultiPolygon(right)
+    return SplitGeometry(left, right)

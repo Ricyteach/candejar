@@ -12,7 +12,7 @@ D = TypeVar("D")
 
 
 def orient_seq(seq: Sequence[T], idx_order: Iterable[int]) -> Sequence[T]:
-    """Return a sequence in an order determined by idx_order"""
+    """Return a sequence in either forward order or reversed order (as determined by idx_order)"""
     order_list = list(idx_order)
     if any(i>len(seq)-1 for i in order_list):
         raise IndexError("invalid indexes detected in sequence")
