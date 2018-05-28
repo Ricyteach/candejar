@@ -30,7 +30,7 @@ def two_triangles():
 @pytest.fixture
 def simple_get_LRsides(monkeypatch):
     f=lambda x,y,z: (x,y)
-    monkeypatch.setattr(ops, '_get_LRsides', f)
+    monkeypatch.setattr(ops, 'get_LRsides', f)
     return
 
 @pytest.fixture
@@ -55,9 +55,9 @@ def test_splitLR(simple_get_LRsides, box, splitter, two_triangles):
     assert split.equals(two_triangles)
 
 def test_get_LRsides(two_triangles, splitter, rev_splitter):
-    Left, Right = ops._get_LRsides(*two_triangles, splitter)
+    Left, Right = ops.get_LRsides(*two_triangles, splitter)
     assert Left.equals(two_triangles[1])
     assert Right.equals(two_triangles[0])
-    Left, Right = ops._get_LRsides(*two_triangles, rev_splitter)
+    Left, Right = ops.get_LRsides(*two_triangles, rev_splitter)
     assert Left.equals(two_triangles[0])
     assert Right.equals(two_triangles[1])
