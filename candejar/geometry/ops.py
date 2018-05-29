@@ -7,7 +7,7 @@ import shapely.geometry as geo
 import shapely.ops as ops
 import shapely.affinity as affine
 
-from utilities.sequence_tools import orient_seq
+from ..utilities.sequence_tools import orient_seq
 from .exc import GeometryError
 
 
@@ -49,14 +49,8 @@ def splitLR(geom: geo.base.BaseGeometry, splitter: String_or_Ring) -> SplitGeome
             lookup_text = {True:"CCW", False:"CW"}
             ambiguity_explanation = ", ".join(f"{ceidx}: {lookup_text[is_ccw]}" for ceidx,is_ccw in ccw_orientations.items())
             raise GeometryError(f"split polygon index {pdx:d} has ambiguous orientation\n\tcommon edge index {ambiguity_explanation}")
-    if len(left)==1:
-        left = left[0]
-    else:
-        left = geo.MultiPolygon(left)
-    if len(right)==1:
-        right = right[0]
-    else:
-        right = geo.MultiPolygon(right)
+    left = geo.MultiPolygon(left)
+    right = geo.MultiPolygon(right)
     return SplitGeometry(left, right)
 
 
