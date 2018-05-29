@@ -58,22 +58,66 @@ def iter_oriented_line_pt_idx(to_orient: String_or_Ring, path: String_or_Ring,
         2. Has not been captured by a previous segment (the first capturing path segment lays claim to each line point)
         3. If a segment captures multiple points: is the next closest point to the *first* path segment point
 
-    If a line is ring-like the final ring point will be removed.
+    If a line is ring-like, one of the repeated ring points- if captured- will be discarded.
     """
     if buffer is None:
         buffer = 0
     else:
         buffer = float(buffer)
-    coords_to_orient = to_orient.coords
-    # note: even after the following block, a LineString could still be ring-like; more handling required way below
-    if isinstance(to_orient,geo.LinearRing):
-        coords_to_orient=coords_to_orient[:-1]
+    if isinstance(to_orient, (geo.LineString, geo.LinearRing)):
+        if not to_orient.is_simple:
+            raise GeometryError("simple linear objects are required for orientation")
+    else:
+        raise GeometryError("a line like geometry object is required")
+
+    # the path will decide the resulting line index order
+    coords_to_orient = list(to_orient.coords)
     points_to_orient = geo.MultiPoint(coords_to_orient)
     path_segments = geo.MultiLineString(list(iter_segments(path)))
+    if len(path_segments)==0:
+        raise GeometryError("failed to break path into segments")
 
+    # sorting dictionaries
     lpdx_to_sdx_dict: DefaultDict[int,Set[int]] = DefaultDict(set)
     lpdx_to_min_dist_dict: Dict[int,float] = dict()
     sdx_to_lpdx_dict: Dict[int, List[int]] = DefaultDict(list)
+
+    # handle ring-like line
+    if to_orient.is_closed:
+        # ring-like
+        repeated_point = points_to_orient[0]
+        if repeated_point.within(path) or repeated_point.within(path.buffer(buffer)):
+            # do away with captured repeated ring point
+            chord_sdx_pdx_dict = DefaultDict(list)
+            for pdx,p in enumerate(points_to_orient[:-1]):
+                sdx_to_d_dict = {sdx:p.distance(seg) for sdx,seg in enumerate(path_segments)}
+                min_d = min(sdx_to_d_dict.values())
+                if min_d<=buffer:
+                    closest_sdx = next(sdx for sdx,d in sdx_to_d_dict.items() if d==min_d)
+                    chord_sdx_pdx_dict[closest_sdx].append(pdx)
+                    if pdx==0:
+                        continue
+                    else:
+                        break
+            chord_idx_order = []
+            for closest_sdx,pdx_bag in chord_sdx_pdx_dict.items():
+                if len(pdx_bag)==1:
+                    chord_idx_order.append(pdx_bag[0])
+                else:
+                    sp0 = geo.Point(path_segments[closest_sdx].coords[0])
+                    sp0_dist_to_pdx_dict = {points_to_orient[pdx].distance(sp0):pdx for pdx in pdx_bag}
+                    chord_idx_order.append(sp0_dist_to_pdx_dict[min(sp0_dist_to_pdx_dict)])
+            c_first, c_second = chord_idx_order
+            if c_first==0:
+                points_to_orient = geo.MultiPoint(points_to_orient[:-1])
+            elif c_second==0:
+                points_to_orient = geo.MultiPoint(points_to_orient[1:])
+            else:
+                raise GeometryError("An error occurred attemping to handle a ring-like line")
+
+    ring_like = to_orient.is_closed
+
+    # point capture algorithm
     lpdx: int
     lp: geo.Point
     for (lpdx,lp) in enumerate(points_to_orient):

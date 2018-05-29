@@ -66,9 +66,9 @@ def test_iter_oriented_line_pt_idx(splitter, rev_splitter, two_points_to_orient)
 
 def test_iter_oriented_line_pt_idx_hard(splitter, rev_splitter, four_points_to_orient):
     idxs_list = list(ops.iter_oriented_line_pt_idx(four_points_to_orient, splitter))
-    assert idxs_list==[3,2,0]
+    assert idxs_list==[2,0]
     idxs_list_rev = list(ops.iter_oriented_line_pt_idx(four_points_to_orient, rev_splitter))
-    assert idxs_list_rev==[0,2,3]
+    assert idxs_list_rev==[0,2]
 
 def test_splitLR(do_patch_get_LRsides, box, splitter, two_triangles):
     split = geo.GeometryCollection(list(ops.splitLR(box, splitter)))
