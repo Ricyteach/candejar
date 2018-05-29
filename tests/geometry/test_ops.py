@@ -36,12 +36,6 @@ def two_triangles():
     return geo.GeometryCollection([t1,t2])
 
 @pytest.fixture
-def do_patch_get_LRsides(monkeypatch):
-    f=lambda x,y,z: (x,y)
-    monkeypatch.setattr(ops, 'get_LRsides', f)
-    return
-
-@pytest.fixture
 def line_coords():
     return [(0, 0), (0, 0), (1, 1), (2, 2)]
 
@@ -72,12 +66,8 @@ def test_iter_oriented_line_pt_idx_hard2(rev_splitter, four_points_to_orient):
     idxs_list_rev = list(ops.iter_oriented_line_pt_idx(four_points_to_orient, rev_splitter))
     assert idxs_list_rev==[2,3]
 
-def test_splitLR(do_patch_get_LRsides, box, splitter, two_triangles):
+def test_splitLR(box, splitter, two_triangles):
     split = geo.GeometryCollection(list(ops.splitLR(box, splitter)))
-    assert split.equals(two_triangles)
-
-def test_splitLR_(box, splitter, two_triangles):
-    split = geo.GeometryCollection(list(ops.splitLR_(box, splitter)))
     assert split.equals(two_triangles)
 
 def test_get_LRsides(two_triangles, splitter, rev_splitter):

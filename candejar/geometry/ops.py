@@ -15,36 +15,50 @@ class SplitGeometry(NamedTuple):
     left: geo.base.BaseGeometry
     right: geo.base.BaseGeometry
 
-
-def splitLR(geom: geo.base.BaseGeometry,
-            splitter: geo.base.BaseGeometry) -> SplitGeometry:
-    """Split a geometry into a 'left' and 'right' side using the shapely API"""
-    if not isinstance(splitter, geo.LineString):
-        raise GeometryError("The splitter must be a LineString")
-    if not splitter.is_simple:
-        raise GeometryError("Only simple splitter objects allowed")
-    if hasattr(geom, "__iter__"):
-        raise GeometryError("Geometry collections not allowed")
-    geom = geo.GeometryCollection([geom])
-    geom_extents = geo.GeometryCollection([*geom, splitter]).minimum_rotated_rectangle
-    sides = ops.split(geom_extents, splitter)
-    try:
-        Aside, Bside = sides
-    except TypeError:
-        # only 1 result - rotated rectangle wasn't split
-        if len(ops.split(geom, splitter)) == 1:
-            # geom isn't split by splitter
-            raise GeometryError("the splitter does not appear to split the geometry")
-        else:
-            # splitter too small for algorithm
-            raise GeometryError("the splitter must extend beyond minimum_rotated_rectangle of the combined geometry")
-    # determine Lside and Rside here
-    Lside, Rside = get_LRsides(Aside, Bside, splitter)
-    return SplitGeometry(*(side.intersection(geom) for side in (Lside, Rside)))
-
-
 geoLine = TypeVar("geoLine", geo.LineString, geo.LinearRing)
 String_or_Ring = Union[geo.LineString, geo.LinearRing]
+
+def splitLR(geom: geo.base.BaseGeometry, splitter: String_or_Ring) -> SplitGeometry:
+    """Split a geometry into a 'left' and 'right' side using the shapely API"""
+    left,right = [],[]
+    split_geom = ops.split(geom, splitter)
+    if len(split_geom)==1:
+        raise GeometryError("splitter did not split the geometry")
+    pdx: int
+    p: geo.Polygon
+    for pdx,p in enumerate(split_geom):
+        if not isinstance(p,geo.Polygon):
+            raise GeometryError("split operation resulted in a non-polygon (not supported)")
+        common_edges = p.boundary.intersection(splitter)
+        common_edges = list(common_edges) if hasattr(common_edges, "__iter__") else [common_edges]
+        ceidx: int
+        common_edge: geo.LineString
+        ccw_orientations: Dict[int,bool] = dict()
+        for ceidx, common_edge in enumerate(common_edges):
+            i_points_idxs = list(iter_oriented_line_pt_idx(common_edge, splitter))
+            common_edge_oriented = geo.LineString(orient_seq(list(common_edge.coords), i_points_idxs))
+            p_points_idxs = list(iter_oriented_line_pt_idx(p.boundary, common_edge_oriented))
+            p_oriented = geo.Polygon(orient_seq(list(p.boundary.coords), p_points_idxs))
+            p_boundary: geo.LinearRing = p_oriented.exterior
+            ccw_orientations[ceidx]=p_boundary.is_ccw
+        if all(ccw_orientations.values()):
+            left.append(p)
+        elif all(not ccw for ccw in ccw_orientations.values()):
+            right.append(p)
+        else:
+            lookup_text = {True:"CCW", False:"CW"}
+            ambiguity_explanation = ", ".join(f"{ceidx}: {lookup_text[is_ccw]}" for ceidx,is_ccw in ccw_orientations.items())
+            raise GeometryError(f"split polygon index {pdx:d} has ambiguous orientation\n\tcommon edge index {ambiguity_explanation}")
+    if len(left)==1:
+        left = left[0]
+    else:
+        left = geo.MultiPolygon(left)
+    if len(right)==1:
+        right = right[0]
+    else:
+        right = geo.MultiPolygon(right)
+    return SplitGeometry(left, right)
+
 
 def iter_oriented_line_pt_idx(to_orient: String_or_Ring, path: String_or_Ring,
                               buffer: Optional[float] = None) -> Iterator[int]:
@@ -60,6 +74,9 @@ def iter_oriented_line_pt_idx(to_orient: String_or_Ring, path: String_or_Ring,
 
     In the case of a ring-like line, if the repeated ring end point is captured then at least one of the immediate
     neighboring points must also be captured (error otherwise).
+
+    Note that if a line orientation turns out to be ambiguous- e.g. the case where a path captures only index 0 and
+    index 2 of a 4-point line- the line orientation is assumed to be the originally supplied orientation.
     """
     if buffer is None:
         buffer = 0
@@ -198,14 +215,14 @@ def get_LRsides(Aside: geo.base.BaseGeometry,
                     # step 4a: get the segment midpoint
                     midpoint = segment.interpolate(0.5, normalized=True)
                     # step 4b: get the `x` exterior edge
-                    a_edge = x.boundary.difference(common_edge)
+                    a_edge = p.boundary.difference(common_edge)
                     # step 4c: make perpendicular segment at midpoint, increase by 1000x length each time until
                     # extends beyond the `x` bounding box; 90 deg rotation means
                     perp_segment = affine.rotate(segment, 90, midpoint)
                     factor = 1000
                     while True:
                         scaled_perp_segment: geo.LineString = affine.scale(perp_segment,factor,factor,factor,midpoint)
-                        if scaled_perp_segment.within(x.minimum_rotated_rectangle):
+                        if scaled_perp_segment.within(p.minimum_rotated_rectangle):
                             factor *= 1000
                             continue
                         break
@@ -231,44 +248,3 @@ def get_LRsides(Aside: geo.base.BaseGeometry,
                         continue
     else:
         raise GeometryError("Failed to figure out which side is which (left and right)")
-
-
-def splitLR_(geom: geo.base.BaseGeometry, splitter: geo.base.BaseGeometry):
-    left,right = [],[]
-    split_geom = ops.split(geom, splitter)
-    if len(split_geom)==1:
-        raise GeometryError("splitter did not split the geometry")
-    pdx: int
-    p: geo.Polygon
-    for pdx,p in enumerate(split_geom):
-        if not isinstance(p,geo.Polygon):
-            raise GeometryError("split operation resulted in a non-polygon (not supported)")
-        common_edges = p.boundary.intersection(splitter)
-        common_edges = list(common_edges) if hasattr(common_edges, "__iter__") else [common_edges]
-        ceidx: int
-        common_edge: geo.LineString
-        ccw_orientations: Dict[int,bool] = dict()
-        for ceidx, common_edge in enumerate(common_edges):
-            i_points_idxs = iter_oriented_line_pt_idx(common_edge, splitter)
-            common_edge_oriented = geo.LineString(orient_seq(list(common_edge.coords), i_points_idxs))
-            p_points_idxs = iter_oriented_line_pt_idx(p.boundary, common_edge_oriented)
-            p_oriented = geo.Polygon(orient_seq(list(p.boundary.coords), p_points_idxs))
-            p_boundary: geo.LinearRing = p_oriented.boundary
-            ccw_orientations[ceidx]=p_boundary.is_ccw
-        if all(ccw_orientations.values()):
-            left.append(p)
-        elif all(not ccw for ccw in ccw_orientations.values()):
-            right.append(p)
-        else:
-            lookup_text = {True:"CCW", False:"CW"}
-            ambiguity_explanation = ", ".join(f"{ceidx}: {lookup_text[is_ccw]}" for ceidx,is_ccw in ccw_orientations.items())
-            raise GeometryError(f"split polygon index {pdx:d} has ambiguous orientation\n\tcommon edge index {ambiguity_explanation}")
-    if len(left)==1:
-        left = left[0]
-    else:
-        left = geo.MultiPolygon(left)
-    if len(right)==1:
-        right = right[0]
-    else:
-        right = geo.MultiPolygon(right)
-    return SplitGeometry(left, right)
