@@ -3,32 +3,33 @@
 """For selecting parts of cande problem objects.
 
 Selectable things:
-    nodes, elements
+    nodes, elements, boundaries
 
 Selectable bys:
-    both:
+    all:
         number, shape, collection_name or _key*,
     nodes:
         boundary_condition (xcode, ycode), elements
     elements:
-        material, step, nodes
+        material, step, nodes, boundaries
+    boundaries (equivalent to nodes...?):
+        boundary_condition (xcode, ycode), nodes, elements
 """
 
 import shapely.geometry as geo
-from typing import Sequence, overload, TypeVar, Generic, List, Callable
+from typing import Sequence, overload, TypeVar, Generic, List, Callable, Any
 from types import new_class
 
 T = TypeVar("T")
 T_Sequence = new_class("T_Sequence", (Generic[T],Sequence))
 T_List = List[T]
-A = TypeVar("A")
 
-def by_func(selectables: T_Sequence, *, func: Callable[[T],A]) -> T_List:
-    return [s for s in selectables if func(s)]
+def by_filter(selectables: T_Sequence, *, function: Callable[[T], Any]) -> T_List:
+    return list(filter(function, selectables))
 
 def by_shape(selectables: T_Sequence, shape: geo.base.BaseGeometry) -> T_List:
-    func = lambda s: shape.contains(geo.asShape(s))
-    return by_func(selectables, func=func)
+    function = lambda s: shape.contains(geo.asShape(s))
+    return by_filter(selectables, function=function)
 
 
 @overload
@@ -39,10 +40,10 @@ def by_sliceable_attr(selectables: T_Sequence, s: slice, *, attr: str) -> T_List
 
 def by_sliceable_attr(selectables, x, *, attr):
     if isinstance(x,int):
-        func = lambda s: getattr(s, attr) == x
-        return by_func(selectables, func=func)
+        function = lambda s: getattr(s, attr) == x
+        return by_filter(selectables, function=function)
     if isinstance(x,slice):
-        return [s for v in range(len(selectables))[x] for s in by_func(selectables, func=lambda s: getattr(s, attr) == v)]
+        return [s for v in range(len(selectables))[x] for s in by_filter(selectables, function=lambda s: getattr(s, attr) == v)]
 
 
 @overload
