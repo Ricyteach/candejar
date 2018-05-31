@@ -9,6 +9,9 @@ def seqs():
 def chain_seq(seqs):
     return ChainSequence(*seqs)
 
+def test_new_chain_seq(seqs):
+    assert ChainSequence(*seqs)
+
 def test_empty_chain_seq():
     c = ChainSequence()
     assert not c

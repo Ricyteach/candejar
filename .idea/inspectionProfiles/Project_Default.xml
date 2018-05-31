@@ -50,6 +50,7 @@
           <option value="candeobj.pipe_groups.subcls" />
           <option value="candeobj.pipe_groups.Basic" />
           <option value="candeobj.pipe_group_components.subcls" />
+          <option value="utilities.collections.ChainSequence._sequences" />
         </list>
       </option>
     </inspection_tool>
