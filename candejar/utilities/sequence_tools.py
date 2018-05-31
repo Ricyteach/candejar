@@ -87,3 +87,13 @@ def iter_nn(item: T, seq: Sequence[S], distance_f: Callable[[T,S], D] = DISTANCE
     dct = dict(enumerate(iter_distances(item, seq, distance_f)))
     sorted_dct = {idx: dct[idx] for idx in sorted(dct.keys(), key=dct.__getitem__)}
     yield from ((seq[idx],d) for idx,d in sorted_dct.items())
+
+def range_subset(range1:range, range2:range) -> bool:
+    """Whether range1 is a subset of range2."""
+    if not range1:
+        return True  # empty range is subset of anything
+    if not range2:
+        return False  # non-empty range can't be subset of empty range
+    if len(range1) > 1 and range1.step % range2.step:
+        return False  # must have a single value or integer multiple step
+    return range1.start in range2 and range1[-1] in range2
