@@ -42,3 +42,6 @@ def test_index_chain_list(chain_seq, idx):
         chain_seq[idx]
     with pytest.raises(IndexError):
         del chain_seq[idx]
+
+def test_len_chain_list(chain_seq):
+    assert len(chain_seq)==9

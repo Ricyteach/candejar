@@ -4,8 +4,9 @@
 
 from __future__ import annotations
 import collections
+import itertools
 from collections.abc import MutableSequence
-from typing import List, Tuple, Any
+from typing import List, Tuple, Any, overload
 
 
 class ChainSequence(MutableSequence):
@@ -56,31 +57,45 @@ class ChainSequence(MutableSequence):
         else:
             s.append(item)
 
+    @overload
+    def get_seq_and_idx(self, i: int) -> Tuple[MutableSequence, int]: ...
 
-    def get_seq_and_idx(self, idx: int) -> Tuple[MutableSequence, int]:
-        if -len(self)<idx<0:
-            idx = len(self)+idx
-        if idx>=len(self):
-            cum_len = 0
-            for seq,length in zip(self.sequences, self.cumulative_lens):
-                if length==len(self):
-                    return seq, idx-cum_len
-                cum_len = length
-        sequences = iter(self.sequences)
-        old_idx = idx
-        for s in sequences:
-            new_idx = old_idx-len(s)
-            if new_idx<0:
-                break
-            old_idx = new_idx
+    @overload
+    def get_seq_and_idx(self, s: slice) -> List[Tuple[MutableSequence, int]]: ...
+
+    def get_seq_and_idx(self, x):
+        x_list=range(len(self))[x]
+        if isinstance(x_list, int):
+            x_list = [x_list]
         else:
-            old_idx = len(s)
-        return s, old_idx
+            x_list = list(x_list)
+        seqidx_idx_list=[]
+        lengths = self.cumulative_lens
+        for idx in x_list:
+            offsets = [idx-l for l in lengths]
+            seqidx = next((seqidx, idx) for seqidx, offset in enumerate(offsets) if offset > 0)
+            seqidx_idx_list.append()
+
+        seq_idx_list=[]
+        for idx in x_list:
+            sequences = iter(self.sequences)
+            old_idx = idx
+            for s in sequences:
+                new_idx = old_idx-len(s)
+                if new_idx<0:
+                    break
+                old_idx = new_idx
+            else:
+                old_idx = len(s)
+            seq_idx_list.append((s, old_idx))
+        if len(seq_idx_list)==1:
+            return seq_idx_list[0]
+        else:
+            return seq_idx_list
 
     @property
     def cumulative_lens(self) -> List[int]:
-        f_lens = lambda i_last: sum(len(sq) for sq in self.sequences[:i_last + 1])
-        return [f_lens(i_last) for i_last in range(len(self.sequences))]
+        return list(itertools.accumulate(len(s) for s in self.sequences))
 
     def new_child(self, s: MutableSequence) -> ChainSequence:
         return ChainSequence(*self.sequences, s)
@@ -88,11 +103,3 @@ class ChainSequence(MutableSequence):
     @property
     def parents(self) -> ChainSequence:
         return ChainSequence(*self.sequences[:-1])
-
-
-class MyCounter(collections.Counter):
-    """A special `collections.Counter` that can be incremented."""
-    def incremented(self, key):
-        """The post-incremented count of `key`."""
-        self[key] += 1
-        return self[key]
