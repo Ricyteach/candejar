@@ -152,12 +152,15 @@ class ChainSequence(MutableSequence[T]):
                 prev_cumlen = sub_seq_cumlen
 
     def _iter_seqidx_and_slice(self, s: slice) -> Iterator[Optional[slice]]:
+        # TODO: implement slicing steps other than 1
         sequences_len = len(self.sequences)
         if s==slice(None):
             yield from (s for _ in range(sequences_len))
             return
-        if slice.step==0:
+        if s.step==0:
             raise ValueError("slice step cannot be zero")
+        if s.step and slice.step!=1:
+            raise NotImplementedError("slice steps other than 1 not  yet implemented")
         chain_len = len(self)
         slice_range = range(chain_len)[s]
         if not slice_range:
@@ -166,28 +169,35 @@ class ChainSequence(MutableSequence[T]):
         s_starts = list(self._iter_seqidx_and_idx(slice_range.start))
         s_stops = list(self._iter_seqidx_and_idx(slice_range.stop))
         starts_seen,stops_seen = [],[]
+        yielded = []
         if (s.step if s.step is not None else 0)<0:
-            starts_seen, stops_seen = stops_seen, starts_seen
             s_starts, s_stops = s_stops, s_starts
         for sdx,(start_dx,stop_dx,cum_len) in enumerate(zip(s_starts,s_stops,self.cumulative_lens)):
-            if start_dx is None:
+            start: Optional[Union[type(NO_SLICE),int]]
+            if s.start is None and (s.step is None or s.step==1):
+                start = None
+            elif start_dx is None:
                 if all(s is None for s in starts_seen):
                     start = NO_SLICE
                 else:
                     start = None
             else:
                 start = start_dx
-            if stop_dx is None:
+            stop: Optional[Union[type(NO_SLICE),int]]
+            if s.stop is None and (s.step is None or s.step==1):
+                stop = None
+            elif stop_dx is None:
                 if all(s is None for s in stops_seen):
                     stop = None
                 else:
                     stop = NO_SLICE
             else:
-                stop = start_dx
+                stop = stop_dx
             if NO_SLICE in (start,stop):
-                yield None
+                yielded.append(None)
             else:
-                yield slice(start,stop,s.step)
+                yielded.append(slice(start,stop,s.step))
+            yield yielded[-1]
             starts_seen.append(start_dx)
             stops_seen.append(stop_dx)
 
