@@ -9,6 +9,18 @@ def seqs():
 def chain_seq(seqs):
     return ChainSequence(*seqs)
 
+@pytest.mark.parametrize("s, result", [
+    (slice(None),[slice(None),slice(None),slice(None)]),
+    (slice(10), [slice(None), slice(None), slice(None)]),
+    (slice(2,10), [slice(2, None), slice(None), slice(None)]),
+    (slice(3, 10), [None, slice(0,None), slice(None)]),
+    (slice(2, 8), [slice(2, None), slice(None), slice(2)]),
+    (slice(3, 8), [None, slice(0, None), slice(2)]),
+
+])
+def test_iter_seqidx_and_slice(chain_seq:ChainSequence, s:slice, result):
+    assert list(chain_seq._iter_seqidx_and_slice(s)) == result
+
 def test_new_chain_seq(seqs):
     assert ChainSequence(*seqs)
 
@@ -48,3 +60,4 @@ def test_index_chain_list(chain_seq, idx):
 
 def test_len_chain_list(chain_seq):
     assert len(chain_seq)==9
+

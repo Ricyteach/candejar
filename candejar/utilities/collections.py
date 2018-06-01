@@ -8,6 +8,10 @@ from typing import List, Tuple, Any, overload, Sequence, MutableSequence, Generi
     Iterable, Iterator
 
 T=TypeVar("T")
+NO_SLICE=object()
+
+class SpecialValueError(ValueError):
+    pass
 
 def cleanup_falsey(sequences):
     """Removes falsey items (e.g. empty sub sequences) from the sequences argument"""
@@ -79,7 +83,11 @@ class ChainSequence(MutableSequence[T]):
     def __setitem__(self, s: slice, value: Iterable[T]) -> None:...
 
     def __setitem__(self, x: int, value) -> None:
-        seq, new_idx = self.get_seq_and_idx(x)
+        try:
+            seq, new_idx = self.get_seq_and_idx(x)
+        except SpecialValueError as e:
+            is_slice = isinstance(x, slice)
+            raise NotImplementedError("setting by slice is not supported") if is_slice else e from e if is_slice else None
         try:
             seq[new_idx] = value
         except IndexError:
@@ -121,7 +129,7 @@ class ChainSequence(MutableSequence[T]):
 
         None means that the supplied index doesn't apply to the associated sub-sequence"""
         if i<0:
-            raise ValueError("i must be zero or greater")
+            raise SpecialValueError("i must be zero or greater")
         sequences_len = len(self.sequences)
         if sequences_len==0:
             yield i
@@ -140,7 +148,7 @@ class ChainSequence(MutableSequence[T]):
     def _iter_seqidx_and_slice(self, s: slice) -> Iterator[Optional[slice]]:
         if slice.step==0:
             raise ValueError("slice step cannot be zero")
-        sequences_len = len(self.sequences)
+        sequences_len = len(self)
         s_range = range(sequences_len)[s]
         if not s_range:
             yield from (None for _ in range(sequences_len))
@@ -149,8 +157,32 @@ class ChainSequence(MutableSequence[T]):
         if all(start is None for start in s_starts):
             yield from (None for _ in range(sequences_len))
             return
-        sdx_start,idx_start = next((sx,ix) for sx,ix in enumerate(s_starts) if ix is not None)
         s_stops = list(self._iter_seqidx_and_idx(s_range.stop))
+        starts_seen,stops_seen = [],[]
+        if (s.step if s.step is not None else 0)<0:
+            starts_seen, stops_seen = stops_seen, starts_seen
+            s_starts, s_stops = s_stops, s_starts
+        for sdx,(start_dx,stop_dx,cum_len) in enumerate(zip(s_starts,s_stops,self.cumulative_lens)):
+            if start_dx is None:
+                if all(s is None for s in starts_seen):
+                    start = NO_SLICE
+                else:
+                    start = None
+            else:
+                start = start_dx
+            if stop_dx is None:
+                if all(s is None for s in stops_seen):
+                    stop = None
+                else:
+                    stop = NO_SLICE
+            else:
+                stop = start_dx
+            if NO_SLICE in (start,stop):
+                yield None
+            else:
+                yield slice(start,stop,s.step)
+            starts_seen.append(start_dx)
+            stops_seen.append(stop_dx)
 
     @overload
     def get_seq_and_idx(self, i: int) -> Tuple[MutableSequence, int]: ...
