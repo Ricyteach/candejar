@@ -16,6 +16,10 @@ from ..utilities.dataclasses import shallow_mapify
 from ..utilities.collections import ChainSequence
 
 
+class KeyedChainViewer:
+    def __init__(self, *iterable_mapping: Mapping[str,Iterable]) -> None:
+        pass
+
 @dataclass
 class CandeObj(CidRW):
     """The interface for .cid file representation objects."""
@@ -36,7 +40,7 @@ class CandeObj(CidRW):
     iterations: int = -99
     title: str = ""
     check: int = 1
-    bandwidth = 1
+    bandwidth: int = 1
 
     # sub object iterables
     pipe_groups: InitVar[Optional[Iterable]] = None
