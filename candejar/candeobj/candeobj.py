@@ -25,15 +25,18 @@ class CandeObj(CidRW):
     method: int = 0  # 0=WSD, 1=LRFD
     ngroups: int = 0  # pipe groups
     heading: str = "From `pip install candejar`: Rick Teachey, rick@teachey.org"
-    iterations: int = -99
-    title: str = ""
-    check: int = 1
     nsteps: int = 0  # load steps
     nnodes: int = 0
     nelements: int = 0
     nboundaries: int = 0
     nsoilmaterials: int = 0
     ninterfmaterials: int = 0
+
+    # more less important top level objects (easily edited in cande GUI)
+    iterations: int = -99
+    title: str = ""
+    check: int = 1
+    bandwidth = 1
 
     # sub object iterables
     pipe_groups: InitVar[Optional[Iterable]] = None
