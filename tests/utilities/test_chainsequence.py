@@ -31,11 +31,11 @@ def test_iter_seqidx_and_idx(chain_seq, i, result):
         assert list(chain_seq._iter_seqidx_and_idx(i)) == result
 
 @pytest.mark.parametrize("s, result", [
-    (slice(None),[slice(None),slice(None),slice(None)]),
-    (slice(10,20),[None, None, None]),
-    (slice(10,-1),[None, None, None]),
-    (slice(2,10), [slice(2, None), slice(None), slice(None)]),
-    (slice(3, 10), [None, slice(0,None), slice(None)]),
+    # (slice(None),[slice(None),slice(None),slice(None)]),
+    # (slice(10,20),[None, None, None]),
+    # (slice(10,-1),[None, None, None]),
+    # (slice(2,10), [slice(2, None), slice(None), slice(None)]),
+    # (slice(3, 10), [None, slice(0,None), slice(None)]),
     (slice(2, 8), [slice(2, None), slice(None), slice(2)]),
     (slice(3, 8), [None, slice(0, None), slice(2)]),
     (slice(10), [slice(None), slice(None), slice(None)]),

@@ -50,6 +50,9 @@ class ChainSequence(MutableSequence[T]):
     def __init__(self, *sequences: Sequence[Sequence[T]]) -> None:
         self.sequences = list(sequences) if sequences else [[]]
 
+    def __repr__(self):
+        return "[{}]".format(", ".join(f"{s!r}" for s in self.sequences))
+
     @overload
     def __delitem__(self, i: int) -> None:...
 
