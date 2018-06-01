@@ -10,7 +10,7 @@ def L3(cid):
     yield from soil.D1(cid)
 
 def PipeGroups(cid):
-    igroups = iter(cid.pipe_groups)
+    igroups = iter(cid.pipegroups)
     for group_num, group in enumerate(igroups, 1):
         yield from PipeGroup(cid, group_num, group)
 
@@ -18,7 +18,7 @@ def PipeGroup(cid, group_num, group=None):
     try:
         yield from A2(cid)
         if not group:
-            group = cid.pipe_groups[group_num - 1]
+            group = cid.pipegroups[group_num - 1]
         type_ = group.type_
         gen = pipelookup[type_]
         yield from gen(cid, group)

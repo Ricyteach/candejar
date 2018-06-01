@@ -43,7 +43,7 @@ class CandeObj(CidRW):
     bandwidth: int = 1
 
     # sub object iterables
-    pipe_groups: InitVar[Optional[Iterable]] = None
+    pipegroups: InitVar[Optional[Iterable]] = None
     nodes: InitVar[Optional[Iterable]] = None
     elements: InitVar[Optional[Iterable]] = None
     boundaries: InitVar[Optional[Iterable]] = None
@@ -51,8 +51,8 @@ class CandeObj(CidRW):
     interfmaterials: InitVar[Optional[Iterable]] = None
     factors: InitVar[Optional[Iterable]] = None
 
-    def __post_init__(self, pipe_groups, nodes, elements, boundaries, soilmaterials, interfmaterials, factors):
-        kwargs = dict(pipe_groups=pipe_groups, nodes=nodes, elements=elements, boundaries=boundaries,
+    def __post_init__(self, pipegroups, nodes, elements, boundaries, soilmaterials, interfmaterials, factors):
+        kwargs = dict(pipegroups=pipegroups, nodes=nodes, elements=elements, boundaries=boundaries,
                       soilmaterials=soilmaterials, interfmaterials=interfmaterials, factors=factors)
         for k,v in kwargs.items():
             # TODO: change `list` below to a better data structure?

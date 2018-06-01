@@ -92,7 +92,7 @@ def make_pipe_group(cid, type_: Union[str, PipeType, PlasticType], **kwargs: Can
         # TODO: handle multiple B1Basic components
         pass
     # TODO: handle various concrete components/types
-    group_num = len(getattr(pipe_group,"pipe_groups",[]))+1
+    group_num = len(getattr(pipe_group,"pipegroups",[]))+1
     iter_linetype = process_PipeGroup(cid, group_num, pipe_group)
     for linetype in iter_linetype:
         ComponentCls = PipeGroupComponent.getsubcls(linetype)

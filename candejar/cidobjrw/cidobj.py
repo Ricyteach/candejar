@@ -53,7 +53,7 @@ class CidObj(CidRW):
         return self.nsoilmaterials + self.ninterfmaterials
 
     # sub-sequences of other cid objects; must appear in ALL_SEQ_NAMES
-    pipe_groups: CidSeq[CidObj, A2] = field(default=None, repr=False)  # pipe groups
+    pipegroups: CidSeq[CidObj, A2] = field(default=None, repr=False)  # pipe groups
     nodes: CidSeq[CidObj, C3] = field(default=None, repr=False)
     elements: CidSeq[CidObj, C4] = field(default=None, repr=False)
     boundaries: CidSeq[CidObj, C5] = field(default=None, repr=False)

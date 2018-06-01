@@ -66,7 +66,7 @@ def cidmock(cidmock_types):
         mode="ANALYS",
         method=0,
         ngroups=3,
-        pipe_groups=groupmocks,
+        pipegroups=groupmocks,
         nsteps=0,
         nnodes=0,
         nelements=0,

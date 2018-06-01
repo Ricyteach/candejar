@@ -6,7 +6,7 @@ from ..names import SEQ_TYPES_DICT
 from .cidseq import CidSeq, subclass_CidSeq, _COMPLETE
 from .cidseqmaterials import SoilMaterialSeq, InterfMaterialSeq
 
-PipeGroupSeq = subclass_CidSeq(SEQ_TYPES_DICT["pipe_groups"])
+PipeGroupSeq = subclass_CidSeq(SEQ_TYPES_DICT["pipegroups"])
 NodeSeq = subclass_CidSeq(SEQ_TYPES_DICT["nodes"])
 ElementSeq = subclass_CidSeq(SEQ_TYPES_DICT["elements"])
 BoundarySeq = subclass_CidSeq(SEQ_TYPES_DICT["boundaries"])

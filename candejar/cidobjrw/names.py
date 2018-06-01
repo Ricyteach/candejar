@@ -5,7 +5,7 @@
 from ..cid import SEQ_LINE_TYPES, A2, C3, C4, C5, E1, D1
 
 # below for sequence attributes of CidObj instances
-SEQ_NAMES = ("pipe_groups", "nodes", "elements", "boundaries", "materials", "factors")
+SEQ_NAMES = ("pipegroups", "nodes", "elements", "boundaries", "materials", "factors")
 SEQ_LINE_TYPE_NAME_DICT = dict(zip(SEQ_LINE_TYPES, SEQ_NAMES))
 
 MAT_LINE_TYPES = (D1, D1)

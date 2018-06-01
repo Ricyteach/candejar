@@ -11,7 +11,7 @@ from candejar.candeobj.bases import CandeNum, CandeStr
 @pytest.fixture
 def dumb_cid():
     cid = type("DumbCid",(),{})()
-    cid.pipe_groups = []
+    cid.pipegroups = []
     return cid
 
 @pytest.fixture
