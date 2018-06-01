@@ -1,5 +1,6 @@
 import pytest
-from candejar.utilities.collections import ChainSequence
+from candejar.utilities.collections import ChainSequence, SpecialValueError
+
 
 @pytest.fixture
 def seqs():
@@ -9,13 +10,35 @@ def seqs():
 def chain_seq(seqs):
     return ChainSequence(*seqs)
 
+@pytest.mark.parametrize("i, result", [
+    (-1, None),
+    (0, [0, None, None]),
+    (1, [1, None, None]),
+    (2, [2, None, None]),
+    (3, [None, 0, None]),
+    (4, [None, 1, None]),
+    (5, [None, 2, None]),
+    (6, [None, None, 0]),
+    (7, [None, None, 1]),
+    (8, [None, None, 2]),
+    (9, [None, None, None]),
+])
+def test_iter_seqidx_and_idx(chain_seq, i, result):
+    if i<0:
+        with pytest.raises(SpecialValueError):
+            list(chain_seq._iter_seqidx_and_idx(i))
+    else:
+        assert list(chain_seq._iter_seqidx_and_idx(i)) == result
+
 @pytest.mark.parametrize("s, result", [
     (slice(None),[slice(None),slice(None),slice(None)]),
-    (slice(10), [slice(None), slice(None), slice(None)]),
+    (slice(10,20),[None, None, None]),
+    (slice(10,-1),[None, None, None]),
     (slice(2,10), [slice(2, None), slice(None), slice(None)]),
     (slice(3, 10), [None, slice(0,None), slice(None)]),
     (slice(2, 8), [slice(2, None), slice(None), slice(2)]),
     (slice(3, 8), [None, slice(0, None), slice(2)]),
+    (slice(10), [slice(None), slice(None), slice(None)]),
 
 ])
 def test_iter_seqidx_and_slice(chain_seq:ChainSequence, s:slice, result):

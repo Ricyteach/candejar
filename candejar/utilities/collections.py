@@ -127,37 +127,41 @@ class ChainSequence(MutableSequence[T]):
     def _iter_seqidx_and_idx(self, i: int) -> Iterator[Optional[int]]:
         """Places a positive index in the context of the sub-sequences
 
-        None means that the supplied index doesn't apply to the associated sub-sequence"""
+        None means that the supplied index doesn't apply to the associated sub-sequence
+        """
         if i<0:
             raise SpecialValueError("i must be zero or greater")
         sequences_len = len(self.sequences)
         if sequences_len==0:
-            yield i
+            return
         else:
             indexes: List[Optional[int]]=[]
+            prev_cumlen = 0
             for seq,sub_seq_cumlen in zip(self.sequences, self.cumulative_lens):
-                idx = i-sub_seq_cumlen
+                diff = i-sub_seq_cumlen
                 if not seq:
                     indexes.append(None)
-                elif idx<0:
-                    indexes.append(i if all(y is None for y in indexes) else None)
+                elif diff<0:
+                    indexes.append(i-prev_cumlen if all(y is None for y in indexes) else None)
                 else:
-                    indexes.append(idx)
+                    indexes.append(None)
                 yield indexes[-1]
+                prev_cumlen = sub_seq_cumlen
 
     def _iter_seqidx_and_slice(self, s: slice) -> Iterator[Optional[slice]]:
+        sequences_len = len(self.sequences)
+        if s==slice(None):
+            yield from (s for _ in range(sequences_len))
+            return
         if slice.step==0:
             raise ValueError("slice step cannot be zero")
-        sequences_len = len(self)
-        s_range = range(sequences_len)[s]
-        if not s_range:
+        chain_len = len(self)
+        slice_range = range(chain_len)[s]
+        if not slice_range:
             yield from (None for _ in range(sequences_len))
             return
-        s_starts = list(self._iter_seqidx_and_idx(s_range.start))
-        if all(start is None for start in s_starts):
-            yield from (None for _ in range(sequences_len))
-            return
-        s_stops = list(self._iter_seqidx_and_idx(s_range.stop))
+        s_starts = list(self._iter_seqidx_and_idx(slice_range.start))
+        s_stops = list(self._iter_seqidx_and_idx(slice_range.stop))
         starts_seen,stops_seen = [],[]
         if (s.step if s.step is not None else 0)<0:
             starts_seen, stops_seen = stops_seen, starts_seen
