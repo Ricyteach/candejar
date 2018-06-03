@@ -22,6 +22,7 @@
   "tests/test_cidseq.py::test_iteration": true,
   "tests/utilities/test_chainsequence.py::test_iter_seqidx_and_idx[-1-result0]": true,
   "tests/utilities/test_chainsequence.py::test_iter_seqidx_and_idx[9-result0]": true,
+  "tests/utilities/test_keyedchainview.py": true,
   "tests/utilities/test_metaclasses.py::test_1": true,
   "tests/utilities/test_metaclasses.py::test_3": true,
   "tests/utilities/test_metaclasses.py::test_with_dataclasses_1": true,

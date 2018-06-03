@@ -51,6 +51,7 @@
           <option value="candeobj.pipe_groups.Basic" />
           <option value="candeobj.pipe_group_components.subcls" />
           <option value="utilities.collections.ChainSequence._sequences" />
+          <option value="typing.Sequence.__delitem__" />
         </list>
       </option>
     </inspection_tool>

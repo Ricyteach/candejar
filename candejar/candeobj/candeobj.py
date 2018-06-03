@@ -4,7 +4,10 @@
 
 from dataclasses import dataclass, InitVar
 from pathlib import Path
-from typing import Mapping, Union, Sequence, Type, Optional, Iterable
+from typing import Mapping, Union, Sequence, Type, Optional, Iterable, overload, Iterator, Generic, TypeVar, Any, Tuple, \
+    MutableSequence, List, Callable
+
+import itertools
 
 from ..cid import CidLine
 from ..cidrw import CidLineStr
@@ -14,11 +17,6 @@ from ..cidobjrw.cidrwabc import CidRW
 from ..cidobjrw.cidobj import CidObj
 from ..utilities.dataclasses import shallow_mapify
 from ..utilities.collections import ChainSequence
-
-
-class KeyedChainViewer:
-    def __init__(self, *iterable_mapping: Mapping[str,Iterable]) -> None:
-        pass
 
 @dataclass
 class CandeObj(CidRW):
