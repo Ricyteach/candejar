@@ -262,7 +262,7 @@ class ChainSequence(MutableSequence[T]):
 V = TypeVar("V")
 
 
-class KeyedChainView(Mapping, Generic[V]):
+class KeyedChainView(Sequence[V]):
     """A mutable viewer of underlying sub-sequences, each with a key.
 
     The sequence related methods act on the underlying sub-sequences. Other
@@ -385,7 +385,7 @@ class KeyedChainView(Mapping, Generic[V]):
 
     def append(self, v: V) -> None:
         try:
-            s = list(self.seq_map.keys())[-1]
+            s = list(self.seq_map.values())[-1]
         except IndexError:
             raise IndexError(f"cannot append to an empty {type(self).__qualname__}") from None
         else:
@@ -424,6 +424,7 @@ class KeyedChainView(Mapping, Generic[V]):
             else:
                 pass
         else:
+            s.insert(i, object)
             return
         s_list = list(self.seq_map.values())
         try:
