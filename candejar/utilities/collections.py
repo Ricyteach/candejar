@@ -274,9 +274,13 @@ class KeyedChainView(Sequence[V]):
     """
     __slots__ = ("seq_map")
 
-    def __init__(self, **kwargs: Iterable[V]) -> None:
-        self.seq_map = {k: (v if isinstance(v, Sequence) else list(v))
-                        for k, v in kwargs.items()}
+    def __init__(self, seq_map: Optional[Mapping[Any,Sequence[V]]], **kwargs: Iterable[V]) -> None:
+        if seq_map and any(isinstance(k,int) for k in seq_map.keys()):
+            raise TypeError("int keys are not allowed for seq_map")
+        if seq_map is None:
+            seq_map = {}
+        seq_map.update({k: (v if isinstance(v, Sequence) else list(v)) for k, v in kwargs.items()})
+        self.seq_map = seq_map
 
     def __repr__(self) -> str:
         return f"KeyedChainView({self.seq_map!r})"
@@ -399,6 +403,7 @@ class KeyedChainView(Sequence[V]):
         else:
             s.extend(iterable)
 
+    # TODO: pop dict key
     def pop(self, index: int = ...) -> V:
         try:
             s, i = self.get_seq_idx(index)
@@ -480,6 +485,7 @@ class KeyedChainView(Sequence[V]):
         else:
             return k, self.seq_map.pop(k)
 
+    # TODO: fix to use key argument
     def move_to_end(self, key: Any, last:bool=True) -> None:
         idx = {True: -1, False: 0}[bool(last)]
         try:
