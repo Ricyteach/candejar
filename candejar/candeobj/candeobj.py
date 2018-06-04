@@ -6,6 +6,7 @@ from dataclasses import dataclass, InitVar
 from pathlib import Path
 from typing import Mapping, Union, Sequence, Type, Optional, Iterable, TypeVar, Any, Callable
 
+from .candeseq import cande_seq_dict
 from ..cid import CidLine
 from ..cidrw import CidLineStr
 from ..cidobjrw.cidsubobj.cidsubobj import CidSubObj, CidData
@@ -13,7 +14,6 @@ from ..cidobjrw.names import ALL_SEQ_NAMES
 from ..cidobjrw.cidrwabc import CidRW
 from ..cidobjrw.cidobj import CidObj
 from ..utilities.dataclasses import shallow_mapify
-from ..utilities.collections import ChainSequence, KeyedChainView
 
 @dataclass
 class CandeObj(CidRW):
@@ -31,7 +31,7 @@ class CandeObj(CidRW):
     nsoilmaterials: int = 0
     ninterfmaterials: int = 0
 
-    # more less important top level objects (easily edited in cande GUI)
+    # additional, less important top-level objects (easily edited in cande GUI)
     iterations: int = -99
     title: str = ""
     check: int = 1
@@ -51,7 +51,7 @@ class CandeObj(CidRW):
                       soilmaterials=soilmaterials, interfmaterials=interfmaterials, factors=factors)
         for k,v in kwargs.items():
             # TODO: change `list` below to a better data structure?
-            cande_sub_seq = list(v if v is not None else ())
+            cande_sub_seq = cande_seq_dict[k](v if v is not None else ())
             setattr(self, k, cande_sub_seq)
 
     @classmethod

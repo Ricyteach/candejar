@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """The interface for cid type objects expected by the module."""
+import types
 from typing import Callable, Any, Iterable, Sequence, Mapping, Optional, TypeVar, Union
 
 from .pipe_groups import PipeGroup, make_pipe_group
@@ -31,18 +32,19 @@ class CandeSequence(KeyedChainView[T]):
                     s[i] = self.converter(**v)
 
 
-candesequence_converter_dict = dict(pipegroups = make_pipe_group,
-                                    nodes = ,
-                                    elements = ,
-                                    boundaries = ,
-                                    soilmaterials = ,
-                                    interfmaterials = ,
-                                    factors = ,
+# TODO: replace types.SimpleNamespace kwarg converters with cool types that do stuff
+candesequence_converter_dict = dict(pipegroups = types.SimpleNamespace,
+                                    nodes = types.SimpleNamespace,
+                                    elements = types.SimpleNamespace,
+                                    boundaries = types.SimpleNamespace,
+                                    soilmaterials = types.SimpleNamespace,
+                                    interfmaterials = types.SimpleNamespace,
+                                    factors = types.SimpleNamespace,
                                     )
 
 
 def make_candesequence(name):
-    return type(name, (CandeSequence[PipeGroup],), {}, kwarg_convert = candesequence_converter_dict[name])
+    return types.new_class(name, (CandeSequence[PipeGroup], ), dict(kwarg_convert = candesequence_converter_dict[name.lower()]))
 
 
 cande_seq_dict = dict(pipegroups = make_candesequence("PipeGroups"),
