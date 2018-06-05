@@ -34,7 +34,8 @@ def test_cande_sequence():
 
 def test_cande_sequence_subclass_missing_kwarg_convert_error():
     with pytest.raises(TypeError):
-        types.new_class("C", (CandeSequence[int],), dict())
+        C = types.new_class("C", (CandeSequence[int],), dict())
+        C()
 
 def test_cande_sequence_subclass(C_str_holder):
     assert C_str_holder
