@@ -14,7 +14,7 @@ from ..cidobjrw.cidsubobj.cidsubobj import CidSubObj, CidData
 from ..cidobjrw.names import ALL_SEQ_NAMES
 from ..cidobjrw.cidrwabc import CidRW
 from ..cidobjrw.cidobj import CidObj
-from ..utilities.dataclasses import shallow_mapify
+from ..utilities.mapping_tools import shallow_mapify
 from ..utilities.collections import KeyedChainView
 
 class SectionNameSet:

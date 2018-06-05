@@ -526,3 +526,4 @@ class KeyedChainView(Sequence[V]):
 
     def __add__(self, other: Any) -> KeyedChainView:
         raise TypeError(f"{type(self).__qualname__} addition operation not supported")
+

@@ -9,7 +9,8 @@ from typing import Iterator, Optional, Iterable, Collection, Union, Counter, Cal
 from ..cidobjrw.names import SEQ_LINE_TYPE_NAME_DICT, SEQ_LINE_TYPE_TOTAL_DICT
 from ..cid import TOP_LEVEL_TYPES, CIDL_FORMAT_TYPES
 from ..utilities.cidobj import forgiving_dynamic_attr, SpecialError
-from ..utilities.dataclasses import unmapify, shallow_mapify
+from ..utilities.dataclasses import unmapify
+from ..utilities.mapping_tools import shallow_mapify
 from ..cid import Stop
 from ..cid import CidLine
 from .exc import CIDRWError

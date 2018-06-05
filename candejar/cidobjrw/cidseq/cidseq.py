@@ -10,7 +10,7 @@ from typing import Sequence, Generic, Type, Iterator, Union, TypeVar, Counter, L
 from ...cid import CidLine
 from ...cid import CidSubLine, TOP_LEVEL_TYPES
 from ...utilities.mixins import ChildRegistryMixin, ChildRegistryError
-from ...utilities.dataclasses import shallow_mapify
+from ...utilities.mapping_tools import shallow_mapify
 from ..cidsubobj import CidSubObj, SUB_OBJ_NAMES_DICT
 from ..cidsubobj.cidsubobj import CidData
 from ..names import SEQ_LINE_TYPE_TOTAL_DICT
