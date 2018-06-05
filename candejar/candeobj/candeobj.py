@@ -5,7 +5,7 @@
 from __future__ import annotations
 from dataclasses import dataclass, InitVar
 from pathlib import Path
-from typing import Mapping, Union, Sequence, Type, Optional, Iterable, ClassVar, List
+from typing import Mapping, Union, Sequence, Type, Optional, Iterable, ClassVar, List, MutableMapping
 
 from .candeseq import cande_seq_dict
 from ..cid import CidLine
@@ -76,18 +76,10 @@ class CandeObj(CidRW):
 
     @classmethod
     def load_cidobj(cls, cid: Union[CidObj, Mapping[str,Union[CidData, Sequence[Union[CidSubObj, Mapping[str, CidData]]]]]]) -> "CandeObj":
-        map = shallow_mapify(cid)
+        map: MutableMapping = shallow_mapify(cid)
+        # skip properties
         map.pop("materials",None)
         map.pop("nmaterials",None)
-        for seq_k in ALL_SEQ_NAMES:
-            try:
-                seq = map[seq_k]
-            except KeyError:
-                # skip properties
-                if seq_k in ("materials", "nmaterials"):
-                    continue
-                seq = []
-            map[seq_k] = shallow_mapify(seq)
         return cls(**map)
 
     @property

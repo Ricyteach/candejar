@@ -16,7 +16,7 @@ class CandeSequence(CollectionConvertingMixin[T], List[T]):
     __slots__ = ()
 
 
-class CandeMapSequence(KeyedChainView[T]):
+class CandeMapSequence(CollectionConvertingMixin[T], KeyedChainView[T]):
     __slots__ = ()
 
 

@@ -1,37 +1,48 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Tests for `candejar.candeobj.candeseq.CandeSequence` class."""
+"""Tests for `candejar.candeobj.candeseq.CandeMapSequence` class."""
 
 import pytest
 import types
 
-from candejar.candeobj.candeseq import CandeSequence, cande_seq_dict
+from candejar.candeobj.candeseq import CandeMapSequence, cande_seq_dict
 
 def test_cande_sequence_subclass_missing_kwarg_convert_error():
     with pytest.raises(TypeError):
-        class C(CandeSequence[int]): ...
+        class C(CandeMapSequence[int]): ...
         C()
 
 @pytest.fixture
-def c_list():
-    return list(range(1,7))
+def MyDict():
+    return type("MyDict", (dict,), {})
+
+@pytest.fixture
+def c_my_dict(MyDict):
+    return MyDict(A=[], B=[1,2,3])
+
+@pytest.fixture
+def c_kwargs():
+    return dict(C=[4,5,6], D=[])
 
 @pytest.fixture
 def C_str_holder():
-    return types.new_class("C", (CandeSequence[str],), dict(kwarg_convert = str))
+    return types.new_class("C", (CandeMapSequence[str],), dict(kwarg_convert = str))
 
 @pytest.fixture
-def c_instance(C_str_holder, c_list):
-    return C_str_holder(c_list)
+def c_instance(C_str_holder, c_my_dict, c_kwargs):
+    return C_str_holder(c_my_dict, **c_kwargs)
 
 def test_cande_sequence():
     with pytest.raises(TypeError):
-        CandeSequence()
+        CandeMapSequence()
 
 def test_cande_sequence_subclass(C_str_holder):
     assert C_str_holder
     assert not C_str_holder()
+
+def test_c_instance_seqmap_type(c_instance, MyDict):
+    assert type(c_instance.seq_map) == MyDict
 
 @pytest.mark.parametrize("i, int_result", [
     (-1, 6),
