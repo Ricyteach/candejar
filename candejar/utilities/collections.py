@@ -5,7 +5,7 @@
 from __future__ import annotations
 import itertools
 from typing import List, Tuple, Any, overload, Sequence, MutableSequence, Generic, TypeVar, Type, Union, Optional, \
-    Iterable, Iterator, Mapping
+    Iterable, Iterator, Mapping, Callable
 
 T = TypeVar("T")
 NO_SLICE = object()
@@ -262,7 +262,7 @@ class ChainSequence(MutableSequence[T]):
 V = TypeVar("V")
 
 
-class KeyedChainView(Sequence[V]):
+class KeyedChainView(MutableSequence[V]):
     """A mutable viewer of underlying sub-sequences, each with a key.
 
     The sequence related methods act on the underlying sub-sequences. Other
@@ -274,7 +274,7 @@ class KeyedChainView(Sequence[V]):
     """
     __slots__ = ("seq_map")
 
-    def __init__(self, seq_map: Optional[Mapping[Any,Sequence[V]]] = None, **kwargs: Iterable[V]) -> None:
+    def __init__(self, seq_map: Optional[Mapping[Any, Sequence[V]]] = None, **kwargs: Iterable[V]) -> None:
         if seq_map and any(isinstance(k,int) for k in seq_map.keys()):
             raise TypeError("int keys are not allowed for seq_map")
         if seq_map is None:
@@ -527,3 +527,23 @@ class KeyedChainView(Sequence[V]):
     def __add__(self, other: Any) -> KeyedChainView:
         raise TypeError(f"{type(self).__qualname__} addition operation not supported")
 
+
+class CollectionConvertingMixin(Generic[T]):
+    __slots__ = ()
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        try:
+            cls.converter: Callable[[Any], T] = kwargs.pop("kwarg_convert")
+        except KeyError:
+            pass
+        super().__init_subclass__(**kwargs)
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        try:
+            converter_is_cls = isinstance(self.converter, type)
+        except AttributeError:
+            raise TypeError(f"cannot instantiate {type(self).__qualname__} without 'converter' class attribute")
+        for i, v in enumerate(iter(self)):
+            if not converter_is_cls or (converter_is_cls and not isinstance(v, self.converter)):
+                self[i] = self.converter(v)
