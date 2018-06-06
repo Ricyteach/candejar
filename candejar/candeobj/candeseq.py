@@ -31,9 +31,9 @@ candesequence_converter_dict = dict(pipegroups=types.SimpleNamespace,
                                     )
 
 
-def mapify_and_unpack_decorator(f: Callable[[Any], Any]):
+def mapify_and_unpack_decorator(f: Callable[..., Any]) -> Callable[[Any], Any]:
     @functools.wraps(f)
-    def wrapped(v):
+    def wrapped(v: Any) -> Any:
         return f(**shallow_mapify(v))
     return wrapped
 

@@ -5,7 +5,7 @@
 from __future__ import annotations
 import itertools
 from typing import List, Tuple, Any, overload, Sequence, MutableSequence, Generic, TypeVar, Type, Union, Optional, \
-    Iterable, Iterator, Mapping, Callable
+    Iterable, Iterator, Mapping, Callable, ClassVar
 
 T = TypeVar("T")
 NO_SLICE = object()
@@ -531,9 +531,11 @@ class KeyedChainView(MutableSequence[V]):
 class CollectionConvertingMixin(Generic[T]):
     __slots__ = ()
 
+    converter: ClassVar[Callable[[Any], T]]
+
     def __init_subclass__(cls, **kwargs: Any) -> None:
         try:
-            cls.converter: Callable[[Any], T] = kwargs.pop("kwarg_convert")
+            cls.converter = staticmethod(kwargs.pop("kwarg_convert"))
         except KeyError:
             pass
         super().__init_subclass__(**kwargs)
