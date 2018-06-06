@@ -42,15 +42,6 @@ def shallow_mapify(o: Any) -> Mapping[str, Any]:
         return shallow_asdict(o)
     if isinstance(o, SimpleNamespace):
         return vars(o)
-    # slots?
-    try:
-        slots = o.__slots__
-    except AttributeError:
-        pass
-    else:
-        empty = object()
-        values = (getattr(o, s, empty) for s in slots)
-        return dict((s,v) for s,v in zip(slots, values) if v is not empty)
     # attempt common as dict methods
     as_dicts = (getattr(o,n,None) for n in "_asdict asdict as_dict _as_dict".split())
     for asdict in (a for a in as_dicts if a is not None):
@@ -62,6 +53,6 @@ def shallow_mapify(o: Any) -> Mapping[str, Any]:
             return m
     try:
         return dict(o)
-    except TypeError:
+    except (TypeError, ValueError):
         pass
     raise TypeError(f"Failed to mapify {type(o).__qualname__} object")
