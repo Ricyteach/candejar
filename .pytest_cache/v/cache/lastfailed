@@ -21,6 +21,7 @@
   "tests/test_cidline.py::TestCidLine::()::test_format": true,
   "tests/test_cidline.py::TestCidLine::()::test_parse": true,
   "tests/test_cidobj.py::test_rw_cid_obj": true,
+  "tests/test_cidobj.py::test_write_blank_cid_obj": true,
   "tests/test_cidobj_abc.py::test_candebase": true,
   "tests/test_cidrwabc.py::test_from_lines": true,
   "tests/test_cidseq.py::test_iteration": true,

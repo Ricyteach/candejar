@@ -95,8 +95,7 @@ class CidObj(CidRW):
         """Creates the line_objs list and adds the parsed line objects that
         constitute the object state.
 
-        A cidseq._COMPLETE signal is sent to the current sequence object when the
-        next line string indicates the end of a block of line types.
+        Utilizes seq.check_complete = None AND cidseq._COMPLETE to signal the start AND end of a block of line types.
         """
         # for tracking sub sequence sections
         curr_section_typ = None
@@ -116,10 +115,19 @@ class CidObj(CidRW):
             if issubclass(line_type, Stop):
                 break
 
-            # mark the next section if line_type indicates we're in a sub seq
-            if line_type in SEQ_LINE_TYPES:
+            # mark the next section and set check_complete to None if line_type indicates we're in a new sub seq
+            if line_type in SEQ_LINE_TYPES and curr_section_typ != line_type:
                 curr_section_typ = line_type
                 next_section_typ = self.next_section_type(line_type)
+                try:
+                    seq = getattr(self, SEQ_NAMES_DICT[curr_section_typ])
+                except KeyError as e:
+                    raise CidObjFromLinesError(f"the name of the {type(self).__qualname__} object sequence attribute "
+                                               f"could not be determined") from e
+                except AttributeError as e:
+                    raise CidObjFromLinesError(f"{type(self).__name__} object is missing "
+                                               f"{SEQ_NAMES_DICT[curr_section_typ]} sub sequence") from e
+                seq.check_complete = None
 
             # only worry about signaling complete sequences for specific line types
             if line_type not in excluded_check_complete_types:
@@ -134,23 +142,18 @@ class CidObj(CidRW):
                 # if it succeeds, current section is complete; send signal
                 else:
                     try:
-                        seq = getattr(self, SEQ_NAMES_DICT[curr_section_typ])
-                    except KeyError:
-                        raise CidObjFromLinesError("No sub sequence lines were "
-                                                   "detected; not a valid cid "
-                                                   "line sequence") from None
-                    except AttributeError:
-                        raise CidObjFromLinesError(f"{type(self).__name__} "
-                                                   f"object is missing "
-                                                   f"{SEQ_NAMES_DICT[curr_section_typ]} "
-                                                   f"sub sequence") from None
-                    else:
                         seq.check_complete = _COMPLETE
+                    except NameError:
+                        CidObjFromLinesError("an invalid series of types were sent to the generator")
+
+        # check that the generator was sent some line types other than A1, C1, C2, or Stop
+        if curr_section_typ is None:
+            raise CidObjFromLinesError("No sub sequence lines were detected") from None
         # pause after Stop, before completion
         yield
 
     def next_section_type(self, line_type:Type[CidLine]) -> Type[CidLine]:
-        """Calculate the line type that should be attempted for parsing next."""
+        """Calculate the next section line type that should be attempted for parsing the next cid section."""
         d={A1:A2, A2:C1, C3:C4, C4:C5, C5:D1, D1:(E1 if self.method==1 else Stop), E1:Stop}
         return d[line_type]
 
