@@ -21,7 +21,7 @@ CidObj = TypeVar("CidObj", covariant=True)
 SubObj = CidSubObj[CidObj, "CidSeq", CidSubLine]
 
 # for indicating completed sequence during object instantiation
-_COMPLETE = object()
+COMPLETE = object()
 
 @dataclass(eq=False)
 class CidSeq(ChildRegistryMixin, Sequence[SubObj], Generic[CidObj, CidSubLine]):
@@ -85,14 +85,14 @@ class CidSeq(ChildRegistryMixin, Sequence[SubObj], Generic[CidObj, CidSubLine]):
         If the cid_obj.line_obj collection has no relevant line objects, the sequence is assumed to be in the process
         of being built (e.g., an input file or object is being read) and sub objects will be produced anyway UNLESS the
         associated A1 or C1 item count returns false-y (zero). During the build process the self.check_complete signal
-        will be checked, and object iteration will cease, if it is set to _COMPLETE.
+        will be checked, and object iteration will cease, if it is set to COMPLETE.
 
         E.g., if the cid_obj.line_obj collection has no relevant C3 objects and the cid_obj.nnodes is zero, no Node
         sub objects will be produced. If cid_obj.nnodes is not zero, empty Node sub objects will be produced so the
         cid_obj.nodes sequence can be built.
 
         Among other things, this means that any processes utilizing CidSeq object iteration needs to be careful to set
-        the obj.check_complete attribute correctly: to _COMPLETE to prevent infinite iteration of empty CidSubObj
+        the obj.check_complete attribute correctly: to COMPLETE to prevent infinite iteration of empty CidSubObj
         objects, or to None to signal that sub objects should be produce (e.g., during dynamically building up of a
         sequence of objects).
         """
@@ -110,7 +110,7 @@ class CidSeq(ChildRegistryMixin, Sequence[SubObj], Generic[CidObj, CidSubLine]):
             if seq_total:
                 # count is not zero but current_object_lines is empty; assume need to produce new sub object items
                 # self.check_complete needs to be set externally to avoid error on iteration of empty CidSeq
-                while self.check_complete is not _COMPLETE:
+                while self.check_complete is not COMPLETE:
                     subobj = SubObjCls(self, next(x))
                     yield subobj
                 del self.check_complete

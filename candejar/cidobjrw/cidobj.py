@@ -14,7 +14,7 @@ from ..cid import SEQ_LINE_TYPES, TOP_LEVEL_TYPES, CidLine, A1, A2, C1, C2, C3, 
 from ..cid.exc import LineParseError
 from .names import ALL_SEQ_NAMES, SEQ_NAMES_DICT
 from .cidrwabc import CidRW
-from .cidseq import CidSeq, _COMPLETE
+from .cidseq import CidSeq, COMPLETE
 from .cidseq.names import ALL_SEQ_CLASS_NAMES
 from .exc import CidObjFromLinesError
 
@@ -97,7 +97,7 @@ class CidObj(CidRW):
     def handle_line_strs(self, lines: Sequence[CidLineStr]) -> Generator[None, Tuple[int, Type[CidLine]], None]:
         """Creates the line_objs list and adds the parsed line objects that constitute the object state.
 
-        Utilizes next_seq.check_complete = None AND cidseq._COMPLETE to signal the start AND end of line type sequences.
+        Utilizes next_seq.check_complete = None AND cidseq.COMPLETE to signal the start AND end of line type sequences.
         """
         # for tracking sub sequence sections
         curr_section_typ = None
@@ -143,7 +143,7 @@ class CidObj(CidRW):
 
             # only worry about signaling complete sequences for specific line types
             if line_type not in EXCLUDED_CHECK_COMPLETE_TYPES:
-                # determine if _COMPLETE signal should be sent for current sub sequence based on next line
+                # determine if COMPLETE signal should be sent for current sub sequence based on next line
                 next_line_str = lines[line_idx+1]
                 # see if a parse attempt on next line will succeed for next section
                 try:
@@ -154,7 +154,7 @@ class CidObj(CidRW):
                 # if it succeeds, current section is complete; send signal
                 else:
                     try:
-                        next_seq.check_complete = _COMPLETE
+                        next_seq.check_complete = COMPLETE
                     except AttributeError:
                         CidObjFromLinesError("an invalid series of types was sent to the generator")
 

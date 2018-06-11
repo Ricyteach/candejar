@@ -3,7 +3,7 @@
 """CID sequence module for working with CID sub object sequences (pipe groups, nodes, etc)."""
 
 from ..names import SEQ_TYPES_DICT
-from .cidseq import CidSeq, subclass_CidSeq, _COMPLETE
+from .cidseq import CidSeq, subclass_CidSeq, COMPLETE
 from .cidseqmaterials import SoilMaterialSeq, InterfMaterialSeq
 
 PipeGroupSeq = subclass_CidSeq(SEQ_TYPES_DICT["pipegroups"])
