@@ -23,6 +23,7 @@ SubObj = CidSubObj[CidObj, "CidSeq", CidSubLine]
 
 @dataclass(eq=False)
 class CidSeq(ChildRegistryMixin, Sequence[SubObj], Generic[CidObj, CidSubLine]):
+    # TODO: add a test to mapify this and not include the cid_obj
     cid_obj: InitVar[CidObj]
 
     def __post_init__(self, cid_obj: CidObj) -> None:

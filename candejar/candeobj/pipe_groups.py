@@ -22,6 +22,7 @@ from .bases import CandeData, CandeComposite, CandeStr
 class PipeGroup(CandeComposite):
     type_: InitVar[CandeStr]
     def __post_init__(self, type_: CandeStr):
+        # dataclass machinery doesn't call super().__init__(); must do manuall
         CandeComposite.__init__(self)
 
 @case_insensitive_arguments
