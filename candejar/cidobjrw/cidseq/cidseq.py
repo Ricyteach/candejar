@@ -79,11 +79,11 @@ class CidSeq(ChildRegistryMixin, Sequence[SubObj], Generic[CidObj, CidSubLine]):
         """Produces CidSubObj instances- which are just views of the underlying line object attributes- "on the fly".
 
         The iterator will ALWAYS try to produce ALL the sub-object instances from the relevant line objects contained in
-        cid_obj.line_obj- regardless of the associated A1 or C1 item count.
+        cid_obj.line_obj- regardless of the associated A1 or C2 item count.
 
         If the cid_obj.line_obj collection has no relevant line objects, the sequence is assumed to be in the process
         of being built (e.g., an input file or object is being read) and sub objects will be produced anyway up to the
-        associated A1 or C1 time count.
+        associated A1 or C2 time count.
         """
         # get list of relevant line objects
         current_object_lines = list(self.iter_main_lines)
