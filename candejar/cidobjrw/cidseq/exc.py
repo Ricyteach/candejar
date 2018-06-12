@@ -9,6 +9,3 @@ class CidSeqError(CIDObjError):
 
 class CIDSubSeqIndexError(CidSeqError, IndexError):
     pass
-
-class CheckCompleteNotSet(CidSeqError):
-    pass

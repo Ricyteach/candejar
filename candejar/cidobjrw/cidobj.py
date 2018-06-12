@@ -5,20 +5,17 @@ data model object."""
 
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import List, Any, Iterable, Optional, Generator, Tuple, Type, Sequence
+from typing import List, Iterable, Optional, Generator, Tuple, Type, Sequence
 
 from ..utilities.descriptors import AttributeDelegator
 from ..cidrw.write import CidLineStr
 from ..cidrw.read import line_strings as read_line_strings
-from ..cid import SEQ_LINE_TYPES, TOP_LEVEL_TYPES, CidLine, A1, A2, C1, C2, C3, C4, C5, D1, E1, Stop
-from ..cid.exc import LineParseError
-from .names import ALL_SEQ_NAMES, SEQ_NAMES_DICT
+from ..cid import CidLine, A1, A2, C1, C2, C3, C4, C5, D1, E1, Stop
+from .names import ALL_SEQ_NAMES
 from .cidrwabc import CidRW
-from .cidseq import CidSeq, COMPLETE
+from .cidseq import CidSeq
 from .cidseq.names import ALL_SEQ_CLASS_NAMES
 from .exc import CidObjFromLinesError
-
-EXCLUDED_CHECK_COMPLETE_TYPES = (A1, A2, C1, C2, D1, Stop)
 
 
 @dataclass
@@ -95,17 +92,7 @@ class CidObj(CidRW):
         return obj
 
     def handle_line_strs(self, lines: Sequence[CidLineStr]) -> Generator[None, Tuple[int, Type[CidLine]], None]:
-        """Creates the line_objs list and adds the parsed line objects that constitute the object state.
-
-        Utilizes next_seq.check_complete = None AND cidseq.COMPLETE to signal the start AND end of line type sequences.
-        """
-        # for tracking sub sequence sections
-        curr_section_typ = None
-        next_section_typ = A1
-
-        # for setting check_complete
-        next_seq = None
-
+        """Creates the line_objs list and adds the parsed line objects that constitute the object state."""
         # line string processing procedure
         while True:
             # receive information to produce next line object
@@ -119,48 +106,6 @@ class CidObj(CidRW):
             if issubclass(line_type, Stop):
                 break
 
-            # check if the top level section changed
-            if line_type in TOP_LEVEL_TYPES and curr_section_typ != line_type:
-                # note the previous section
-                prev_section_typ = curr_section_typ
-                # note the current section
-                curr_section_typ = line_type
-                # get the PREDICTED next section
-                next_section_typ = self.next_section_type(line_type)
-                # check if the next section is a sequence
-                if next_section_typ in SEQ_LINE_TYPES:
-                    # set next_seq.check_complete to None
-                    try:
-                        next_seq_name = SEQ_NAMES_DICT[next_section_typ]
-                        next_seq = getattr(self, next_seq_name)
-                    except KeyError as e:
-                        raise CidObjFromLinesError(f"the name of the {type(self).__qualname__} object sequence attribute "
-                                                   f"could not be determined from {next_section_typ.__qualname__}") from e
-                    except AttributeError as e:
-                        raise CidObjFromLinesError(f"{type(self).__name__} object is missing "
-                                                   f"{next_seq_name} sub sequence") from e
-                    next_seq.check_complete = None
-
-            # only worry about signaling complete sequences for specific line types
-            if line_type not in EXCLUDED_CHECK_COMPLETE_TYPES:
-                # determine if COMPLETE signal should be sent for current sub sequence based on next line
-                next_line_str = lines[line_idx+1]
-                # see if a parse attempt on next line will succeed for next section
-                try:
-                    next_section_typ.parse(next_line_str)
-                # if it fails, do nothing; probably will succeed with next parser sent
-                except LineParseError:
-                    pass
-                # if it succeeds, current section is complete; send signal
-                else:
-                    try:
-                        next_seq.check_complete = COMPLETE
-                    except AttributeError:
-                        CidObjFromLinesError("an invalid series of types was sent to the generator")
-
-        # check that the generator was sent some top level line types
-        if curr_section_typ is None:
-            raise CidObjFromLinesError("No top level line types were sent") from None
         # pause after Stop, before completion (to prevent StopIteration)
         yield
 

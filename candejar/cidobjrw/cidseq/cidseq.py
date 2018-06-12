@@ -15,13 +15,11 @@ from ..cidsubobj import CidSubObj, SUB_OBJ_NAMES_DICT
 from ..cidsubobj.cidsubobj import CidData
 from ..names import SEQ_LINE_TYPE_TOTAL_DICT
 from .names import SEQ_CLASS_DICT
-from .exc import CheckCompleteNotSet, CIDSubSeqIndexError
+from .exc import CIDSubSeqIndexError
 
 CidObj = TypeVar("CidObj", covariant=True)
 SubObj = CidSubObj[CidObj, "CidSeq", CidSubLine]
 
-# for indicating completed sequence during object instantiation
-COMPLETE = object()
 
 @dataclass(eq=False)
 class CidSeq(ChildRegistryMixin, Sequence[SubObj], Generic[CidObj, CidSubLine]):
@@ -71,6 +69,7 @@ class CidSeq(ChildRegistryMixin, Sequence[SubObj], Generic[CidObj, CidSubLine]):
         for obj in self.iter_sublines(val):
             d.update(asdict(obj))
         try:
+            # on-the-fly object of CID sub-object type
             result = CidSubObj.getsubcls(SUB_OBJ_NAMES_DICT[self.line_type])[CidObj, CidSeq](self, val, **d)
         except CIDSubSeqIndexError as e:
             raise IndexError(f"{val!s} not an available index for {self.line_type.__name__} object") from e
@@ -79,54 +78,32 @@ class CidSeq(ChildRegistryMixin, Sequence[SubObj], Generic[CidObj, CidSubLine]):
     def __iter__(self):
         """Produces CidSubObj instances- which are just views of the underlying line object attributes- "on the fly".
 
-        The iterator will ALWAYS try to produce a sub object instance if the cid_obj.line_obj collection contains any
-        relevant line objects.
+        The iterator will ALWAYS try to produce ALL the sub-object instances from the relevant line objects contained in
+        cid_obj.line_obj- regardless of the associated A1 or C1 item count.
 
         If the cid_obj.line_obj collection has no relevant line objects, the sequence is assumed to be in the process
-        of being built (e.g., an input file or object is being read) and sub objects will be produced anyway UNLESS the
-        associated A1 or C1 item count returns false-y (zero). During the build process the self.check_complete signal
-        will be checked, and object iteration will cease, if it is set to COMPLETE.
-
-        E.g., if the cid_obj.line_obj collection has no relevant C3 objects and the cid_obj.nnodes is zero, no Node
-        sub objects will be produced. If cid_obj.nnodes is not zero, empty Node sub objects will be produced so the
-        cid_obj.nodes sequence can be built.
-
-        Among other things, this means that any processes utilizing CidSeq object iteration needs to be careful to set
-        the obj.check_complete attribute correctly: to COMPLETE to prevent infinite iteration of empty CidSubObj
-        objects, or to None to signal that sub objects should be produce (e.g., during dynamically building up of a
-        sequence of objects).
+        of being built (e.g., an input file or object is being read) and sub objects will be produced anyway up to the
+        associated A1 or C1 time count.
         """
-        # check to see if the cid_obj.line_objs sequence is currently empty of relevant line objects
+        # get list of relevant line objects
         current_object_lines = list(self.iter_main_lines)
+        # if non-empty, produce the sub object items based upon the current_object_lines contents
         if current_object_lines:
-            # produce the sub object items based upon the current_object_lines contents
             yield from (self[i] for i,_ in enumerate(current_object_lines))
+        # if empty, assume in the process of being initialized, need to produce new sub-object items
         else:
-            # check to see if the total is set to zero
+            # get the associated total item count
             total_attr_name = SEQ_LINE_TYPE_TOTAL_DICT[self.line_type]
             seq_total = getattr(self.cid_obj, total_attr_name)
-            x = count()
+            # get the sub-object type
             SubObjCls: Type[SubObj] = CidSubObj.getsubcls(SUB_OBJ_NAMES_DICT[self.line_type])[CidObj, CidSeq]
-            if seq_total:
-                # count is not zero but current_object_lines is empty; assume need to produce new sub object items
-                # self.check_complete needs to be set externally to avoid error on iteration of empty CidSeq
-                while self.check_complete is not COMPLETE:
-                    subobj = SubObjCls(self, next(x))
-                    yield subobj
-                del self.check_complete
-            else:
-                # count is zero and no relevant line objects; nothing to iterate
-                return
+            # produce items up to the specified item total
+            for x in range(seq_total):
+                subobj = SubObjCls(self, x)
+                yield subobj
 
     def __len__(self) -> int:
         return sum(1 for _ in self.iter_main_lines)
-
-    def __getattr__(self, item):
-        if item == "check_complete":
-            raise CheckCompleteNotSet(f"check_complete attribute is required prior to iteration of currently empty "
-                                      f"{type(self).__qualname__} object")
-        return super().__getattribute__(item)
-
 
 def subclass_CidSeq(sub_line_type: Type[CidLine]) -> Type[CidSeq]:
     """Produce a `CidSeq` based subclass `dataclass`."""

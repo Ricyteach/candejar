@@ -13,7 +13,6 @@ MAT_SEQ_NAMES = ("soilmaterials", "interfmaterials")
 ALL_SEQ_NAMES = SEQ_NAMES + MAT_SEQ_NAMES
 
 SEQ_TYPES_DICT = dict(zip(SEQ_NAMES + MAT_SEQ_NAMES, SEQ_LINE_TYPES + MAT_LINE_TYPES))
-SEQ_NAMES_DICT = dict(zip(SEQ_LINE_TYPES, SEQ_NAMES))
 
 # below for sequence total attributes of CidObj instances; using nmaterials
 # (instead of nsoilmaterials and ninterface materials) because nmterials is

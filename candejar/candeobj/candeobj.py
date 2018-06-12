@@ -11,7 +11,6 @@ from .candeseq import cande_seq_dict
 from ..cid import CidLine
 from ..cidrw import CidLineStr
 from ..cidobjrw.cidsubobj.cidsubobj import CidSubObj, CidData
-from ..cidobjrw.cidseq import CidSeq, COMPLETE
 from ..cidobjrw.cidrwabc import CidRW
 from ..cidobjrw.cidobj import CidObj
 from ..utilities.mapping_tools import shallow_mapify
@@ -65,28 +64,14 @@ class CandeObj(CidRW):
         list_kwargs = dict(pipegroups=pipegroups, soilmaterials=soilmaterials,
                            interfmaterials=interfmaterials, factors=factors)
         for k,v in cande_seq_kwargs.items():
-            if isinstance(v, CidSeq):
-                v.check_complete = COMPLETE
             if v is not None:
                 cande_sub_seq = cande_seq_dict[k]({name:list(v)})
             else:
                 cande_sub_seq = cande_seq_dict[k]()
             setattr(self, k, cande_sub_seq)
-            if isinstance(v, CidSeq):
-                try:
-                    del v.check_complete
-                except AttributeError:
-                    pass
         for k,v in list_kwargs.items():
-            if isinstance(v, CidSeq):
-                v.check_complete = COMPLETE
             cande_sub_seq = list(v if v is not None else ())
             setattr(self, k, cande_sub_seq)
-            if isinstance(v, CidSeq):
-                try:
-                    del v.check_complete
-                except AttributeError:
-                    pass
 
     @classmethod
     def load_cidobj(cls, cid: Union[CidObj, Mapping[str,Union[CidData, Sequence[Union[CidSubObj, Mapping[str, CidData]]]]]]) -> "CandeObj":
