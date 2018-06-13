@@ -58,7 +58,7 @@ def make_cande_sequence_class(name: str, value_type: Optional[T] = None) -> Type
     wrapped_converter = mapify_and_unpack_decorator(converter)
     if name in "Nodes Elements Boundaries".split():
         CandeSequenceType = CandeMapSequence
-    elif name in "PipeGroups SoilMaterial, InterfMaterials Factors".split():
+    elif name in "PipeGroups SoilMaterials InterfMaterials Factors".split():
         CandeSequenceType = CandeListSequence
     else:
         raise ValueError(f"invalid cande object sequence attribute name: {name!s}")
