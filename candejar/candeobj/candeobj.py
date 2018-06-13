@@ -61,9 +61,8 @@ class CandeObj(CidRW):
 
     def __post_init__(self, pipegroups, nodes, elements, boundaries, soilmaterials, interfmaterials, factors, name):
         if name is None:
-            name = "section1"
-        if isinstance(name, int):
-            raise TypeError("integers are not allowed for mesh section name")
+            name = self.section_auto_name()
+        self.validate_section_name(name)
         cande_map_seq_kwargs = dict(nodes=nodes, elements=elements, boundaries=boundaries)
         cande_list_seq_kwargs = dict(pipegroups=pipegroups, soilmaterials=soilmaterials,
                            interfmaterials=interfmaterials, factors=factors)
@@ -106,18 +105,32 @@ class CandeObj(CidRW):
         cidobj = CidObj.from_lines(lines, line_types)
         return cls.loadcid(cidobj)
 
-    def add_from_msh(self, file, *, name=None, nodes=None):
+    def add_from_msh(self, file, *, name: Optional[str]=None, nodes: Optional[Iterable]=None):
         if name is None:
             name = self.section_auto_name()
+        self.validate_section_name(name)
         name_str = str(name)
+        if name_str in self.section_names:
+            raise ValueError(f"the section name {name_str} already exists")
         self.elements
 
-    def section_auto_name(self):
-        names = self.section_names
-        names_len = len(names)
-        names_lower = {n.lower() for n in names}
-        new_name = f"section{names_len}"
-        while new_name in names_lower:
-            names_len += 1
-            new_name = f"section{names_len}"
-        return new_name
+    def validate_section_name(self, name: str) -> None:
+        if isinstance(name, int):
+            raise TypeError("integers are not allowed for mesh section name")
+        names_lower = {str(n).lower() for n in self.section_names}
+        if name in names_lower:
+            raise ValueError(f"the section name {name} already exists")
+
+    def section_auto_name(self, name: Optional[str]=None) -> str:
+        try:
+            self.validate_section_name(name)
+        except ValueError:
+            names = self.section_names
+            names_len = len(names)
+            names_lower = {str(n).lower() for n in names}
+            if name is None:
+                name = f"section{names_len+1}"
+            while name in names_lower:
+                names_len += 1
+                name = f"section{names_len+1}"
+        return name
