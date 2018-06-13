@@ -115,9 +115,18 @@ class CandeObj(CidRW):
         else:
             self.validate_section_name(name)
         msh_obj = msh.open(file)
-        new_nodes_seq, new_elements_seq = (getattr(msh_obj, attr) for attr in "nodes elements".split())
-        elements_section_dict = self.elements.seq_map
-        elements_section_dict[name] = new_elements_seq
+        nodes_list = list(nodes if nodes else ())
+        msh_nodes_seq, msh_elements_seq, msh_boundaries_seq = (getattr(msh_obj, attr) for attr in "nodes elements".split())
+        if msh_nodes_seq and nodes_list:
+            raise ValueError("conflicting nodes sequences were provided")
+        new_nodes_list = {bool(seq): seq for seq in (msh_nodes_seq, nodes_list)}.get(True, None)
+        self.elements[name] = msh_elements_seq
+        if new_nodes_list:
+            self.nodes[name] = new_nodes_list
+            self.elements[name].nodes = self.nodes[name]
+        else:
+            self.elements[name].nodes = self.nodes
+        # TODO: handle boundaries
 
     def validate_section_name(self, name: str) -> None:
         """Make sure supplied section name follows the rules.

@@ -360,6 +360,8 @@ class KeyedChainView(MutableSequence[V]):
             if isinstance(x, int):
                 s, x_set = self.get_seq_idx(x)
             else:
+                if not isinstance(v, Sequence):
+                    v = list(v)
                 s, x_set = self.seq_map, x
             s[x_set] = v
 
