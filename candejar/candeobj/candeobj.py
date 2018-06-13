@@ -7,6 +7,7 @@ from dataclasses import dataclass, InitVar
 from pathlib import Path
 from typing import Mapping, Union, Sequence, Type, Optional, Iterable, ClassVar, List, MutableMapping
 
+from .. import msh
 from .candeseq import cande_seq_dict, CandeMapSequence, CandeListSequence
 from ..cid import CidLine
 from ..cidrw import CidLineStr
@@ -20,7 +21,8 @@ from ..utilities.collections import KeyedChainView
 class SectionNameSet:
     def __get__(self, instance: Optional[CandeObj], owner: Type[CandeObj]):
         if instance is not None:
-            return set(v for s_name in "nodes elements boundaries".split() for v in getattr(instance, s_name).seq_map.keys())
+            return set(k for s_name in "nodes elements boundaries".split()
+                       for k in getattr(getattr(instance, s_name), "seq_map", dict()).keys())
         return self
 
 
@@ -62,26 +64,28 @@ class CandeObj(CidRW):
     def __post_init__(self, pipegroups, nodes, elements, boundaries, soilmaterials, interfmaterials, factors, name):
         if name is None:
             name = self.section_auto_name()
-        self.validate_section_name(name)
+        else:
+            self.validate_section_name(name)
         cande_map_seq_kwargs = dict(nodes=nodes, elements=elements, boundaries=boundaries)
         cande_list_seq_kwargs = dict(pipegroups=pipegroups, soilmaterials=soilmaterials,
-                           interfmaterials=interfmaterials, factors=factors)
-        for k,v in cande_map_seq_kwargs.items():
+                                     interfmaterials=interfmaterials, factors=factors)
+        for k, v in cande_map_seq_kwargs.items():
             if v is not None:
-                cande_sub_seq = cande_seq_dict[k]({name:v})
+                cande_sub_seq = cande_seq_dict[k]({name: v})
             else:
                 cande_sub_seq = cande_seq_dict[k]()
             setattr(self, k, cande_sub_seq)
-        for k,v in cande_list_seq_kwargs.items():
+        for k, v in cande_list_seq_kwargs.items():
             cande_sub_seq = cande_seq_dict[k](v if v is not None else ())
             setattr(self, k, cande_sub_seq)
 
     @classmethod
-    def load_cidobj(cls, cid: Union[CidObj, Mapping[str,Union[CidData, Sequence[Union[CidSubObj, Mapping[str, CidData]]]]]]) -> "CandeObj":
+    def load_cidobj(cls, cid: Union[
+        CidObj, Mapping[str, Union[CidData, Sequence[Union[CidSubObj, Mapping[str, CidData]]]]]]) -> "CandeObj":
         map: MutableMapping = shallow_mapify(cid)
         # skip properties
-        map.pop("materials",None)
-        map.pop("nmaterials",None)
+        map.pop("materials", None)
+        map.pop("nmaterials", None)
         return cls(**map)
 
     @property
@@ -99,20 +103,21 @@ class CandeObj(CidRW):
             path.write_text("\n".join(self.iter_line_strings()))
 
     @classmethod
-    def from_lines(cls, lines: Optional[Iterable[CidLineStr]]=None,
-                         line_types: Optional[Iterable[Type[CidLine]]]=None) -> CidRW:
+    def from_lines(cls, lines: Optional[Iterable[CidLineStr]] = None,
+                   line_types: Optional[Iterable[Type[CidLine]]] = None) -> CidRW:
         """Construct or edit an object instance from line string and line type inputs."""
         cidobj = CidObj.from_lines(lines, line_types)
         return cls.loadcid(cidobj)
 
-    def add_from_msh(self, file, *, name: Optional[str]=None, nodes: Optional[Iterable]=None):
+    def add_from_msh(self, file, *, name: Optional[str] = None, nodes: Optional[Iterable] = None):
         if name is None:
             name = self.section_auto_name()
-        self.validate_section_name(name)
-        name_str = str(name)
-        if name_str in self.section_names:
-            raise ValueError(f"the section name {name_str} already exists")
-        self.elements
+        else:
+            self.validate_section_name(name)
+        msh_obj = msh.open(file)
+        new_nodes_seq, new_elements_seq = (getattr(msh_obj, attr) for attr in "nodes elements".split())
+        elements_section_dict = self.elements.seq_map
+        elements_section_dict[name] = new_elements_seq
 
     def validate_section_name(self, name: str) -> None:
         if isinstance(name, int):
@@ -121,7 +126,7 @@ class CandeObj(CidRW):
         if name in names_lower:
             raise ValueError(f"the section name {name} already exists")
 
-    def section_auto_name(self, name: Optional[str]=None) -> str:
+    def section_auto_name(self, name: Optional[str] = None) -> str:
         try:
             self.validate_section_name(name)
         except ValueError:
