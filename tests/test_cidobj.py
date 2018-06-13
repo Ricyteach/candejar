@@ -31,10 +31,9 @@ def test_rw_cid_obj(cid_obj_standard, cid_standard_lines):
     assert cid_standard_lines == cid_output_path.read_text().split("\n")
 
 def test_write_blank_cid_obj(cid_blank):
-    p = Path(__file__).resolve().parents[0].joinpath("bad_output_test.cid")
-    # raises error because sub sequences are all empty
-    with pytest.raises(CIDRWError):
-        cid_blank.save(p, mode="w")
+    p = Path(__file__).resolve().parents[0].joinpath("blank_cidobj_output_test.cid")
+    cid_blank.save(p, mode="w")
+    assert len(p.read_text().split("\n")) == 4 # A1, C1, C2, Stop
 
 @pytest.mark.skip(reason="only works on local machine")
 def test_open_wild_files():

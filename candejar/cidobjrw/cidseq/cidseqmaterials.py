@@ -7,8 +7,8 @@
 from typing import TypeVar, Generic, Iterator, Counter
 
 from ...cid import CidSubLine, D1
-from ..cidsubobj import CidSubObj
-from .cidseq import CidSeq
+from ..cidsubobj import CidSubObj, SUB_OBJ_NAMES_DICT
+from .cidseq import CidSeq, SubObj
 from .exc import CIDSubSeqIndexError
 
 CidObj = TypeVar("CidObj", covariant=True)
@@ -37,6 +37,17 @@ class SoilMaterialSeq(CidSeq[CidObj, D1], Generic[CidObj]):
             num = idx+1
             raise CIDSubSeqIndexError(f"Could not locate {self.line_type.__name__!s} soil object number {num!s}")
 
+    def iter_init(self) -> Iterator[SubObj]:
+        """Extends CidSeq.iter_init so that the soil material count is utilized."""
+        # get the associated total item count
+        seq_total = getattr(self.cid_obj, "nsoilmaterials")
+        # get the sub-object type
+        SubObjCls: Type[SubObj] = CidSubObj.getsubcls(SUB_OBJ_NAMES_DICT[self.line_type])[CidObj, CidSeq]
+        # produce items up to the specified item total
+        for x in range(seq_total):
+            subobj = SubObjCls(self, x)
+            yield subobj
+
     def __len__(self) -> int:
         return sum(1 for line in self.iter_main_lines if line.model!=6)
 
@@ -61,6 +72,17 @@ class InterfMaterialSeq(CidSeq[CidObj, D1], Generic[CidObj]):
         else:
             num = idx+1
             raise CIDSubSeqIndexError(f"Could not locate {self.line_type.__name__!s} interface object number {num!s}")
+
+    def iter_init(self) -> Iterator[SubObj]:
+        """Extends CidSeq.iter_init so that the interface material count is utilized."""
+        # get the associated total item count
+        seq_total = getattr(self.cid_obj, "ninterfmaterials")
+        # get the sub-object type
+        SubObjCls: Type[SubObj] = CidSubObj.getsubcls(SUB_OBJ_NAMES_DICT[self.line_type])[CidObj, CidSeq]
+        # produce items up to the specified item total
+        for x in range(seq_total):
+            subobj = SubObjCls(self, x)
+            yield subobj
 
     def __len__(self) -> int:
         return sum(1 for line in self.iter_main_lines if line.model==6)

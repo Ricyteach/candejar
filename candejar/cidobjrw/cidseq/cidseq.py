@@ -75,15 +75,14 @@ class CidSeq(ChildRegistryMixin, Sequence[SubObj], Generic[CidObj, CidSubLine]):
             raise IndexError(f"{val!s} not an available index for {self.line_type.__name__} object") from e
         return result
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[SubObj]:
         """Produces CidSubObj instances- which are just views of the underlying line object attributes- "on the fly".
 
         The iterator will ALWAYS try to produce ALL the sub-object instances from the relevant line objects contained in
         cid_obj.line_obj- regardless of the associated A1 or C2 item count.
 
         If the cid_obj.line_obj collection has no relevant line objects, the sequence is assumed to be in the process
-        of being built (e.g., an input file or object is being read) and sub objects will be produced anyway up to the
-        associated A1 or C2 time count.
+        of being built (e.g., an input file or object is being read) and iter_init() will be called.
         """
         # get list of relevant line objects
         current_object_lines = list(self.iter_main_lines)
@@ -92,15 +91,25 @@ class CidSeq(ChildRegistryMixin, Sequence[SubObj], Generic[CidObj, CidSubLine]):
             yield from (self[i] for i,_ in enumerate(current_object_lines))
         # if empty, assume in the process of being initialized, need to produce new sub-object items
         else:
-            # get the associated total item count
-            total_attr_name = SEQ_LINE_TYPE_TOTAL_DICT[self.line_type]
-            seq_total = getattr(self.cid_obj, total_attr_name)
-            # get the sub-object type
-            SubObjCls: Type[SubObj] = CidSubObj.getsubcls(SUB_OBJ_NAMES_DICT[self.line_type])[CidObj, CidSeq]
-            # produce items up to the specified item total
-            for x in range(seq_total):
-                subobj = SubObjCls(self, x)
-                yield subobj
+            yield from self.iter_init()
+
+    def iter_init(self) -> Iterator[SubObj]:
+        """Yields empty sub objects up to the associated A1 or C2 item count.
+
+        Used for sequence initialization.
+        """
+        # get the associated total item count
+        total_attr_name = SEQ_LINE_TYPE_TOTAL_DICT[self.line_type]
+        if total_attr_name == "nsteps" and self.cid_obj.method == 0:
+            # ASD - no factors should be yielded
+            return
+        seq_total = getattr(self.cid_obj, total_attr_name)
+        # get the sub-object type
+        SubObjCls: Type[SubObj] = CidSubObj.getsubcls(SUB_OBJ_NAMES_DICT[self.line_type])[CidObj, CidSeq]
+        # produce items up to the specified item total
+        for x in range(seq_total):
+            subobj = SubObjCls(self, x)
+            yield subobj
 
     def __len__(self) -> int:
         return sum(1 for _ in self.iter_main_lines)
