@@ -7,7 +7,7 @@ from dataclasses import dataclass, InitVar
 from pathlib import Path
 from typing import Mapping, Union, Sequence, Type, Optional, Iterable, ClassVar, List, MutableMapping
 
-from .candeseq import cande_seq_dict
+from .candeseq import cande_seq_dict, CandeMapSequence, CandeListSequence
 from ..cid import CidLine
 from ..cidrw import CidLineStr
 from ..cidobjrw.cidsubobj.cidsubobj import CidSubObj, CidData
@@ -16,9 +16,13 @@ from ..cidobjrw.cidobj import CidObj
 from ..utilities.mapping_tools import shallow_mapify
 from ..utilities.collections import KeyedChainView
 
+
 class SectionNameSet:
-    def __get__(self, instance: CandeObj, owner: Type[CandeObj]):
-        return set(v for s_name in "nodes elements boundaries".split() for v in getattr(instance, s_name).seq_map.keys())
+    def __get__(self, instance: Optional[CandeObj], owner: Type[CandeObj]):
+        if instance is not None:
+            return set(v for s_name in "nodes elements boundaries".split() for v in getattr(instance, s_name).seq_map.keys())
+        return self
+
 
 @dataclass
 class CandeObj(CidRW):
@@ -43,13 +47,13 @@ class CandeObj(CidRW):
     bandwidth: int = 1
 
     # sub object iterables
-    pipegroups: InitVar[List] = None
-    nodes: InitVar[Optional[Iterable]] = None
-    elements: InitVar[Optional[Iterable]] = None
-    boundaries: InitVar[Optional[Iterable]] = None
-    soilmaterials: InitVar[List] = None
-    interfmaterials: InitVar[List] = None
-    factors: InitVar[List] = None
+    pipegroups: InitVar[CandeListSequence] = None
+    nodes: InitVar[CandeMapSequence] = None
+    elements: InitVar[CandeMapSequence] = None
+    boundaries: InitVar[CandeMapSequence] = None
+    soilmaterials: InitVar[CandeListSequence] = None
+    interfmaterials: InitVar[CandeListSequence] = None
+    factors: InitVar[CandeListSequence] = None
 
     # required name for initial mesh objects added
     name: InitVar[Optional[str]] = None
@@ -60,17 +64,17 @@ class CandeObj(CidRW):
             name = "section1"
         if isinstance(name, int):
             raise TypeError("integers are not allowed for mesh section name")
-        cande_seq_kwargs = dict(nodes=nodes, elements=elements, boundaries=boundaries)
-        list_kwargs = dict(pipegroups=pipegroups, soilmaterials=soilmaterials,
+        cande_map_seq_kwargs = dict(nodes=nodes, elements=elements, boundaries=boundaries)
+        cande_list_seq_kwargs = dict(pipegroups=pipegroups, soilmaterials=soilmaterials,
                            interfmaterials=interfmaterials, factors=factors)
-        for k,v in cande_seq_kwargs.items():
+        for k,v in cande_map_seq_kwargs.items():
             if v is not None:
-                cande_sub_seq = cande_seq_dict[k]({name:list(v)})
+                cande_sub_seq = cande_seq_dict[k]({name:v})
             else:
                 cande_sub_seq = cande_seq_dict[k]()
             setattr(self, k, cande_sub_seq)
-        for k,v in list_kwargs.items():
-            cande_sub_seq = list(v if v is not None else ())
+        for k,v in cande_list_seq_kwargs.items():
+            cande_sub_seq = cande_seq_dict[k](v if v is not None else ())
             setattr(self, k, cande_sub_seq)
 
     @classmethod
@@ -102,5 +106,18 @@ class CandeObj(CidRW):
         cidobj = CidObj.from_lines(lines, line_types)
         return cls.loadcid(cidobj)
 
-    def add_from_msh(self, file, *, name, nodes = None):
-        pass
+    def add_from_msh(self, file, *, name=None, nodes=None):
+        if name is None:
+            name = self.section_auto_name()
+        name_str = str(name)
+        self.elements
+
+    def section_auto_name(self):
+        names = self.section_names
+        names_len = len(names)
+        names_lower = {n.lower() for n in names}
+        new_name = f"section{names_len}"
+        while new_name in names_lower:
+            names_len += 1
+            new_name = f"section{names_len}"
+        return new_name
