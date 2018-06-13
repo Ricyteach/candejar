@@ -10,4 +10,5 @@ class MSHRWError(Exception):
 
 class MSHLineProcessingError(MSHRWError):
     """Raised when error occurs during processing."""
-    pass
+    total: int  # total items in the section where error occurred
+    line: str  # the line that caused the error

@@ -3,6 +3,7 @@
 """Contains the procedure for reading a .msh file to an object."""
 
 from typing import Iterable, Callable, Any, Dict, TypeVar, Sequence, Iterator
+import itertools
 
 from . import MshObj, exc
 
@@ -24,21 +25,52 @@ def line_strings(msh: MshObj, lines: Iterable[str]) -> MshObj:
         1    1
 
     """
+    if isinstance(lines, str) or not isinstance(lines, Iterable):
+        raise exc.MSHRWError(f"lines must be an iterable, not {type(lines).__qualname__}")
     iter_line_strs = iter(line.strip() for line in lines)
-    nnodes = next(parse_lines(iter_line_strs, parse_total))["num"]
-    nodes = [node for _, node in zip(range(nnodes), parse_lines(iter_line_strs, parse_node))]
-    nelements = next(parse_lines(iter_line_strs, parse_total))["num"]
-    elements = [element for _, element in zip(range(nelements), parse_lines(iter_line_strs, parse_element))]
-    nboundaries = next(parse_lines(iter_line_strs, parse_total))["num"]
-    boundaries = [boundary for _, boundary in zip(range(nboundaries), parse_lines(iter_line_strs, parse_boundary))]
+    nodes, elements, boundaries = get_all(iter_line_strs)
     # check for leftover non-empty lines
     leftovers = [line.strip() for line in iter_line_strs]
     if any((leftover and not leftover.startswith("#")) for leftover in leftovers):
         raise exc.MSHLineProcessingError(
             f"There appear to be {len(leftovers)!s} extraneous data lines at the end of the file.")
     for attr, seq in zip("nodes elements boundaries".split(), (nodes, elements, boundaries)):
-        setattr(msh, attr, seq)
+        setattr(msh, attr, list(seq))
     return msh
+
+
+def get_all(ilines):
+    nodes_elements_boundaries = []
+    for parser in (parse_node, parse_element, parse_boundary):
+        try:
+            x = get_items(ilines, parser)
+        except exc.MSHLineProcessingError as e:
+            try:
+                nitems = e.total
+                line = e.line
+            except AttributeError:
+                raise e
+            else:
+                ilines = itertools.chain([str(nitems), line], ilines)
+                x = []
+        except StopIteration:
+            x = []
+        nodes_elements_boundaries.append(x)
+    return nodes_elements_boundaries
+
+
+def get_items(ilines, parser):
+    nitems = next(parse_lines(ilines, parse_total))["num"]
+    item_tuples = []
+    try:
+        for n, i in zip(range(1, nitems + 1), parse_lines(ilines, parser)):
+            item_tuples.append((n, i))
+    except exc.MSHLineProcessingError as e:
+        if len(item_tuples) == 0:
+            e.total = nitems
+        raise e
+    _, items = zip(*item_tuples)
+    return items
 
 
 def parse_lines(ilines: Iterator[str], parser: Callable[[str], Dict[str, T]]) -> Iterator[Dict[str, T]]:
@@ -52,7 +84,9 @@ def parse_line(line: str, field_names: Sequence[str],
     field_values = line.split()
     field_converters = tuple(field_converters)
     if not len(field_names) == len(field_values) == len(field_converters):
-        raise exc.MSHLineProcessingError("line length mismatch occurred during parsing")
+        e = exc.MSHLineProcessingError("line length mismatch occurred during parsing")
+        e.line = line
+        raise e
     d = dict((name, converter(value)) for name, value, converter in zip(field_names, field_values, field_converters))
     return d
 
@@ -76,6 +110,6 @@ def parse_element(element_line: str) -> Dict[str, Any]:
 
 
 def parse_boundary(boundary_line: str) -> Dict[str, Any]:
-    field_names = "b".split()
-    field_converters = (int,)
+    field_names = "num b".split()
+    field_converters = (int, int)
     return parse_line(boundary_line, field_names, field_converters)
