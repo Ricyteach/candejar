@@ -44,7 +44,7 @@
 
     C2:
         prefix: "C-2.L3"
-        NSteps: [5, 1]
+        NSteps: [5, 0]
         # 1: control data, 2: input data,
         # 3: created data, 4: maximum
         MeshOutput: [5, 3]

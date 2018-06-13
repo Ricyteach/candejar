@@ -71,12 +71,12 @@ class CandeObj(CidRW):
                                      interfmaterials=interfmaterials, factors=factors)
         for k, v in cande_map_seq_kwargs.items():
             if v is not None:
-                cande_sub_seq = cande_seq_dict[k]({name: v})
+                cande_sub_seq = cande_seq_dict[k]({name: list(v)})
             else:
                 cande_sub_seq = cande_seq_dict[k]()
             setattr(self, k, cande_sub_seq)
         for k, v in cande_list_seq_kwargs.items():
-            cande_sub_seq = cande_seq_dict[k](v if v is not None else ())
+            cande_sub_seq = cande_seq_dict[k](list(v) if v is not None else ())
             setattr(self, k, cande_sub_seq)
 
     @classmethod
@@ -127,14 +127,14 @@ class CandeObj(CidRW):
             raise ValueError(f"the section name {name} already exists")
 
     def section_auto_name(self, name: Optional[str] = None) -> str:
+        names = self.section_names
+        names_len = len(names)
+        if name is None:
+            name = f"section{names_len+1}"
         try:
             self.validate_section_name(name)
         except ValueError:
-            names = self.section_names
-            names_len = len(names)
             names_lower = {str(n).lower() for n in names}
-            if name is None:
-                name = f"section{names_len+1}"
             while name in names_lower:
                 names_len += 1
                 name = f"section{names_len+1}"
