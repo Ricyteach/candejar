@@ -56,7 +56,13 @@ def make_cande_sequence_class(name: str, value_type: Optional[T] = None) -> Type
             raise TypeError("CandeSequence container type needs to be specified for type checker when using a non-type as a converter")
     # change the converter so it accepts a single argument instead of an unpacked map
     wrapped_converter = mapify_and_unpack_decorator(converter)
-    cls: Type[CandeSequence] = types.new_class(name, (CandeMapSequence[value_type],), dict(kwarg_convert=wrapped_converter))
+    if name in "Nodes Elements Boundaries".split():
+        CandeSequenceType = CandeMapSequence
+    elif name in "PipeGroups SoilMaterial, InterfMaterials Factors".split():
+        CandeSequenceType = CandeListSequence
+    else:
+        raise ValueError(f"invalid cande object sequence attribute name: {name!s}")
+    cls: Type[CandeSequence] = types.new_class(name, (CandeSequenceType[value_type],), dict(kwarg_convert=wrapped_converter))
     return cls
 
 
