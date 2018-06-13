@@ -120,6 +120,10 @@ class CandeObj(CidRW):
         elements_section_dict[name] = new_elements_seq
 
     def validate_section_name(self, name: str) -> None:
+        """Make sure supplied section name follows the rules.
+
+        Rules: no integers allowed, no duplicate section names allowed
+        """
         if isinstance(name, int):
             raise TypeError("integers are not allowed for mesh section name")
         names_lower = {str(n).lower() for n in self.section_names}
@@ -127,6 +131,13 @@ class CandeObj(CidRW):
             raise ValueError(f"the section name {name} already exists")
 
     def section_auto_name(self, name: Optional[str] = None) -> str:
+        """Produce a section name that doesn't conflict with existing names
+
+        Auto-names are produces in sequence, e.g. section1, section2, etc.
+
+        Cardinal number determined based on current number of sections. Upper/lowercase is ignored for checking against
+        existing names (i.e., if ONLY Section2 exists, the next section will not be section2 but section3).
+        """
         names = self.section_names
         names_len = len(names)
         if name is None:
