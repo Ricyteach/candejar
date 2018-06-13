@@ -53,7 +53,6 @@ class CidSeq(ChildRegistryMixin, Sequence[SubObj], Generic[CidObj, CidSubLine]):
                 yield line
                 break
         else:
-            breakpoint()
             raise CIDSubSeqIndexError(f"Could not locate {self.line_type.__name__!s} object number {num!s}")
         for line in i_line_objs:
             if type(line) in TOP_LEVEL_TYPES:
