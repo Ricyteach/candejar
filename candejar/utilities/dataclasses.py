@@ -7,8 +7,8 @@ from typing import Any, Mapping, Callable, Tuple, TypeVar, Dict
 
 
 def shallow_asdict(obj) -> Dict[str, Any]:
-    """Shallowly return the fields of a dataclass instance as a new dictionary mapping
-    field names to field values.
+    """Shallowly return the fields of a dataclass instance as a new dictionary
+    mapping field names to field values.
     """
     if not isinstance(obj, type) and is_dataclass(obj):
         result = []
@@ -23,9 +23,9 @@ def shallow_asdict(obj) -> Dict[str, Any]:
 T = TypeVar("T")
 
 
-def unmapify(d: Mapping, f: Callable[..., T], key_validator: Callable[[Any], bool]=lambda k: True) -> T:
+def unmapify(d: Mapping, f: Callable[..., T], key_validator: Callable[[Any], bool] = lambda k: True) -> T:
     """Feed a mapping to a function using only validated keys."""
-    return f(**{k:v for k,v in d.items() if key_validator(k)})
+    return f(**{k: v for k, v in d.items() if key_validator(k)})
 
 
 def field_names(cls_or_instance) -> Tuple[str, ...]:

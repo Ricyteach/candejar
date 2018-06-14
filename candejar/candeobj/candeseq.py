@@ -16,6 +16,9 @@ T = TypeVar("T")
 class CandeListSequence(CollectionConvertingMixin[T], List[T]):
     __slots__ = ()
 
+    def __repr__(self) -> str:
+        return f"{type(self).__qualname__}({super().__repr__()})"
+
 
 class CandeMapSequence(CollectionConvertingMixin[T], KeyedChainView[T]):
     __slots__ = ()

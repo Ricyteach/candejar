@@ -283,7 +283,7 @@ class KeyedChainView(MutableSequence[V]):
         self.seq_map = seq_map
 
     def __repr__(self) -> str:
-        return f"KeyedChainView({self.seq_map!r})"
+        return f"{type(self).__qualname__}({self.seq_map!r})"
 
     def __contains__(self, item) -> bool:
         return item in set(v for s in self.seq_map.values() for v in s)
