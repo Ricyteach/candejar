@@ -34,7 +34,7 @@ def test_add_from_msh(monkeypatch, cande_obj_standard: CandeObj, msh_all_obj: Ms
         return msh_all_obj
     monkeypatch.setattr(msh, "open", mock_open)
     file_name = "FAKE"
-    cande_obj_standard.add_from_msh(file_name, name="section2")
+    cande_obj_standard.add_from_msh(file_name)
     assert cande_obj_standard.nodes
     assert cande_obj_standard.elements
     assert cande_obj_standard.boundaries

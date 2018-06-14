@@ -5,7 +5,7 @@
 import functools
 import types
 from abc import ABC
-from typing import Callable, Any, Optional, TypeVar, Type, List, overload, Iterable, Sequence
+from typing import Callable, Any, Optional, TypeVar, Type, List, overload, Iterable, Sequence, Mapping
 
 from ..utilities.mapping_tools import shallow_mapify
 from ..utilities.collections import KeyedChainView, CollectionConvertingMixin
@@ -26,6 +26,13 @@ class CandeListSequence(CollectionConvertingMixin[T], List[T]):
 
 class CandeMapSequence(CollectionConvertingMixin[T], KeyedChainView[T]):
     __slots__ = ()
+
+    def __init__(self, seq_map: Optional[Mapping[Any, Sequence[T]]] = None, **kwargs: Iterable[T]) -> None:
+        super().__init__(seq_map, **kwargs)
+        for k,v in self.seq_map.copy().items():
+            if not isinstance(v, CandeSectionSequence):
+                del self[k]
+                super().__setitem__(k, CandeSectionSequence(v))
 
     @overload
     def __setitem__(self, i: int, v: T) -> None:
