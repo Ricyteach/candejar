@@ -46,4 +46,12 @@ def test_read_complicated_msh(msh_cls, complicated_msh_lines):
     msh = read(msh_cls(), complicated_msh_lines)
     assert msh.nodes
     assert msh.elements
+    assert all(len(d)==5 for d in msh.elements)
     assert msh.boundaries
+
+def test_read_complicated_msh_elements(msh_cls, complicated_msh_2Delements_lines):
+    msh = read(msh_cls(), complicated_msh_2Delements_lines)
+    assert msh.nodes
+    assert msh.elements
+    assert all(len(d)==5 for d in msh.elements)
+    assert not msh.boundaries

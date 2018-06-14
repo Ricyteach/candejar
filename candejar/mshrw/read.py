@@ -29,6 +29,11 @@ def line_strings(msh: MshObj, lines: Iterable[str]) -> MshObj:
         raise exc.MSHRWError(f"lines must be an iterable, not {type(lines).__qualname__}")
     iter_line_strs = iter(line.strip() for line in lines)
     nodes, elements, boundaries = get_all(iter_line_strs)
+    # handle 2D elements
+    e: dict
+    for e in elements:
+        for x in "kl":
+            e[x] = e.get(x, 0)
     # check for leftover non-empty lines
     leftovers = [line.strip() for line in iter_line_strs]
     if any((leftover and not leftover.startswith("#")) for leftover in leftovers):
@@ -77,9 +82,22 @@ def get_items(ilines, parser):
 
 
 def parse_lines(ilines: Iterator[str], parser: Callable[[str], Dict[str, T]]) -> Iterator[Dict[str, T]]:
+    if parser is parse_element:
+        o_parser = parse_element_2d
     for line in ilines:
         if line and not line.startswith("#"):
-            yield parser(line)
+            try:
+                yield parser(line)
+            except exc.MSHLineProcessingError as e:
+                try:
+                    parser, o_parser = o_parser, parser
+                except NameError:
+                    raise e from None
+                else:
+                    try:
+                        yield parser(line)
+                    except exc.MSHLineProcessingError:
+                        raise e from None
 
 
 def parse_line(line: str, field_names: Sequence[str],
@@ -109,6 +127,12 @@ def parse_node(node_line: str) -> Dict[str, Any]:
 def parse_element(element_line: str) -> Dict[str, Any]:
     field_names = "num i j k l".split()
     field_converters = (int,) * 5
+    return parse_line(element_line, field_names, field_converters)
+
+
+def parse_element_2d(element_line: str) -> Dict[str, Any]:
+    field_names = "num i j".split()
+    field_converters = (int,) * 3
     return parse_line(element_line, field_names, field_converters)
 
 
