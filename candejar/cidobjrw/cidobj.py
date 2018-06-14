@@ -74,7 +74,7 @@ class CidObj(CidRW):
 
     @classmethod
     def from_lines(cls, lines: Optional[Sequence[CidLineStr]]=None,
-                   line_types: Optional[Iterable[Type[CidLine]]]=None) -> CidRW:
+                   line_types: Optional[Iterable[Type[CidLine]]]=None) -> CidObj:
         """Build an instance using line input strings and line types
 
         If no lines or existing instance are provided, result is same as cls()
