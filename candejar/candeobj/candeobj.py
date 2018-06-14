@@ -5,7 +5,7 @@
 from __future__ import annotations
 from dataclasses import dataclass, InitVar, field
 from pathlib import Path
-from typing import Union, Type, Optional, Iterable, ClassVar, MutableMapping
+from typing import Union, Type, Optional, Iterable, ClassVar, MutableMapping, Sequence
 
 from .. import msh
 from .candeseq import cande_seq_dict, PipeGroups, Nodes, Elements, Boundaries, SoilMaterials, InterfMaterials, Factors
@@ -146,21 +146,19 @@ class CandeObj(CidRW):
         return cls.load_cidobj(cidobj)
 
     def add_from_msh(self, file, *, name: Optional[str] = None, nodes: Optional[Iterable] = None):
-        name = type(self).section_names.handle_section_name(self, name)
+        section_name = type(self).section_names.handle_section_name(self, name)
         msh_obj = msh.open(file)
-        nodes_seq = nodes if nodes is not None else list()
+        nodes_seq = nodes if isinstance(nodes, Sequence) else list(nodes) if nodes is not None else list()
         msh_nodes_seq, msh_elements_seq, msh_boundaries_seq = (getattr(msh_obj, attr) for attr in
                                                                "nodes elements boundaries".split())
         if msh_nodes_seq and nodes_seq:
             raise ValueError("conflicting nodes sequences were provided")
         new_nodes_seq = {bool(seq): seq for seq in (msh_nodes_seq, nodes_seq)}.get(True, None)
-        if msh_elements_seq:
-            self.elements[name] = msh_elements_seq
-        if msh_boundaries_seq:
-            self.boundaries[name] = msh_boundaries_seq
         if new_nodes_seq:
-            self.nodes[name] = new_nodes_seq
-            self.elements[name].nodes = self.nodes[name]
-        else:
-            self.elements[name].nodes = self.nodes
-        # TODO: handle boundaries
+            self.nodes[section_name] = new_nodes_seq
+        for seq_name, msh_seq in zip(("elements", "boundaries"), (msh_elements_seq, msh_boundaries_seq)):
+            seq_obj = getattr(self, seq_name)
+            if msh_seq:
+                seq_obj[section_name] = msh_seq
+                if new_nodes_seq:
+                    seq_obj[section_name].nodes = self.nodes[section_name]

@@ -9,6 +9,7 @@ from candejar.cidobjrw.cidobj import CidObj
 from candejar.cid.cidlineclasses import A1, A2, B1Alum, B2AlumA, B1Plastic, B2Plastic, B3PlasticAGeneral, B1Steel, \
     B2SteelA, C1, C2, C3, C4, C5, D1, D2Isotropic, D2Interface, Stop
 from tests.cid_file_test_standards import standard_lines, cidmock_standard_lines
+from candejar.mshrw.read import line_strings as msh_read
 
 @pytest.fixture(scope="session")
 def cid_standard_lines():
@@ -82,3 +83,82 @@ def cidmock(cidmock_types):
     )
     mock.line_objs[-3] = D1(model=6)
     return mock
+
+# various .msh file text
+
+@pytest.fixture
+def msh_all_lines():
+    lines = "1\n1    1.0    2.0\n\n1\n1    1    2    0    0\n\n1\n1    1\n\n".split("\n")
+    return lines
+
+@pytest.fixture
+def msh_nodes_lines():
+    lines = "1\n1    1.0    2.0\n\n".split("\n")
+    return lines
+
+@pytest.fixture
+def msh_elements_lines():
+    lines = "1\n1    1    2    0    0\n\n".split("\n")
+    return lines
+
+@pytest.fixture
+def msh_boundaries_lines():
+    lines = "1\n1    1\n\n".split("\n")
+    return lines
+
+@pytest.fixture
+def msh_nodes_elements_lines():
+    lines = "1\n1    1.0    2.0\n\n1\n1    1    2    0    0\n\n".split("\n")
+    return lines
+
+@pytest.fixture
+def msh_elements_boundaries_lines():
+    lines = "1\n1    1    2    0    0\n\n1\n1    1\n\n".split("\n")
+    return lines
+
+@pytest.fixture
+def msh_nodes_boundaries_lines():
+    lines = "1\n1    1.0    2.0\n\n1\n1    1\n\n".split("\n")
+    return lines
+
+# various Msh file objects
+
+@pytest.fixture
+def msh_cls():
+    msh = type("Msh", (), {})
+    return msh
+
+@pytest.fixture
+def msh_all_obj(msh_cls, msh_all_lines):
+    msh = msh_read(msh_cls(), msh_all_lines)
+    return msh
+
+@pytest.fixture
+def msh_nodes_obj(msh_cls, msh_nodes_lines):
+    msh = msh_read(msh_cls(), msh_nodes_lines)
+    return msh
+
+@pytest.fixture
+def msh_elements_obj(msh_cls, msh_elements_lines):
+    msh = msh_read(msh_cls(), msh_elements_lines)
+    return msh
+
+@pytest.fixture
+def msh_boundaries_obj(msh_cls, msh_boundaries_lines):
+    msh = msh_read(msh_cls(), msh_boundaries_lines)
+    return msh
+
+@pytest.fixture
+def msh_nodes_elements_obj(msh_cls, msh_nodes_elements_lines):
+    msh = msh_read(msh_cls(), msh_nodes_elements_lines)
+    return msh
+
+@pytest.fixture
+def msh_elements_boundaries_obj(msh_cls, msh_elements_boundaries_lines):
+    msh = msh_read(msh_cls(), msh_elements_boundaries_lines)
+    return msh
+
+@pytest.fixture
+def msh_nodes_boundaries_obj(msh_cls, msh_nodes_boundaries_lines):
+    msh = msh_read(msh_cls(), msh_nodes_boundaries_lines)
+    return msh
