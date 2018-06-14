@@ -363,6 +363,8 @@ class KeyedChainView(MutableSequence[V]):
                 if not isinstance(v, Sequence):
                     v = list(v)
                 s, x_set = self.seq_map, x
+                if x_set in s:
+                    raise ValueError(f"key {x_set!r} already exists in {type(self).__qualname__} object")
             s[x_set] = v
 
     @overload
