@@ -60,7 +60,10 @@ def get_all(ilines):
 
 
 def get_items(ilines, parser):
-    nitems = next(parse_lines(ilines, parse_total))["num"]
+    while True:
+        nitems = next(parse_lines(ilines, parse_total))["num"]
+        if nitems:
+            break
     item_tuples = []
     try:
         for n, i in zip(range(1, nitems + 1), parse_lines(ilines, parser)):

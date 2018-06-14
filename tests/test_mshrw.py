@@ -41,3 +41,9 @@ def test_read_nodes_boundaries_only(msh_nodes_boundaries_obj):
     assert msh.nodes == [dict(num=1, x=1.0, y=2.0)]
     assert msh.elements == []
     assert msh.boundaries == [dict(num=1, b=1)]
+
+def test_read_complicated_msh(msh_cls, complicated_msh_lines):
+    msh = read(msh_cls(), complicated_msh_lines)
+    assert msh.nodes
+    assert msh.elements
+    assert msh.boundaries

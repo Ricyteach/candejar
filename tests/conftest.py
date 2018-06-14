@@ -9,6 +9,7 @@ from candejar.cidobjrw.cidobj import CidObj
 from candejar.cid.cidlineclasses import A1, A2, B1Alum, B2AlumA, B1Plastic, B2Plastic, B3PlasticAGeneral, B1Steel, \
     B2SteelA, C1, C2, C3, C4, C5, D1, D2Isotropic, D2Interface, Stop
 from tests.cid_file_test_standards import standard_lines, cidmock_standard_lines
+from tests.msh_file_test_standards import complicated_msh_file
 from candejar.mshrw.read import line_strings as msh_read
 
 @pytest.fixture(scope="session")
@@ -120,6 +121,10 @@ def msh_elements_boundaries_lines():
 def msh_nodes_boundaries_lines():
     lines = "1\n1    1.0    2.0\n\n1\n1    1\n\n".split("\n")
     return lines
+
+@pytest.fixture
+def complicated_msh_lines():
+    return complicated_msh_file.split("\n")
 
 # various Msh file objects
 

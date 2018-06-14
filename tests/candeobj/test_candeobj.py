@@ -29,7 +29,7 @@ def test_load_cid_standard(cid_obj_standard, cande_obj_standard):
     assert all(getattr(cande_obj_standard, name) == getattr(cid_obj_standard, name) for name in SEQ_LINE_TYPE_TOTALS)
 
 
-def test_add_from_msh(monkeypatch, cande_obj_standard: CandeObj, msh_all_obj: Msh):
+def test_add_from_msh_all_obj(monkeypatch, cande_obj_standard: CandeObj, msh_all_obj: Msh):
     def mock_open(*args, **kwargs):
         return msh_all_obj
     monkeypatch.setattr(msh, "open", mock_open)
