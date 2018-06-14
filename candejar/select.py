@@ -7,7 +7,7 @@ Selectable things:
 
 Selectable bys:
     all:
-        number, shape, collection_name or _key*,
+        number, shape, section_name
     nodes:
         boundary_condition (xcode, ycode), elements
     elements:
