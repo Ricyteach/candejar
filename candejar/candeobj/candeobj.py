@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
 
-"""The interface for cid type objects expected by the module."""
+"""The cande type objects expected by the module."""
 
 from __future__ import annotations
 from dataclasses import dataclass, InitVar, field
 from pathlib import Path
-from typing import Mapping, Union, Sequence, Type, Optional, Iterable, ClassVar, List, MutableMapping
+from typing import Union, Type, Optional, Iterable, ClassVar, MutableMapping
 
 from .. import msh
 from .candeseq import cande_seq_dict, PipeGroups, Nodes, Elements, Boundaries, SoilMaterials, InterfMaterials, Factors
 from ..cid import CidLine
 from ..cidrw import CidLineStr
-from ..cidobjrw.cidsubobj.cidsubobj import CidSubObj, CidData
 from ..cidobjrw.cidrwabc import CidRW
 from ..cidobjrw.cidobj import CidObj
 from ..utilities.mapping_tools import shallow_mapify
@@ -25,16 +24,58 @@ class SectionNameSet:
                        for k in getattr(getattr(instance, s_name), "seq_map", dict()).keys())
         return self
 
+    @staticmethod
+    def validate_section_name(instance: CandeObj, name: str) -> None:
+        """Make sure supplied section name follows the rules.
+
+        Rules: no integers allowed, no duplicate section names allowed
+        """
+        if isinstance(name, int):
+            raise TypeError("integers are not allowed for mesh section name")
+        names_lower = {str(n).lower() for n in instance.section_names}
+        if name in names_lower:
+            raise ValueError(f"the section name {name} already exists")
+
+    @staticmethod
+    def section_auto_name(instance: CandeObj, name: Optional[str] = None) -> str:
+        """Produce a section name that doesn't conflict with existing names
+
+        Auto-names are produces in sequence, e.g. section1, section2, etc.
+
+        Cardinal number determined based on current number of sections. Upper/lowercase is ignored for checking against
+        existing names (i.e., if ONLY Section2 exists, the next section will not be section2 but section3).
+        """
+        names = instance.section_names
+        names_len = len(names)
+        if name is None:
+            name = f"section{names_len+1}"
+        try:
+            SectionNameSet.validate_section_name(instance, name)
+        except ValueError:
+            names_lower = {str(n).lower() for n in names}
+            while name in names_lower:
+                names_len += 1
+                name = f"section{names_len+1}"
+        return name
+
+    @staticmethod
+    def handle_section_name(instance: CandeObj, name: Optional[str]) -> str:
+        if name is None:
+            name = SectionNameSet.section_auto_name(instance, name)
+        else:
+            SectionNameSet.validate_section_name(instance, name)
+        return name
+
 
 @dataclass
 class CandeObj(CidRW):
-    """The interface for .cid file representation objects."""
+    """For cande problem representation objects."""
     # top level objects
     mode: str = "ANALYS"  # ANALYS or DESIGN
-    level: int = 3  # 1, 2, 3
+    level: int = 3  # 1, 2, 3 (only 3 currently supported)
     method: int = 0  # 0=WSD, 1=LRFD
     ngroups: int = 0  # pipe groups
-    heading: str = "From `pip install candejar`: Rick Teachey, rick@teachey.org"
+    heading: str = 'From "candejar" by Rick Teachey, rick@teachey.org'
     nsteps: int = 0  # load steps
     nnodes: int = 0
     nelements: int = 0
@@ -62,10 +103,7 @@ class CandeObj(CidRW):
     section_names: ClassVar[set] = SectionNameSet()
 
     def __post_init__(self, name):
-        if name is None:
-            name = self.section_auto_name()
-        else:
-            self.validate_section_name(name)
+        name = type(self).section_names.handle_section_name(self, name)
         cande_map_seq_kwargs = dict(nodes=self.nodes, elements=self.elements, boundaries=self.boundaries)
         cande_list_seq_kwargs = dict(pipegroups=self.pipegroups, soilmaterials=self.soilmaterials,
                                      interfmaterials=self.interfmaterials, factors=self.factors)
@@ -79,13 +117,12 @@ class CandeObj(CidRW):
                 setattr(self, k, cande_sub_seq)
 
     @classmethod
-    def load_cidobj(cls, cid: Union[
-        CidObj, Mapping[str, Union[CidData, Sequence[Union[CidSubObj, Mapping[str, CidData]]]]]]) -> CandeObj:
-        map: MutableMapping = shallow_mapify(cid)
+    def load_cidobj(cls, cid: CidObj) -> CandeObj:
+        mmap: MutableMapping = shallow_mapify(cid)
         # skip properties
-        map.pop("materials", None)
-        map.pop("nmaterials", None)
-        return cls(**map)
+        mmap.pop("materials", None)
+        mmap.pop("nmaterials", None)
+        return cls(**mmap)
 
     @property
     def materials(self):
@@ -103,58 +140,27 @@ class CandeObj(CidRW):
 
     @classmethod
     def from_lines(cls, lines: Optional[Iterable[CidLineStr]] = None,
-                   line_types: Optional[Iterable[Type[CidLine]]] = None) -> CidRW:
+                   line_types: Optional[Iterable[Type[CidLine]]] = None) -> CandeObj:
         """Construct or edit an object instance from line string and line type inputs."""
         cidobj = CidObj.from_lines(lines, line_types)
         return cls.load_cidobj(cidobj)
 
     def add_from_msh(self, file, *, name: Optional[str] = None, nodes: Optional[Iterable] = None):
-        if name is None:
-            name = self.section_auto_name()
-        else:
-            self.validate_section_name(name)
+        name = type(self).section_names.handle_section_name(self, name)
         msh_obj = msh.open(file)
-        nodes_list = list(nodes if nodes else ())
-        msh_nodes_seq, msh_elements_seq, msh_boundaries_seq = (getattr(msh_obj, attr) for attr in "nodes elements".split())
-        if msh_nodes_seq and nodes_list:
+        nodes_seq = nodes if nodes is not None else list()
+        msh_nodes_seq, msh_elements_seq, msh_boundaries_seq = (getattr(msh_obj, attr) for attr in
+                                                               "nodes elements boundaries".split())
+        if msh_nodes_seq and nodes_seq:
             raise ValueError("conflicting nodes sequences were provided")
-        new_nodes_list = {bool(seq): seq for seq in (msh_nodes_seq, nodes_list)}.get(True, None)
-        self.elements[name] = msh_elements_seq
-        if new_nodes_list:
-            self.nodes[name] = new_nodes_list
+        new_nodes_seq = {bool(seq): seq for seq in (msh_nodes_seq, nodes_seq)}.get(True, None)
+        if msh_elements_seq:
+            self.elements[name] = msh_elements_seq
+        if msh_boundaries_seq:
+            self.boundaries[name] = msh_boundaries_seq
+        if new_nodes_seq:
+            self.nodes[name] = new_nodes_seq
             self.elements[name].nodes = self.nodes[name]
         else:
             self.elements[name].nodes = self.nodes
         # TODO: handle boundaries
-
-    def validate_section_name(self, name: str) -> None:
-        """Make sure supplied section name follows the rules.
-
-        Rules: no integers allowed, no duplicate section names allowed
-        """
-        if isinstance(name, int):
-            raise TypeError("integers are not allowed for mesh section name")
-        names_lower = {str(n).lower() for n in self.section_names}
-        if name in names_lower:
-            raise ValueError(f"the section name {name} already exists")
-
-    def section_auto_name(self, name: Optional[str] = None) -> str:
-        """Produce a section name that doesn't conflict with existing names
-
-        Auto-names are produces in sequence, e.g. section1, section2, etc.
-
-        Cardinal number determined based on current number of sections. Upper/lowercase is ignored for checking against
-        existing names (i.e., if ONLY Section2 exists, the next section will not be section2 but section3).
-        """
-        names = self.section_names
-        names_len = len(names)
-        if name is None:
-            name = f"section{names_len+1}"
-        try:
-            self.validate_section_name(name)
-        except ValueError:
-            names_lower = {str(n).lower() for n in names}
-            while name in names_lower:
-                names_len += 1
-                name = f"section{names_len+1}"
-        return name
