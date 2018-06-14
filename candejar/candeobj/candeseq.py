@@ -5,12 +5,16 @@
 import functools
 import types
 from abc import ABC
-from typing import Callable, Any, Optional, TypeVar, Type, List
+from typing import Callable, Any, Optional, TypeVar, Type, List, overload, Iterable, Sequence
 
 from ..utilities.mapping_tools import shallow_mapify
 from ..utilities.collections import KeyedChainView, CollectionConvertingMixin
 
 T = TypeVar("T")
+
+
+class CandeSectionSequence(List[T]):
+    pass
 
 
 class CandeListSequence(CollectionConvertingMixin[T], List[T]):
@@ -23,12 +27,34 @@ class CandeListSequence(CollectionConvertingMixin[T], List[T]):
 class CandeMapSequence(CollectionConvertingMixin[T], KeyedChainView[T]):
     __slots__ = ()
 
+    @overload
+    def __setitem__(self, i: int, v: T) -> None:
+        ...
+
+    @overload
+    def __setitem__(self, s: slice, v: Iterable[T]) -> None:
+        ...
+
+    @overload
+    def __setitem__(self, k: Any, v: Sequence[T]) -> None:
+        ...
+
+    def __setitem__(self, x, v):
+        super().__setitem__(x, v)
+        new_v = self[x]
+        if not (isinstance(x, slice) or isinstance(x, int)):
+            if not isinstance(new_v, CandeSectionSequence):
+                del self[x]
+                super().__setitem__(x, CandeSectionSequence(v))
+
 
 class CandeSequence(ABC):
     pass
 
+
 CandeSequence.register(CandeListSequence)
 CandeSequence.register(CandeMapSequence)
+CandeSequence.register(CandeSectionSequence)
 
 # TODO: replace types.SimpleNamespace kwarg converters with cool types that do stuff
 candesequence_item_converter_dict = dict(pipegroups=types.SimpleNamespace,
