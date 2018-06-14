@@ -3,12 +3,12 @@
 """The interface for cid type objects expected by the module."""
 
 from __future__ import annotations
-from dataclasses import dataclass, InitVar
+from dataclasses import dataclass, InitVar, field
 from pathlib import Path
 from typing import Mapping, Union, Sequence, Type, Optional, Iterable, ClassVar, List, MutableMapping
 
 from .. import msh
-from .candeseq import cande_seq_dict, CandeMapSequence, CandeListSequence
+from .candeseq import cande_seq_dict, PipeGroups, Nodes, Elements, Boundaries, SoilMaterials, InterfMaterials, Factors
 from ..cid import CidLine
 from ..cidrw import CidLineStr
 from ..cidobjrw.cidsubobj.cidsubobj import CidSubObj, CidData
@@ -49,39 +49,38 @@ class CandeObj(CidRW):
     bandwidth: int = 1
 
     # sub object iterables
-    pipegroups: InitVar[CandeListSequence] = None
-    nodes: InitVar[CandeMapSequence] = None
-    elements: InitVar[CandeMapSequence] = None
-    boundaries: InitVar[CandeMapSequence] = None
-    soilmaterials: InitVar[CandeListSequence] = None
-    interfmaterials: InitVar[CandeListSequence] = None
-    factors: InitVar[CandeListSequence] = None
+    pipegroups: PipeGroups = field(default_factory=PipeGroups, repr=False)
+    nodes: Nodes = field(default_factory=Nodes, repr=False)
+    elements: Elements = field(default_factory=Elements, repr=False)
+    boundaries: Boundaries = field(default_factory=Boundaries, repr=False)
+    soilmaterials: SoilMaterials = field(default_factory=SoilMaterials, repr=False)
+    interfmaterials: InterfMaterials = field(default_factory=InterfMaterials, repr=False)
+    factors: Factors = field(default_factory=Factors, repr=False)
 
     # required name for initial mesh objects added
     name: InitVar[Optional[str]] = None
     section_names: ClassVar[set] = SectionNameSet()
 
-    def __post_init__(self, pipegroups, nodes, elements, boundaries, soilmaterials, interfmaterials, factors, name):
+    def __post_init__(self, name):
         if name is None:
             name = self.section_auto_name()
         else:
             self.validate_section_name(name)
-        cande_map_seq_kwargs = dict(nodes=nodes, elements=elements, boundaries=boundaries)
-        cande_list_seq_kwargs = dict(pipegroups=pipegroups, soilmaterials=soilmaterials,
-                                     interfmaterials=interfmaterials, factors=factors)
+        cande_map_seq_kwargs = dict(nodes=self.nodes, elements=self.elements, boundaries=self.boundaries)
+        cande_list_seq_kwargs = dict(pipegroups=self.pipegroups, soilmaterials=self.soilmaterials,
+                                     interfmaterials=self.interfmaterials, factors=self.factors)
         for k, v in cande_map_seq_kwargs.items():
-            if v is not None:
+            if not isinstance(v, cande_seq_dict[k]):
                 cande_sub_seq = cande_seq_dict[k]({name: list(v)})
-            else:
-                cande_sub_seq = cande_seq_dict[k]()
-            setattr(self, k, cande_sub_seq)
+                setattr(self, k, cande_sub_seq)
         for k, v in cande_list_seq_kwargs.items():
-            cande_sub_seq = cande_seq_dict[k](list(v) if v is not None else ())
-            setattr(self, k, cande_sub_seq)
+            if not isinstance(v, cande_seq_dict[k]):
+                cande_sub_seq = cande_seq_dict[k](list(v))
+                setattr(self, k, cande_sub_seq)
 
     @classmethod
     def load_cidobj(cls, cid: Union[
-        CidObj, Mapping[str, Union[CidData, Sequence[Union[CidSubObj, Mapping[str, CidData]]]]]]) -> "CandeObj":
+        CidObj, Mapping[str, Union[CidData, Sequence[Union[CidSubObj, Mapping[str, CidData]]]]]]) -> CandeObj:
         map: MutableMapping = shallow_mapify(cid)
         # skip properties
         map.pop("materials", None)
@@ -107,7 +106,7 @@ class CandeObj(CidRW):
                    line_types: Optional[Iterable[Type[CidLine]]] = None) -> CidRW:
         """Construct or edit an object instance from line string and line type inputs."""
         cidobj = CidObj.from_lines(lines, line_types)
-        return cls.loadcid(cidobj)
+        return cls.load_cidobj(cidobj)
 
     def add_from_msh(self, file, *, name: Optional[str] = None, nodes: Optional[Iterable] = None):
         if name is None:
