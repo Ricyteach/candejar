@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Tests for `candejar.candeobj.candeseq.CandeListSequence` class."""
+"""Tests for `candejar.candeobj.candeseq.CandeList` class."""
 
 import pytest
 import types
 
-from candejar.candeobj.candeseq import CandeListSequence, cande_seq_dict
+from candejar.candeobj.candeseq import CandeList, cande_seq_dict
 
 def test_cande_sequence_subclass_missing_kwarg_convert_error():
-    with pytest.raises(TypeError):
-        class C(CandeListSequence[int]): ...
+    with pytest.raises(AttributeError):
+        class C(CandeList[int]): ...
         C()
 
 @pytest.fixture
@@ -19,15 +19,15 @@ def c_list():
 
 @pytest.fixture
 def C_str_holder():
-    return types.new_class("C", (CandeListSequence[str],), dict(kwarg_convert = str))
+    return types.new_class("C", (CandeList[str],), dict(kwarg_convert = str))
 
 @pytest.fixture
 def c_instance(C_str_holder, c_list):
     return C_str_holder(c_list)
 
 def test_cande_sequence():
-    with pytest.raises(TypeError):
-        CandeListSequence()
+    with pytest.raises(AttributeError):
+        CandeList()
 
 def test_cande_sequence_subclass(C_str_holder):
     assert C_str_holder

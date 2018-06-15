@@ -3,6 +3,8 @@
 """Special collections types."""
 
 from __future__ import annotations
+
+import functools
 import itertools
 from typing import List, Tuple, Any, overload, Sequence, MutableSequence, Generic, TypeVar, Type, Union, Optional, \
     Iterable, Iterator, Mapping, Callable, ClassVar
@@ -275,7 +277,7 @@ class KeyedChainView(MutableSequence[V]):
     __slots__ = ("seq_map")
 
     def __init__(self, seq_map: Optional[Mapping[Any, Sequence[V]]] = None, **kwargs: Iterable[V]) -> None:
-        if seq_map and any(isinstance(k,int) for k in seq_map.keys()):
+        if seq_map and any(isinstance(k, int) for k in seq_map.keys()):
             raise TypeError("int keys are not allowed for seq_map")
         if seq_map is None:
             seq_map = {}
@@ -478,7 +480,7 @@ class KeyedChainView(MutableSequence[V]):
             raise value_error
 
     def count(self, object: V):
-        return sum(v for v in iter(self) if v==object)
+        return sum(v for v in iter(self) if v == object)
 
     def popitem(self, last: bool = True) -> Tuple[Any, Sequence[V]]:
         idx = {True: -1, False: 0}[bool(last)]
@@ -490,7 +492,7 @@ class KeyedChainView(MutableSequence[V]):
             return k, self.seq_map.pop(k)
 
     # TODO: fix to use key argument
-    def move_to_end(self, key: Any, last:bool=True) -> None:
+    def move_to_end(self, key: Any, last: bool = True) -> None:
         idx = {True: -1, False: 0}[bool(last)]
         try:
             k = list(self.seq_map.keys())[idx]
@@ -500,12 +502,12 @@ class KeyedChainView(MutableSequence[V]):
             v = self.seq_map.pop(k)
         copy = self.seq_map.copy()
         self.seq_map.clear()
-        if idx==0:
-            self.seq_map.update({k:v})
+        if idx == 0:
+            self.seq_map.update({k: v})
             self.seq_map.update(copy)
         else:
             self.seq_map.update(copy)
-            self.seq_map.update({k:v})
+            self.seq_map.update({k: v})
 
     def __eq__(self, other: Mapping) -> bool:
         try:
@@ -532,29 +534,61 @@ class KeyedChainView(MutableSequence[V]):
         raise TypeError(f"{type(self).__qualname__} addition operation not supported")
 
 
-class ConvertingList(List[T]):
+#####################################
+#   Converting items management     #
+#####################################
+
+class Converter:
+    def __init__(self, cls, converter):
+        cls._converter = self.wrapped_converter(cls, converter)
+
+    def __get__(self, instance, owner):
+        t = type(instance) if instance is not None else owner
+        try:
+            return t._converter
+        except AttributeError:
+            raise TypeError(f"{t.__qualname__} requires a 'converter' class attribute")
+
+    def wrapped_converter(self, cls, f):
+        """Prevents unnecessarily making copies of values that are already instances of a converter type.
+
+        Has no effect if the converter is just a function.
+        """
+        converter_is_cls = isinstance(f, type)
+
+        @functools.wraps(f)
+        def wrapped(v):
+            return f(v) if not converter_is_cls or (converter_is_cls and not isinstance(v, f)) else v
+        return staticmethod(wrapped)
+
+
+class HasConverterMixin(Generic[T]):
     __slots__ = ()
 
-    converter: ClassVar[Callable[[Any], T]]
+    converter: ClassVar[Converter]
+    _converter: ClassVar[Callable[[Any], T]]
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         try:
-            cls.converter = staticmethod(kwargs.pop("kwarg_convert"))
+            cls.converter = Converter(cls, kwargs.pop("kwarg_convert"))
         except KeyError:
             pass
         super().__init_subclass__(**kwargs)
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        try:
-            converter_is_cls = isinstance(self.converter, type)
-        except AttributeError:
-            raise TypeError(f"cannot instantiate {type(self).__qualname__} without 'converter' class attribute")
-        for i, v in enumerate(iter(self)):
-            if not converter_is_cls or (converter_is_cls and not isinstance(v, self.converter)):
-                self[i] = self.converter(v)
+        if not hasattr(self, "converter"):
+            raise AttributeError(f"{type(self).__qualname__} requires a 'converter' attribute for instantiation")
 
-    # TODO: extend these methods to convert all list members
+
+class ConvertingList(HasConverterMixin[T], List[T]):
+    __slots__ = ()
+
+    def __init__(self, iterable: Iterable[V]=None) -> None:
+        if iterable is None:
+            iterable = []
+        iterable = map(self.converter, iterable)
+        super().__init__(iterable)
 
     @overload
     def __setitem__(self, i: int, v: V) -> None:
@@ -569,13 +603,17 @@ class ConvertingList(List[T]):
         ...
 
     def __setitem__(self, x, v):
+        v = self.converter(v)
         super().__setitem__(x, v)
 
-    def insert(self, idx: int, value: Any) -> None:
-        super().insert(idx, value)
+    def insert(self, idx: int, v: Any) -> None:
+        v = self.converter(v)
+        super().insert(idx, v)
 
     def append(self, v: V) -> None:
+        v = self.converter(v)
         super().append(v)
 
     def extend(self, iterable: Iterable[V]):
+        iterable = map(self.converter, iterable)
         super().extend(iterable)

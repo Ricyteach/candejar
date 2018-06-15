@@ -52,6 +52,7 @@
           <option value="candeobj.pipe_group_components.subcls" />
           <option value="utilities.collections.ChainSequence._sequences" />
           <option value="typing.Sequence.__delitem__" />
+          <option value="candeobj.candeseq.CandeSequence.register" />
         </list>
       </option>
     </inspection_tool>

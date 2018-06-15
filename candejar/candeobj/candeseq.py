@@ -5,34 +5,35 @@
 import functools
 import types
 from abc import ABC
-from typing import Callable, Any, Optional, TypeVar, Type, List, overload, Iterable, Sequence, Mapping
+from typing import Callable, Any, Optional, TypeVar, Type, overload, Iterable, Sequence, Mapping, Generic
 
+from . import exc
 from ..utilities.mapping_tools import shallow_mapify
-from ..utilities.collections import KeyedChainView, ConvertingList
+from ..utilities.collections import KeyedChainView, HasConverterMixin, ConvertingList
 
 T = TypeVar("T")
 
 
-class CandeSectionSequence(List[T]):
-    pass
-
-
-class CandeListSequence(ConvertingList[T], List[T]):
+class CandeList(ConvertingList[T]):
+    """Extends ConvertingList with a better repr and for specialized subclassing"""
     __slots__ = ()
 
     def __repr__(self) -> str:
         return f"{type(self).__qualname__}({super().__repr__()})"
 
 
-class CandeMapSequence(ConvertingList[T], KeyedChainView[T]):
+class CandeMapSequence(HasConverterMixin[T], KeyedChainView[T]):
+    """Extends KeyedChainView to utilize CandeList objects for the sub sequences
+
+    Keyword iterables are converted to CandeList before being passed up the inheritance chain. Any sequences that are
+    not a CandeList will raise an error.
+    """
     __slots__ = ()
 
-    def __init__(self, seq_map: Optional[Mapping[Any, Sequence[T]]] = None, **kwargs: Iterable[T]) -> None:
+    def __init__(self, seq_map: Optional[Mapping[Any, CandeList[T]]] = None, **kwargs: Iterable[T]) -> None:
         super().__init__(seq_map, **kwargs)
-        for k,v in self.seq_map.copy().items():
-            if not isinstance(v, CandeSectionSequence):
-                del self[k]
-                super().__setitem__(k, CandeSectionSequence(v))
+        for new_v in self.seq_map.values():
+            self._check_sequence(new_v)
 
     @overload
     def __setitem__(self, i: int, v: T) -> None:
@@ -47,21 +48,28 @@ class CandeMapSequence(ConvertingList[T], KeyedChainView[T]):
         ...
 
     def __setitem__(self, x, v):
+        if not isinstance(v, Sequence):
+            v = CandeList(v)
         super().__setitem__(x, v)
-        new_v = self[x]
         if not (isinstance(x, slice) or isinstance(x, int)):
-            if not isinstance(new_v, CandeSectionSequence):
-                del self[x]
-                super().__setitem__(x, CandeSectionSequence(v))
+            new_v = self[x]
+            self._check_sequence(new_v)
+
+    @classmethod
+    def _check_sequence(cls, v):
+        """Enforces CandeList sub sequence requirement"""
+        if not isinstance(v, CandeList):
+            raise exc.CandeTypeError(f"CandeList required for chained {cls.__qualname__} sub sequences, "
+                                     f"not {type(v).__qualname__}")
 
 
-class CandeSequence(ABC):
-    pass
+# For typing purposes only
+class CandeSequence(ABC, Generic[T]):
+    converter: Callable[[Any], T]
 
 
-CandeSequence.register(CandeListSequence)
+CandeSequence.register(CandeList)
 CandeSequence.register(CandeMapSequence)
-CandeSequence.register(CandeSectionSequence)
 
 # TODO: replace types.SimpleNamespace kwarg converters with cool types that do stuff
 candesequence_item_converter_dict = dict(pipegroups=types.SimpleNamespace,
@@ -81,6 +89,7 @@ def mapify_and_unpack_decorator(f: Callable[..., Any]) -> Callable[[Any], Any]:
     return wrapped
 
 
+# noinspection PyPep8Naming
 def make_cande_sequence_class(name: str, value_type: Optional[T] = None) -> Type[CandeSequence]:
     # get the item converter from the dictionary
     converter = candesequence_item_converter_dict[name.lower()]
@@ -89,16 +98,18 @@ def make_cande_sequence_class(name: str, value_type: Optional[T] = None) -> Type
         if isinstance(converter, type):
             value_type = converter
         else:
-            raise TypeError("CandeSequence container type needs to be specified for type checker when using a non-type as a converter")
+            raise TypeError("CandeSequence container type needs to be specified for type checker when using a non-type "
+                            "as a converter")
     # change the converter so it accepts a single argument instead of an unpacked map
     wrapped_converter = mapify_and_unpack_decorator(converter)
     if name in "Nodes Elements Boundaries".split():
         CandeSequenceType = CandeMapSequence
     elif name in "PipeGroups SoilMaterials InterfMaterials Factors".split():
-        CandeSequenceType = CandeListSequence
+        CandeSequenceType = CandeList
     else:
         raise ValueError(f"invalid cande object sequence attribute name: {name!s}")
-    cls: Type[CandeSequence] = types.new_class(name, (CandeSequenceType[value_type],), dict(kwarg_convert=wrapped_converter))
+    cls: Type[CandeSequence] = types.new_class(name, (CandeSequenceType[value_type],),
+                                               dict(kwarg_convert=wrapped_converter))
     return cls
 
 
@@ -118,3 +129,21 @@ cande_seq_dict = dict(pipegroups=PipeGroups,
                       interfmaterials=InterfMaterials,
                       factors=Factors,
                       )
+
+
+class NodesSection(CandeList[candesequence_item_converter_dict["nodes"]], kwarg_convert=Nodes.converter):
+    pass
+
+
+class ElementsSection(CandeList[candesequence_item_converter_dict["elements"]], kwarg_convert=Elements.converter):
+    pass
+
+
+class BoundariesSection(CandeList[candesequence_item_converter_dict["boundaries"]], kwarg_convert=Boundaries.converter):
+    pass
+
+
+cande_section_dict = dict(nodes=NodesSection,
+                          elements=ElementsSection,
+                          boundaries=BoundariesSection,
+                          )
