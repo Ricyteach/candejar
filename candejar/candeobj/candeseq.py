@@ -23,10 +23,7 @@ class CandeList(ConvertingList[T]):
 
 
 class CandeMapSequence(HasConverterMixin[T], KeyedChainView[T]):
-    """Extends KeyedChainView to utilize CandeList objects for the sub sequences
-
-    Keyword iterables are converted to CandeList before being passed up the inheritance chain. Any sequences that are
-    not a CandeList will raise an error.
+    """Extends KeyedChainView to utilize converting member objects for the sub sequences (such as CandeList subclasses)
     """
     __slots__ = ()
 
@@ -57,10 +54,12 @@ class CandeMapSequence(HasConverterMixin[T], KeyedChainView[T]):
 
     @classmethod
     def _check_sequence(cls, v):
-        """Enforces CandeList sub sequence requirement"""
-        if not isinstance(v, CandeList):
-            raise exc.CandeTypeError(f"CandeList required for chained {cls.__qualname__} sub sequences, "
-                                     f"not {type(v).__qualname__}")
+        """Checks converter attribute sequence requirement"""
+        if not hasattr(v, "converter"):
+            raise exc.CandeAttributeError(f"'converter' attribute required for chained {cls.__qualname__} sub sequences")
+        if cls.converter is not v.converter:
+            # might need to rethink this later....? doing this now for not other reason than it seems easiest.
+            raise exc.CandeTypeError(f"the {cls.__qualname__} and {type(v).__qualname__} converters must be the same")
 
 
 # For typing purposes only

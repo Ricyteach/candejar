@@ -20,15 +20,15 @@ def C_str_holder():
 def invalid_c_my_dict(MyDict):
     return MyDict(A=[], B=[1,2,3])
 
-@pytest.fixture(C_str_holder)
+@pytest.fixture
 def CSub_str_holder(C_str_holder):
     CSub = types.new_class("CSub", (list,), {})
-    CSub.converter = C_str_holder.converter
+    CSub.converter = staticmethod(C_str_holder.converter)
     return CSub
 
 @pytest.fixture
-def c_my_dict(CSub_str_holder, invalid_c_my_dict):
-    d = invalid_c_my_dict.copy()
+def c_my_dict(MyDict, CSub_str_holder, invalid_c_my_dict):
+    d = MyDict(invalid_c_kwargs)
     for k,v in invalid_c_my_dict.items():
         d[k] = CSub_str_holder(v)
     return d
@@ -38,8 +38,8 @@ def invalid_c_kwargs():
     return dict(C=[4,5,6], D=[])
 
 @pytest.fixture
-def c_kwargs(CSub_str_holder, invalid_c_kwargs):
-    d = invalid_c_kwargs.copy()
+def c_kwargs(MyDict, CSub_str_holder, invalid_c_kwargs):
+    d = MyDict(invalid_c_kwargs)
     for k,v in invalid_c_kwargs.items():
         d[k] = CSub_str_holder(v)
     return d
@@ -53,12 +53,12 @@ def test_cande_sequence_subclass_missing_kwarg_convert_error():
         class C(CandeMapSequence[int]): ...
         C()
 
-def c_instance_invalid_kwargs(C_str_holder, invalid_c_kwargs):
-    with pytest.raises(TypeError):
+def test_c_instance_invalid_kwargs(C_str_holder, invalid_c_kwargs):
+    with pytest.raises(AttributeError):
         C_str_holder(**invalid_c_kwargs)
 
-def c_instance_invalid_dict(C_str_holder, invalid_c_my_dict):
-    with pytest.raises(TypeError):
+def test_c_instance_invalid_dict(C_str_holder, invalid_c_my_dict):
+    with pytest.raises(AttributeError):
         C_str_holder(invalid_c_my_dict)
 
 def test_cande_sequence():
