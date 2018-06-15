@@ -8,7 +8,7 @@ from abc import ABC
 from typing import Callable, Any, Optional, TypeVar, Type, List, overload, Iterable, Sequence, Mapping
 
 from ..utilities.mapping_tools import shallow_mapify
-from ..utilities.collections import KeyedChainView, CollectionConvertingMixin
+from ..utilities.collections import KeyedChainView, ConvertingList
 
 T = TypeVar("T")
 
@@ -17,14 +17,14 @@ class CandeSectionSequence(List[T]):
     pass
 
 
-class CandeListSequence(CollectionConvertingMixin[T], List[T]):
+class CandeListSequence(ConvertingList[T], List[T]):
     __slots__ = ()
 
     def __repr__(self) -> str:
         return f"{type(self).__qualname__}({super().__repr__()})"
 
 
-class CandeMapSequence(CollectionConvertingMixin[T], KeyedChainView[T]):
+class CandeMapSequence(ConvertingList[T], KeyedChainView[T]):
     __slots__ = ()
 
     def __init__(self, seq_map: Optional[Mapping[Any, Sequence[T]]] = None, **kwargs: Iterable[T]) -> None:

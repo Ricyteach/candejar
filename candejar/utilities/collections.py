@@ -532,7 +532,7 @@ class KeyedChainView(MutableSequence[V]):
         raise TypeError(f"{type(self).__qualname__} addition operation not supported")
 
 
-class CollectionConvertingMixin(Generic[T]):
+class ConvertingList(List[T]):
     __slots__ = ()
 
     converter: ClassVar[Callable[[Any], T]]
@@ -553,3 +553,29 @@ class CollectionConvertingMixin(Generic[T]):
         for i, v in enumerate(iter(self)):
             if not converter_is_cls or (converter_is_cls and not isinstance(v, self.converter)):
                 self[i] = self.converter(v)
+
+    # TODO: extend these methods to convert all list members
+
+    @overload
+    def __setitem__(self, i: int, v: V) -> None:
+        ...
+
+    @overload
+    def __setitem__(self, s: slice, v: Iterable[V]) -> None:
+        ...
+
+    @overload
+    def __setitem__(self, k: Any, v: Sequence[V]) -> None:
+        ...
+
+    def __setitem__(self, x, v):
+        super().__setitem__(x, v)
+
+    def insert(self, idx: int, value: Any) -> None:
+        super().insert(idx, value)
+
+    def append(self, v: V) -> None:
+        super().append(v)
+
+    def extend(self, iterable: Iterable[V]):
+        super().extend(iterable)
