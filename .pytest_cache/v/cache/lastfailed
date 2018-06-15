@@ -6,7 +6,6 @@
   "tests/candeobj/test_candemapseq.py::test_c_instance_[3-4]": true,
   "tests/candeobj/test_candemapseq.py::test_c_instance_[4-5]": true,
   "tests/candeobj/test_candemapseq.py::test_c_instance_[5-6]": true,
-  "tests/candeobj/test_candemapseq.py::test_c_instance_seqmap_type": true,
   "tests/candeobj/test_candeobj.py::test_add_from_msh_all_obj": true,
   "tests/candeobj/test_candeobj.py::test_load_blank_cidobj": true,
   "tests/candeobj/test_candeobj.py::test_load_cid_standard": true,

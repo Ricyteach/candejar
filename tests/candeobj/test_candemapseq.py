@@ -28,7 +28,8 @@ def CSub_str_holder(C_str_holder):
 
 @pytest.fixture
 def c_my_dict(MyDict, CSub_str_holder, invalid_c_my_dict):
-    d = MyDict(invalid_c_kwargs)
+    d = MyDict()
+    d.update(**invalid_c_my_dict)
     for k,v in invalid_c_my_dict.items():
         d[k] = CSub_str_holder(v)
     return d
@@ -39,7 +40,8 @@ def invalid_c_kwargs():
 
 @pytest.fixture
 def c_kwargs(MyDict, CSub_str_holder, invalid_c_kwargs):
-    d = MyDict(invalid_c_kwargs)
+    d = MyDict()
+    d.update(**invalid_c_kwargs)
     for k,v in invalid_c_kwargs.items():
         d[k] = CSub_str_holder(v)
     return d
