@@ -570,7 +570,7 @@ class HasConverterMixin(Generic[T]):
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         try:
-            cls.converter = Converter(cls, kwargs.pop("kwarg_convert"))
+            cls.converter = Converter(cls, kwargs.pop("converter"))
         except KeyError:
             pass
         super().__init_subclass__(**kwargs)

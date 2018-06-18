@@ -8,7 +8,7 @@ import types
 
 from candejar.candeobj.candeseq import CandeList, cande_seq_dict
 
-def test_cande_sequence_subclass_missing_kwarg_convert_error():
+def test_cande_sequence_subclass_missing_converter_error():
     with pytest.raises(AttributeError):
         class C(CandeList[int]): ...
         C()
@@ -19,7 +19,7 @@ def c_list():
 
 @pytest.fixture
 def C_str_holder():
-    return types.new_class("C", (CandeList[str],), dict(kwarg_convert = str))
+    return types.new_class("C", (CandeList[str],), dict(converter = str))
 
 @pytest.fixture
 def c_instance(C_str_holder, c_list):
