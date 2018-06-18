@@ -28,8 +28,10 @@ T_Iterable = Iterable[T]
 T_Iterator = Iterator[T]
 T_Sequence = Sequence[T]
 
+
 def by_filter(selectables: T_Iterable, *, function: Callable[[T], Any]) -> T_Iterator:
     return filter(function, selectables)
+
 
 def by_shape(selectables: T_Iterable, shape: geo.base.BaseGeometry) -> T_Iterator:
     function = lambda s: shape.contains(geo.asShape(s))
