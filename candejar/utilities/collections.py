@@ -591,15 +591,26 @@ class ConvertingList(HasConverterMixin[T], List[T]):
         super().__init__(iterable)
 
     @overload
+    def __getitem__(self, i: int) -> None:
+        ...
+
+    @overload
+    def __getitem__(self, s: slice) -> None:
+        ...
+
+    def __getitem__(self, x):
+        s = super().__getitem__(x)
+        if isinstance(x, slice):
+            return type(self)(s)
+        else:
+            return s
+
+    @overload
     def __setitem__(self, i: int, v: V) -> None:
         ...
 
     @overload
     def __setitem__(self, s: slice, v: Iterable[V]) -> None:
-        ...
-
-    @overload
-    def __setitem__(self, k: Any, v: Sequence[V]) -> None:
         ...
 
     def __setitem__(self, x, v):
