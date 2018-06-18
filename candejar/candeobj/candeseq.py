@@ -5,10 +5,10 @@
 import functools
 import types
 from abc import ABC
-from dataclasses import dataclass
 from typing import Callable, Any, Optional, TypeVar, Type, overload, Iterable, Sequence, Mapping, Generic, Tuple
 
 from . import exc
+from ..candeobj.level3 import Node, Element, Boundary
 from ..utilities.mapping_tools import shallow_mapify
 from ..utilities.collections import KeyedChainView, ConvertingList
 
@@ -79,50 +79,6 @@ class CandeSequence(ABC, Generic[T]):
 
 CandeSequence.register(CandeList)
 CandeSequence.register(CandeMapSequence)
-
-
-class WithKwargsMixin:
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args)
-        for k,v in kwargs.items():
-            setattr(self, k, v)
-
-
-@dataclass(init=False)
-class Node(WithKwargsMixin):
-    num: int
-    x: float
-    y: float
-    def __init__(self, *, num: int, x: float, y: float, **kwargs) -> None:
-        self.num, self.x, self.y = num, x, y
-        super().__init__(**kwargs)
-
-
-@dataclass(init=False)
-class Element(WithKwargsMixin):
-    num: int
-    i: int
-    j: int
-    k: int = 0
-    l: int = 0
-    mat: int = None
-    step: int = None
-    def __init__(self, *, num: int, i: int, j: int, k: int=0, l: int=0, mat: int=None, step: int=None, **kwargs) -> None:
-        self.num, self.i, self.j, self.k, self.l = num, i, j, k, l
-        if mat is not None:
-            self.mat = mat
-        if step is not None:
-            self.step = step
-        super().__init__(**kwargs)
-
-
-@dataclass(init=False)
-class Boundary(WithKwargsMixin):
-    num: int
-    b: int
-    def __init__(self, *, num: int, b: int, **kwargs) -> None:
-        self.num, self.b = num, b
-        super().__init__(**kwargs)
 
 
 # TODO: replace types.SimpleNamespace kwarg converters with cool types that do stuff
