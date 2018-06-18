@@ -6,7 +6,7 @@ from __future__ import annotations
 from dataclasses import make_dataclass, field
 from typing import Any, Type, TypeVar, Generic
 
-from ..exc import CandeJarError
+from ..exc import CandejarError
 
 T = TypeVar("T")
 
@@ -29,7 +29,7 @@ class AttributeDelegator:
         delegate = getattr(instance, self.delegate_name)
         setattr(delegate, self.name, value)
 
-class CannedInstanceError(CandeJarError, AttributeError):
+class CannedInstanceError(CandejarError, AttributeError):
     pass
 
 class CannedObjects(Generic[T]):
