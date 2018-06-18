@@ -7,6 +7,8 @@ from typing import Generic, Optional, TypeVar
 
 from .bases import NodeNum, MatNum, StepNum, CodeNum, CandeFloat, CandeStr
 
+raise Exception("decide whether or not to delete this module")
+
 @dataclass
 class Node:
     x: CandeFloat = 0.0
