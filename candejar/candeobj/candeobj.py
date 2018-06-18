@@ -104,17 +104,20 @@ class CandeObj(CidRW):
 
     def __post_init__(self, name):
         name = type(self).section_names.handle_section_name(self, name)
-        cande_map_seq_kwargs = dict(nodes=self.nodes, elements=self.elements, boundaries=self.boundaries)
+
         cande_list_seq_kwargs = dict(pipegroups=self.pipegroups, soilmaterials=self.soilmaterials,
                                      interfmaterials=self.interfmaterials, factors=self.factors)
-        for k, v in cande_map_seq_kwargs.items():
-            if not isinstance(v, cande_seq_dict[k]):
-                cande_sub_seq = cande_seq_dict[k]({name: list(v)})
-                setattr(self, k, cande_sub_seq)
         for k, v in cande_list_seq_kwargs.items():
-            if not isinstance(v, cande_seq_dict[k]):
-                cande_sub_seq = cande_seq_dict[k](list(v))
-                setattr(self, k, cande_sub_seq)
+            cande_sub_seq = v if isinstance(v, cande_seq_dict[k]) else cande_seq_dict[k](v)
+            setattr(self, k, cande_sub_seq)
+
+        cande_map_seq_kwargs = dict(nodes=self.nodes, elements=self.elements, boundaries=self.boundaries)
+        for k, v in cande_map_seq_kwargs.items():
+            cande_sub_seq = v if isinstance(v, cande_seq_dict[k]) else cande_seq_dict[k]({name: v})
+            setattr(self, k, cande_sub_seq)
+        for seq_obj in (self.elements, self.boundaries):
+            if seq_obj:
+                seq_obj[name].nodes = self.nodes[name]
 
     @classmethod
     def load_cidobj(cls, cid: CidObj) -> CandeObj:
@@ -148,6 +151,7 @@ class CandeObj(CidRW):
     def add_from_msh(self, file, *, name: Optional[str] = None, nodes: Optional[Iterable] = None):
         section_name = type(self).section_names.handle_section_name(self, name)
         msh_obj = msh.open(file)
+        # handle iterable or None nodes argument
         nodes_seq = nodes if isinstance(nodes, Sequence) else list(nodes) if nodes is not None else list()
         msh_nodes_seq, msh_elements_seq, msh_boundaries_seq = (getattr(msh_obj, attr) for attr in
                                                                "nodes elements boundaries".split())

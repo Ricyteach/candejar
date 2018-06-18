@@ -18,15 +18,29 @@ def cande_obj_standard(cid_obj_standard):
 
 
 def test_candebase():
-    assert CandeObj()
+    cande_obj = CandeObj()
+    assert cande_obj
+    assert not cande_obj.nodes
+    assert not cande_obj.elements
+    assert not cande_obj.boundaries
 
 
 def test_load_blank_cidobj(cid_blank):
-    assert CandeObj.load_cidobj(cid_blank)
+    cande_obj = CandeObj.load_cidobj(cid_blank)
+    assert cande_obj
+    assert not cande_obj.nodes
+    assert not cande_obj.elements
+    assert not cande_obj.boundaries
 
 
 def test_load_cid_standard(cid_obj_standard, cande_obj_standard):
     assert all(getattr(cande_obj_standard, name) == getattr(cid_obj_standard, name) for name in SEQ_LINE_TYPE_TOTALS)
+    assert cande_obj_standard.nodes
+    assert cande_obj_standard.elements
+    assert cande_obj_standard.boundaries
+    assert cande_obj_standard.nodes["section1"]
+    assert cande_obj_standard.elements["section1"].nodes
+    assert cande_obj_standard.boundaries["section1"].nodes
 
 
 def test_add_from_msh_all_obj(monkeypatch, cande_obj_standard: CandeObj, msh_all_obj: Msh):
@@ -38,6 +52,9 @@ def test_add_from_msh_all_obj(monkeypatch, cande_obj_standard: CandeObj, msh_all
     assert cande_obj_standard.nodes
     assert cande_obj_standard.elements
     assert cande_obj_standard.boundaries
+    assert cande_obj_standard.nodes["section1"]
+    assert cande_obj_standard.elements["section1"].nodes
+    assert cande_obj_standard.boundaries["section1"].nodes
     assert cande_obj_standard.nodes["section2"]
     assert cande_obj_standard.elements["section2"].nodes
     assert cande_obj_standard.boundaries["section2"].nodes
