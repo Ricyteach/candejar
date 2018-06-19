@@ -137,6 +137,6 @@ def parse_element_2d(element_line: str) -> Dict[str, Any]:
 
 
 def parse_boundary(boundary_line: str) -> Dict[str, Any]:
-    field_names = "num b".split()
+    field_names = "num node".split()
     field_converters = (int, int)
     return parse_line(boundary_line, field_names, field_converters)
