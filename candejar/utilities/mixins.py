@@ -3,13 +3,17 @@
 """Special mixin classes."""
 
 from __future__ import annotations
-from typing import Callable, Any, Dict, Optional, Counter, TypeVar, Generic, Type
+
+from dataclasses import dataclass
+from typing import Callable, Any, Dict, Optional, Counter, TypeVar, Generic, Type, Sequence
 
 
 class ChildRegistryError(Exception):
     pass
 
+
 MixinSubcls = TypeVar("MixinSubcls", bound="ChildRegistryMixin")
+
 
 class ChildRegistryMixin(Generic[MixinSubcls]):
     """Mixin class that creates classes which track subclasses.
@@ -52,7 +56,7 @@ class ChildRegistryMixin(Generic[MixinSubcls]):
                                      "be provided")
         super().__init_subclass__(**kwargs)
         # for later child classes of the new class
-        subcls._subclasses: Dict[Any,Type[MixinSubcls]] = dict()
+        subcls._subclasses: Dict[Any, Type[MixinSubcls]] = dict()
         # child added to the reg of closest parent that is a subclass of CRM
         for parent_cls in subcls.mro()[1:]:
             if issubclass(parent_cls, ChildRegistryMixin):
@@ -74,6 +78,7 @@ class ChildRegistryMixin(Generic[MixinSubcls]):
             subcls._make_reg_key = make_reg_key
         if key_factory is not None:
             subcls._make_reg_key = key_factory()
+
     @classmethod
     def getsubcls(cls, key: Any) -> Type[MixinSubcls]:
         """Get the registered subclass from the key"""
@@ -87,8 +92,10 @@ class ChildRegistryMixin(Generic[MixinSubcls]):
 class ChildAsAttributeError(Exception):
     pass
 
+
 class ChildAsAttributeMixin:
     """Mixin class that adds child classes parent class attributes."""
+
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         # the child will be added as a class attribute to the closest parent
@@ -106,22 +113,27 @@ class ChildAsAttributeMixin:
                                         f"{cls.__name__} child class attribute "
                                         f"in the {parent_cls.__name__}.__dict__")
 
+
 class ClsAttrKeyMakerFactory:
     """Convenience callable object for specifying registration keys defined by ChildRegistry child classes
 
     The returned key is the class_attr named upon ClsAttrKeyMakerFactory instantiation
     """
     _incomplete = True
+
     def __init__(self, class_attr):
         self.class_attr = str(class_attr)
+
     def __set_name__(self, owner, name):
         self.cls = owner
         self._incomplete = False
+
     def __get__(self, instance, owner):
         if self._incomplete:
             self.cls = owner
             self._incomplete = False
         return self.__call__
+
     def __call__(self):
         class KeyMaker:
             def __call__(km_self, subcls):
@@ -130,10 +142,13 @@ class ClsAttrKeyMakerFactory:
                 except AttributeError:
                     clsname = self.cls.__name__
                     caller = subcls.__name__
-                    raise ChildRegistryError(f"The {clsname} child class {caller} must define a {self.class_attr} attribute")
+                    raise ChildRegistryError(
+                        f"The {clsname} child class {caller} must define a {self.class_attr} attribute")
+
         return KeyMaker()
 
-_CHILD_DISPATCHER_METHODS= """
+
+_CHILD_DISPATCHER_METHODS = """
 def __new__(cls, {arg1!s}, *args, **kwargs):
     if cls is WrappedCls:
         # dispatch to a registered child class
@@ -156,38 +171,158 @@ def child_dispatcher(keyname):
     The decorated class must have a `getsubcls` method in the form of `Callable[[Any], Type[WrappedCls]]` and a child
     class registered under the decorated class `keyname` and matching first argument
     """
+
     def decorator(WrappedCls):
-        ns=dict(WrappedCls=WrappedCls)
-        code=_CHILD_DISPATCHER_METHODS.format(arg1 = str(keyname))
-        exec(code,ns,ns)
+        ns = dict(WrappedCls=WrappedCls)
+        code = _CHILD_DISPATCHER_METHODS.format(arg1=str(keyname))
+        exec(code, ns, ns)
         __new__ = ns["__new__"]
         __init_subclass__ = ns["__init_subclass__"]
         WrappedCls.__new__ = __new__
         WrappedCls.__init_subclass__ = classmethod(__init_subclass__)
         return WrappedCls
+
     return decorator
+
 
 class CompositeAttributeError(AttributeError):
     pass
+
 
 class CompositeMixin:
     @property
     def _component_attrs(self):
         return [attr for comp in self.components for attr in vars(comp)]
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.components = []
+
     def __getattr__(self, item):
         ctr = Counter(self._component_attrs)
-        if any(v!=1 for v in ctr.values()):
-            dupes = [k for k,v in ctr.items() if v!=1]
+        if any(v != 1 for v in ctr.values()):
+            dupes = [k for k, v in ctr.items() if v != 1]
             comps = [c for c in self.components if any(dupeattr in vars(c) for dupeattr in dupes)]
             raise CompositeAttributeError(f"Duplicate attribute names {str(dupes)[1:-1]} detected "
                                           f"in components {str(comps)[1:-1]}")
         try:
-            comp = next(c for c in self.components if hasattr(c,item))
+            comp = next(c for c in self.components if hasattr(c, item))
             return getattr(comp, item)
         except (StopIteration, AttributeError):
             raise AttributeError("{type(self)!r} object has no attribute {item!r}") from None
+
     def add_component(self, comp):
         self.components.append(comp)
+
+
+##########################################################################
+#                        GeoJSON interface Mixin                         #
+##########################################################################
+
+@dataclass
+class GeoTuple:
+    type: str
+    coords: Sequence
+
+
+class GeoInterface:
+    """A descriptor that returns the __geo_interface__ representation of various geometric objects
+
+    The geo_type argument specifies the type of geometry. Choices are:
+        - Point, MultiPoint, Polygon, LineString, MultiPolygon, MultiLineString, and Node*
+        - Point coordinates are specified as pt.x and pt.y
+        - Polygon points are specified as p.i, p.j, p.k, and (optional) p.l
+        - LineString points are specified as p.i and p.j
+        - By default a Polygon with only 2 valid points (i, j) will delegate to a LineString instead
+
+    * Node not part of GeoJSON format spec; a Node contains a node.node attribute which specifies the point number
+      TODO: Node could be reworked later to be a "Feature" containing a Point instead but don't have time for that now
+    """
+
+    def __init__(self, geo_type, strict=False):
+        self.geo_type = geo_type
+        self.strict = strict
+
+    def __get__(self, instance, owner):
+        if instance is not None:
+            _f = self._lookup[self.geo_type]
+            geo_type, coords = _f(self, instance)
+            return dict(type=geo_type, coordinates=coords)
+        return self
+
+    def point(self, node):
+        """A GeoTuple for Point representation."""
+        return GeoTuple("Point", [node.x, node.y])
+
+    def multipoint(self, point_collection):
+        """A GeoTuple for MultiPoint representation."""
+        return GeoTuple("MultiPoint", [self.point(p).coords for p in point_collection])
+
+    def with_node_nums(self, has_nodes, node_nums):
+        """Does the work of looking up coordinate tuples for node number sequences"""
+        p_lookup = has_nodes.nodes
+        if len(node_nums) == 1:
+            # single node
+            return self.point(p_lookup[node_nums[0] - 1]).coords
+        else:
+            # node sequence
+            return [self.point(p_lookup[p - 1]).coords for p in node_nums]
+
+    def polygon(self, has_ijkl, strict=False):
+        """A GeoTuple for Polygon representation.
+
+        If strict is false, delegates to LineString if only 2 nodes."""
+        ijkl = [p for p in (getattr(has_ijkl, name) for name in "ijkl")]
+        nums = [num for num in ijkl if num]
+        result = self.with_node_nums(has_ijkl, nums)
+        if len(nums) == 2 and not strict and not self.strict:
+            # will delegate to a LineString type in with_node_nums
+            # LineStrings are not nested like Polygons
+            return GeoTuple("LineString", result)
+        elif len(nums) > 2:
+            # Polygon needs to be nested in a list (first item is exterior ring, following items are holes)
+            # assume no holes
+            return GeoTuple("Polygon", [result])
+        else:
+            raise ValueError("Invalid Polygon node numbering: (i={:d}, j={:d}, k={:d}, l={:d})".format(*ijkl))
+
+    def node(self, has_node):
+        """A GeoTuple for Point representation of has_node.node"""
+        return GeoTuple("Point", self.with_node_nums(has_node, [has_node.node]))
+
+    def linestring(self, has_ij):
+        """A GeoTuple for LineString representation."""
+        ij = [p for p in (getattr(has_ij, name) for name in "ij")]
+        nums = [num for num in ij if num]
+        if len(nums) != 2:
+            raise ValueError("Invalid LineString node numbering: (i={:d}, j={:d})".format(*ij))
+        return GeoTuple("LineString", self.with_node_nums(has_ij, nums))
+
+    def multipolygon(self, polygon_collection):
+        """A GeoTuple for MultiPolygon representation."""
+        return GeoTuple("MultiPolygon", [self.polygon(p, strict=True).coords for p in polygon_collection])
+
+    def multilinestring(self, linestring_collection):
+        """A GeoTuple for MultiLineString representation."""
+        return GeoTuple("MultiLineString", [self.linestring(p).coords for p in linestring_collection])
+
+    def multinode(self, node_collection):
+        """A GeoTuple for MultiPoint representation of has_node.node for a sequence of has_nodes"""
+        return GeoTuple("MultiPoint", [self.node(p).coords for p in node_collection])
+
+    _lookup = dict(zip("Point Polygon LineString Node MultiPoint MultiPolygon MultiLineString MultiNode".split(),
+                       (point, polygon, linestring, node, multipoint, multipolygon, multilinestring, multinode)))
+
+
+class GeoMixin:
+    """Adds  __geo_interface__ property
+
+    The geo_type argument specifies the type of geometry. Choices are:
+        - Point, MultiPoint, Polygon, LineString, MultiPolygon, MultiLineString
+        - Any Polygon with only 2 valid points will delegate to a LineString instead
+    """
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        geo_type = kwargs.pop("geo_type")
+        cls.__geo_interface__ = GeoInterface(geo_type)
+        super().__init_subclass__(**kwargs)
