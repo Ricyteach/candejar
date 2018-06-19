@@ -14,63 +14,86 @@ Selectable bys:
         material, step, nodes, boundaries
     boundaries (equivalent to nodes...?):
         boundary_condition (xcode, ycode), nodes, elements
+
+IMPORTANT: attribute errors for individual objects will fail silently
 """
 
 import shapely.geometry as geo
-from typing import Sequence, overload, TypeVar, Generic, List, Callable, Any
-from types import new_class
+from typing import Sequence, overload, TypeVar, Callable, Any, Iterator, Iterable
+
+from . import exc
 
 T = TypeVar("T")
-T_Sequence = new_class("T_Sequence", (Generic[T],Sequence))
-T_List = List[T]
+T_Iterable = Iterable[T]
+T_Iterator = Iterator[T]
+T_Sequence = Sequence[T]
 
-def by_filter(selectables: T_Sequence, *, function: Callable[[T], Any]) -> T_List:
-    return list(filter(function, selectables))
 
-def by_shape(selectables: T_Sequence, shape: geo.base.BaseGeometry) -> T_List:
-    function = lambda s: shape.contains(geo.asShape(s))
-    return by_filter(selectables, function=function)
+def by_shape(selectables: T_Iterable, shape: geo.base.BaseGeometry) -> T_Iterator:
+    selectable_geo = geo.asShape(selectables if isinstance(selectables, Sequence) else list(selectables))
+    yield from (s for s,s_geo in zip(selectables, selectable_geo) if shape.contains(s_geo))
 
+
+def by_filter(selectables: T_Iterable, *, function: Callable[[T], Any]) -> T_Iterator:
+    """Basically just a type hinted version of filter (with the arguments swapped)"""
+    return filter(function, selectables)
+
+
+def by_equal_attr(selectable: T, attr: str, value: Any) -> bool:
+    # !!!! attribute errors will fail silently !!!!
+    no_attr = object()
+    return getattr(selectable, attr, no_attr) == value
+
+# a sliceable attribute is one that is an int and can be selected over a range of numbers, e.g. "steps 1 through 3"
+# these slices are indexed starting at 1 because that's how CANDE indexes things
 
 @overload
-def by_sliceable_attr(selectables: T_Sequence, i: int, *, attr: str) -> T_List: ...
+def by_sliceable_attr(selectables: T_Iterable, i: int, *, attr: str) -> T_Iterator: ...
 
 @overload
-def by_sliceable_attr(selectables: T_Sequence, s: slice, *, attr: str) -> T_List: ...
+def by_sliceable_attr(selectables: T_Sequence, s: slice, *, attr: str) -> T_Iterator: ...
 
 def by_sliceable_attr(selectables, x, *, attr):
     if isinstance(x,int):
-        function = lambda s: getattr(s, attr) == x
+        function = lambda s: by_equal_attr(s, attr, x)
         return by_filter(selectables, function=function)
     if isinstance(x,slice):
-        return [s for v in range(len(selectables))[x] for s in by_filter(selectables, function=lambda s: getattr(s, attr) == v)]
+        if x.step is not None and x.step<0:
+            raise exc.CandejarValueError(f"negative attribute slice steps are not allowed")
+        if x.start is None or x.start==0:
+            raise exc.CandejarValueError(f"Candejar attribute slices are indexed at 1; zero index not allowed")
+        try:
+            selectables_len = len(selectables)
+        except TypeError:
+            raise exc.CandejarTypeError(f"a selectable sequence is required for slicing")
+        yield from (s for v in range(selectables_len+1)[x] for s in by_filter(selectables, function=lambda s: by_equal_attr(s, attr, v)))
 
 
 @overload
-def by_number(selectables: T_Sequence, i: int) -> T_List: ...
+def by_number(selectables: T_Iterable, i: int) -> T_Iterator: ...
 
 @overload
-def by_number(selectables: T_Sequence, s: slice) -> T_List: ...
+def by_number(selectables: T_Sequence, s: slice) -> T_Iterator: ...
 
 def by_number(selectables, x):
     return by_sliceable_attr(selectables, x, attr="num")
 
 
 @overload
-def by_material(selectables: T_Sequence, i: int) -> T_List: ...
+def by_material(selectables: T_Iterable, i: int) -> T_Iterator: ...
 
 @overload
-def by_material(selectables: T_Sequence, s: slice) -> T_List: ...
+def by_material(selectables: T_Sequence, s: slice) -> T_Iterator: ...
 
 def by_material(selectables, x):
     return by_sliceable_attr(selectables, x, attr="mat")
 
 
 @overload
-def by_step(selectables: T_Sequence, i: int) -> T_List: ...
+def by_step(selectables: T_Iterable, i: int) -> T_Iterator: ...
 
 @overload
-def by_step(selectables: T_Sequence, s: slice) -> T_List: ...
+def by_step(selectables: T_Sequence, s: slice) -> T_Iterator: ...
 
 def by_step(selectables, x):
     return by_sliceable_attr(selectables, x, attr="step")
