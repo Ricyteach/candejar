@@ -29,13 +29,14 @@ T_Iterator = Iterator[T]
 T_Sequence = Sequence[T]
 
 
-def by_filter(selectables: T_Iterable, *, function: Callable[[T], Any]) -> T_Iterator:
-    return filter(function, selectables)
-
-
 def by_shape(selectables: T_Iterable, shape: geo.base.BaseGeometry) -> T_Iterator:
-    function = lambda s: shape.contains(geo.asShape(s))
-    return by_filter(selectables, function=function)
+    selectable_geo = geo.asShape(selectables)
+    yield from (s for s,s_geo in zip(selectables, selectable_geo) if shape.contains(s_geo))
+
+
+def by_filter(selectables: T_Iterable, *, function: Callable[[T], Any]) -> T_Iterator:
+    """Basically just a type hinted version of filter (with the arguments swapped)"""
+    return filter(function, selectables)
 
 
 def by_equal_attr(selectable: T, attr: str, value: Any) -> bool:
@@ -43,8 +44,8 @@ def by_equal_attr(selectable: T, attr: str, value: Any) -> bool:
     no_attr = object()
     return getattr(selectable, attr, no_attr) == value
 
-# a sliceable attribute is one that is an int and can be selected over a range of numbers
-# these slices are indexed starting at 1
+# a sliceable attribute is one that is an int and can be selected over a range of numbers, e.g. "steps 1 through 3"
+# these slices are indexed starting at 1 because that's how CANDE indexes things
 
 @overload
 def by_sliceable_attr(selectables: T_Iterable, i: int, *, attr: str) -> T_Iterator: ...
@@ -60,7 +61,7 @@ def by_sliceable_attr(selectables, x, *, attr):
         if x.step is not None and x.step<0:
             raise exc.CandejarValueError(f"negative attribute slice steps are not allowed")
         if x.start is None or x.start==0:
-            raise exc.CandejarValueError(f"attribute slices are indexed at 1; zero index not allowed")
+            raise exc.CandejarValueError(f"Candejar attribute slices are indexed at 1; zero index not allowed")
         try:
             selectables_len = len(selectables)
         except TypeError:

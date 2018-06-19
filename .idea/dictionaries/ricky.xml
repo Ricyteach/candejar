@@ -11,6 +11,8 @@
       <w>lowerify</w>
       <w>mapify</w>
       <w>qualname</w>
+      <w>selectables</w>
+      <w>sliceable</w>
     </words>
   </dictionary>
 </component>

@@ -5,6 +5,7 @@
 from dataclasses import dataclass
 from typing import ClassVar
 
+from ..utilities.mixins import GeoMixin
 
 class WithKwargsMixin:
     def __init__(self, *args, **kwargs):
@@ -14,7 +15,7 @@ class WithKwargsMixin:
 
 
 @dataclass(init=False)
-class Node(WithKwargsMixin):
+class Node(WithKwargsMixin, GeoMixin, geo_type="Point"):
     num: int
     x: float
     y: float
@@ -30,7 +31,7 @@ class Node(WithKwargsMixin):
 
 
 @dataclass(init=False)
-class Element(WithKwargsMixin):
+class Element(WithKwargsMixin, GeoMixin, geo_type="Polygon"):
     num: int
     i: int
     j: int
@@ -48,7 +49,7 @@ class Element(WithKwargsMixin):
 
 
 @dataclass(init=False)
-class Boundary(WithKwargsMixin):
+class Boundary(WithKwargsMixin, GeoMixin, geo_type="Node"):
     node: int
     xcode: int = 0
     xvalue: float = 0.0
