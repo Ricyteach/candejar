@@ -109,8 +109,18 @@ class GeoInterface:
         """A GeoTuple for MultiLineString representation."""
         return GeoTuple("MultiLineString", [self.linestring(p).coords for p in linestring_collection])
 
-    _lookup = dict(zip("Point MultiPoint Polygon LineString MultiPolygon MultiLineString".split(),
-                      (point, multipoint, polygon, linestring, multipolygon, multilinestring)))
+    def multinode(self, node_collection):
+        """A GeoTuple for MultiPoint representation of has_node.node for a sequence of has_nodes"""
+        return GeoTuple("MultiPoint", [self.node(p).coords for p in node_collection])
+
+    _lookup = dict(zip("Point Polygon LineString Node MultiPoint MultiPolygon MultiLineString MultiNode".split(),
+                      (point, polygon, linestring, node, multipoint, multipolygon, multilinestring, multinode)))
+
+
+geo_type_lookup = dict(nodes="MultiPoint",
+                       elements="MultiPolygon",
+                       boundaries="MultiNode",
+                       )
 
 
 class GeoMixin:
@@ -218,6 +228,7 @@ def make_cande_list_class(name: str, value_type: Optional[T] = None) -> Type[Can
     cls: Type[CandeSequence] = types.new_class(name, (CandeList[value_type],), dict(converter=wrapped_converter))
     return cls
 
+
 def make_cande_map_seq_and_list_class(name: str, value_type: Optional[T] = None) -> Tuple[Type[CandeMapSequence[T]], Type[CandeList[T]]]:
     # get the item converter from the dictionary
     converter = candesequence_item_converter_dict[name.lower()]
@@ -229,7 +240,8 @@ def make_cande_map_seq_and_list_class(name: str, value_type: Optional[T] = None)
             raise exc.CandeTypeError("container type needs to be specified for type checker when using a non-type as a converter")
     # change the converter so it accepts a single argument instead of an unpacked map
     wrapped_converter = mapify_and_unpack_decorator(converter)
-    subseq_cls: Type[CandeList] = types.new_class(f"{name}Section", (CandeList[value_type],), dict(converter=wrapped_converter))
+    subseq_cls: Type[CandeList] = types.new_class(f"{name}Section", (GeoMixin,CandeList[value_type]),
+                                                  dict(converter=wrapped_converter, geo_type=geo_type_lookup[name.lower()]))
     cls: Type[CandeMapSequence] = types.new_class(name, (CandeMapSequence[value_type],), dict(seq_type=subseq_cls))
     return cls, subseq_cls
 
