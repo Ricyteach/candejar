@@ -22,6 +22,18 @@ class CandeList(ConvertingList[T]):
         return f"{type(self).__qualname__}({super().__repr__()})"
 
 
+class CandeGeoList(CandeList[T]):
+    """Extends CandeList to add a __geo_interface__ property"""
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        cls.geo_type = kwargs.pop("geo_type")
+        super().__init_subclass__(**kwargs)
+
+    @property
+    def __geo_interface__(self):
+        return dict(type=self.geo_type, coordinates=)
+
+
 class CandeMapSequence(KeyedChainView[T]):
     """Extends KeyedChainView to utilize a specified type for the sub-sequences.
 
