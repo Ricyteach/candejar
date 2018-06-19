@@ -30,7 +30,7 @@ T_Sequence = Sequence[T]
 
 
 def by_shape(selectables: T_Iterable, shape: geo.base.BaseGeometry) -> T_Iterator:
-    selectable_geo = geo.asShape(selectables if isinstance(selectables, Sequence) else list(selectables))
+    selectable_geo = geo.asShape(selectables)
     yield from (s for s,s_geo in zip(selectables, selectable_geo) if shape.contains(s_geo))
 
 
