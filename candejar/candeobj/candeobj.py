@@ -3,6 +3,8 @@
 """The cande type objects expected by the module."""
 
 from __future__ import annotations
+
+import operator
 from dataclasses import dataclass, InitVar, field
 from pathlib import Path
 from typing import Union, Type, Optional, Iterable, ClassVar, MutableMapping, Sequence
@@ -166,3 +168,42 @@ class CandeObj(CidRW):
                 seq_obj[section_name] = msh_seq
                 if new_nodes_seq:
                     seq_obj[section_name].nodes = self.nodes[section_name]
+
+    def add_standard_boundaries(self, name: Optional[str] = None, nodes: Optional[Iterable] = None, *, step: int = 1):
+        existing_nodes = None
+        if name is None:
+            section_name = type(self).section_names.section_auto_name(self, name)
+        else:
+            section_name = name
+        try:
+            type(self).section_names.validate_section_name(self, section_name)
+        except ValueError:
+            # name exists - refer to nodes already under that name
+            try:
+                existing_nodes = self.nodes[section_name]
+            except KeyError as e:
+                if nodes is None:
+                    raise KeyError(f"failed to find {section_name!r} node section") from e
+        if existing_nodes is None and nodes is None:
+            raise ValueError("nodes argument is required when supplying a new section name")
+        if existing_nodes is not None and nodes is not None:
+            raise ValueError(f"provided nodes sequence conflicts with section name")
+        if nodes is None:
+            section_nodes = self.nodes[section_name]
+        else:
+            section_nodes = nodes
+        self.boundaries[section_name] = list()
+        self.boundaries[section_name].nodes = section_nodes
+        node_seq = self.boundaries[section_name].nodes
+        y_min = min(node_seq, key=operator.attrgetter("y"))
+        x_min = min(node_seq, key=operator.attrgetter("x"))
+        x_max = max(node_seq, key=operator.attrgetter("x"))
+        for num, n in enumerate(node_seq, 1):
+            d = dict()
+            if n.x in (x_max, x_min):
+                d.update(node=num, xcode=1)
+            if n.y in (y_min,):
+                d.update(node=num, ycode=1)
+            if d:
+                d.update(step=step)
+                self.boundaries[section_name].append(d)
