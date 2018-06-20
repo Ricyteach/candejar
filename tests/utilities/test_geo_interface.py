@@ -3,11 +3,11 @@ from dataclasses import dataclass
 from typing import List
 from shapely import geometry as geo
 
-from candejar.utilities.mixins import GeoMixin
+from candejar.utilities.mixins import GeoMixin, GeoInterfaceError
 
 
 def test_no_geo_type():
-    with pytest.raises(TypeError):
+    with pytest.raises(GeoInterfaceError):
         class C(GeoMixin): ...
 
 
@@ -42,9 +42,11 @@ def polygon_cls(point_cls):
 
 
 @pytest.fixture
-def multipolygon_cls():
+def multipolygon_cls(point_cls):
+    mp = [point_cls(0,0), point_cls(1,0), point_cls(1,1),
+         point_cls(1, 1), point_cls(2, 1), point_cls(2, 2)]
     class MPoly(GeoMixin, List, geo_type="MultiPolygon"):
-        pass
+        nodes = mp
     return MPoly
 
 

@@ -219,6 +219,10 @@ class CompositeMixin:
 #                        GeoJSON interface Mixin                         #
 ##########################################################################
 
+class GeoInterfaceError(Exception):
+    pass
+
+
 class GeoTuple(NamedTuple):
     type: str
     coords: Sequence
@@ -238,8 +242,6 @@ class GeoInterface:
       TODO: Node could be reworked later to be a "Feature" containing a Point instead but don't have time for that now
     """
 
-    raise NotImplementedError("GeoInterface is broken; need to pass nodes sequence to with_node_nums separately, probably?")
-
     def __init__(self, geo_type, strict=False):
         self.geo_type = geo_type
         self.strict = strict
@@ -247,7 +249,10 @@ class GeoInterface:
     def __get__(self, instance, owner):
         if instance is not None:
             _f = self._lookup[self.geo_type]
-            geo_type, coords = _f(self, instance)
+            try:
+                geo_type, coords = _f(self, instance)
+            except Exception as e:
+                raise GeoInterfaceError(f"{type(instance).__qualname__} object") from e
             return dict(type=geo_type, coordinates=coords)
         return self
 
@@ -255,9 +260,9 @@ class GeoInterface:
         """A GeoTuple for Point representation."""
         return GeoTuple("Point", [node.x, node.y])
 
-    def multipoint(self, point_collection):
+    def multipoint(self, point_iterable):
         """A GeoTuple for MultiPoint representation."""
-        return GeoTuple("MultiPoint", [self.point(p).coords for p in point_collection])
+        return GeoTuple("MultiPoint", [self.point(p).coords for p in point_iterable])
 
     def with_node_nums(self, has_nodes, node_nums):
         """Does the work of looking up coordinate tuples for node number sequences"""
@@ -269,14 +274,16 @@ class GeoInterface:
             # node sequence
             return [self.point(p_lookup[p - 1]).coords for p in node_nums]
 
-    def polygon(self, has_ijkl, strict=False):
+    def polygon(self, has_ijkl, has_nodes=None, *, strict=False):
         """A GeoTuple for Polygon representation.
 
         If strict is false, delegates to LineString if only 2 nodes.
         """
+        if has_nodes is None:
+            has_nodes = has_ijkl
         ijkl = [p for p in (getattr(has_ijkl, name) for name in "ijkl")]
         nums = [num for num in ijkl if num]
-        result = self.with_node_nums(has_ijkl, nums)
+        result = self.with_node_nums(has_nodes, nums)
         if len(nums) == 2 and not strict and not self.strict:
             # will delegate to a LineString type in with_node_nums
             # LineStrings are not nested like Polygons
@@ -286,31 +293,49 @@ class GeoInterface:
             # assume no holes
             return GeoTuple("Polygon", [result])
         else:
-            raise ValueError("Invalid Polygon node numbering: (i={:d}, j={:d}, k={:d}, l={:d})".format(*ijkl))
+            raise GeoInterfaceError("Invalid Polygon node numbering: (i={:d}, j={:d}, k={:d}, l={:d})".format(*ijkl))
 
-    def node(self, has_node):
+    def node(self, has_node, has_nodes=None):
         """A GeoTuple for Point representation of has_node.node"""
-        return GeoTuple("Point", self.with_node_nums(has_node, [has_node.node]))
+        if has_nodes is None:
+            has_nodes = has_node
+        node_nums = [has_node.node]
+        return GeoTuple("Point", self.with_node_nums(has_nodes, node_nums))
 
-    def linestring(self, has_ij):
+    def linestring(self, has_ij, has_nodes=None):
         """A GeoTuple for LineString representation."""
+        if has_nodes is None:
+            has_nodes = has_ij
         ij = [p for p in (getattr(has_ij, name) for name in "ij")]
         nums = [num for num in ij if num]
         if len(nums) != 2:
-            raise ValueError("Invalid LineString node numbering: (i={:d}, j={:d})".format(*ij))
-        return GeoTuple("LineString", self.with_node_nums(has_ij, nums))
+            raise GeoInterfaceError("Invalid LineString node numbering: (i={:d}, j={:d})".format(*ij))
+        return GeoTuple("LineString", self.with_node_nums(has_nodes, nums))
 
-    def multipolygon(self, polygon_collection):
-        """A GeoTuple for MultiPolygon representation."""
-        return GeoTuple("MultiPolygon", [self.polygon(p, strict=True).coords for p in polygon_collection])
+    def multipolygon(self, polygon_iterable, *, strict=False):
+        """A GeoTuple for MultiPolygon representation.
 
-    def multilinestring(self, linestring_collection):
-        """A GeoTuple for MultiLineString representation."""
-        return GeoTuple("MultiLineString", [self.linestring(p).coords for p in linestring_collection])
+        If strict is false, attempts to delegate to MultiLineString.
 
-    def multinode(self, node_collection):
+        NOTE: ALL of the iterable items must be either 2 node only, OR a combination of 3 and 4 nodes
+        """
+        try:
+            return GeoTuple("MultiPolygon", [self.polygon(p, polygon_iterable, strict=True).coords for p in polygon_iterable])
+        except GeoInterfaceError as e1:
+            if not strict and not self.strict:
+                try:
+                    return self.multilinestring(polygon_iterable)
+                except GeoInterfaceError as e2:
+                    raise e2 from e1
+            raise e1
+
+    def multinode(self, node_iterable):
         """A GeoTuple for MultiPoint representation of has_node.node for a sequence of has_nodes"""
-        return GeoTuple("MultiPoint", [self.node(p).coords for p in node_collection])
+        return GeoTuple("MultiPoint", [self.node(p, node_iterable).coords for p in node_iterable])
+
+    def multilinestring(self, linestring_iterable):
+        """A GeoTuple for MultiLineString representation."""
+        return GeoTuple("MultiLineString", [self.linestring(p, linestring_iterable).coords for p in linestring_iterable])
 
     _lookup = dict(zip("Point Polygon LineString Node MultiPoint MultiPolygon MultiLineString MultiNode".split(),
                        (point, polygon, linestring, node, multipoint, multipolygon, multilinestring, multinode)))
@@ -328,6 +353,6 @@ class GeoMixin:
         try:
             geo_type = kwargs.pop("geo_type")
         except KeyError:
-            raise TypeError(f"geo_type argument required to subclass {cls.__qualname__}")
+            raise GeoInterfaceError(f"geo_type argument required to subclass {cls.__qualname__}")
         cls.__geo_interface__ = GeoInterface(geo_type)
         super().__init_subclass__(**kwargs)
