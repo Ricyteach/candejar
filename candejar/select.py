@@ -29,6 +29,21 @@ T_Iterator = Iterator[T]
 T_Sequence = Sequence[T]
 
 
+def copy(selectables: T_Sequence, select_f: Callable[..., T_Iterator], *args, **kwargs) -> T_Sequence:
+    if not isinstance(selectables, Sequence):
+        raise exc.CandejarTypeError(f"a selectables sequence is required, not {type(selectables).__qualname__}")
+    iter_selection = select_f(selectables, *args, **kwargs)
+    selection = type(selectables)(iter_selection)
+    # preserve nodes reference for new selection (if it exists)
+    try:
+        nodes = selectables.nodes
+    except AttributeError:
+        pass
+    else:
+        selection.nodes = nodes
+    return selection
+
+
 def by_shape(selectables: T_Iterable, shape: geo.base.BaseGeometry) -> T_Iterator:
     selectable_geo = geo.asShape(selectables)
     yield from (s for s,s_geo in zip(selectables, selectable_geo) if shape.contains(s_geo))
