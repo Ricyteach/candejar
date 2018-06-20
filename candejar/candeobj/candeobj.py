@@ -195,9 +195,9 @@ class CandeObj(CidRW):
         self.boundaries[section_name] = list()
         self.boundaries[section_name].nodes = section_nodes
         node_seq = self.boundaries[section_name].nodes
-        y_min = min(node_seq, key=operator.attrgetter("y"))
-        x_min = min(node_seq, key=operator.attrgetter("x"))
-        x_max = max(node_seq, key=operator.attrgetter("x"))
+        y_min = min(node_seq, key=operator.attrgetter("y")).y
+        x_min = min(node_seq, key=operator.attrgetter("x")).x
+        x_max = max(node_seq, key=operator.attrgetter("x")).x
         for num, n in enumerate(node_seq, 1):
             d = dict()
             if n.x in (x_max, x_min):
