@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable, Any, Dict, Optional, Counter, TypeVar, Generic, Type, Sequence
+from typing import Callable, Any, Dict, Optional, Counter, TypeVar, Generic, Type, Sequence, NamedTuple
 
 
 class ChildRegistryError(Exception):
@@ -219,8 +219,7 @@ class CompositeMixin:
 #                        GeoJSON interface Mixin                         #
 ##########################################################################
 
-@dataclass
-class GeoTuple:
+class GeoTuple(NamedTuple):
     type: str
     coords: Sequence
 
@@ -238,6 +237,8 @@ class GeoInterface:
     * Node not part of GeoJSON format spec; a Node contains a node.node attribute which specifies the point number
       TODO: Node could be reworked later to be a "Feature" containing a Point instead but don't have time for that now
     """
+
+    raise NotImplementedError("GeoInterface is broken; need to pass nodes sequence to with_node_nums separately, probably?")
 
     def __init__(self, geo_type, strict=False):
         self.geo_type = geo_type
@@ -271,7 +272,8 @@ class GeoInterface:
     def polygon(self, has_ijkl, strict=False):
         """A GeoTuple for Polygon representation.
 
-        If strict is false, delegates to LineString if only 2 nodes."""
+        If strict is false, delegates to LineString if only 2 nodes.
+        """
         ijkl = [p for p in (getattr(has_ijkl, name) for name in "ijkl")]
         nums = [num for num in ijkl if num]
         result = self.with_node_nums(has_ijkl, nums)
@@ -323,6 +325,9 @@ class GeoMixin:
     """
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
-        geo_type = kwargs.pop("geo_type")
+        try:
+            geo_type = kwargs.pop("geo_type")
+        except KeyError:
+            raise TypeError(f"geo_type argument required to subclass {cls.__qualname__}")
         cls.__geo_interface__ = GeoInterface(geo_type)
         super().__init_subclass__(**kwargs)
