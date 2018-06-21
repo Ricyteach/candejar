@@ -23,6 +23,7 @@ class CandeList(ConvertingList[T]):
     def __repr__(self) -> str:
         return f"{type(self).__qualname__}({super().__repr__()})"
 
+
 geo_type_lookup = dict(nodes="MultiPoint",
                        elements="MultiPolygon",
                        boundaries="MultiNode",

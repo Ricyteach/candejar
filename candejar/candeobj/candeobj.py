@@ -7,7 +7,7 @@ from __future__ import annotations
 import operator
 from dataclasses import dataclass, InitVar, field
 from pathlib import Path
-from typing import Union, Type, Optional, Iterable, ClassVar, MutableMapping, Sequence
+from typing import Union, Type, Optional, Iterable, ClassVar, MutableMapping, Sequence, Iterator
 
 from .. import msh
 from .candeseq import cande_seq_dict, PipeGroups, Nodes, Elements, Boundaries, SoilMaterials, InterfMaterials, Factors
