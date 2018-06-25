@@ -1,8 +1,8 @@
 # CANDE Level 3 problem template
 # ANALYS or DESIGN
 Mode: "ANALYS"
-# 0 = WSD, 1 = LRFD
-Method: 0
+# WSD, ASD (same as WSD) or LRFD
+Method: "ASD"
 # number of pipe type groups
 NGroups: 0
 # 60 character limit
@@ -17,16 +17,16 @@ NElements: 0
 NBoundaries: 0
 NSoilMaterials: 0
 NInterfMaterials: 0
-# 0: run, 1: check only
-Check: 1
-# 0: none, 1: minimize, 2: minimize and print
-Bandwidth: 1
+# RUN or CHECK
+Check: "CHECK"
+# NONE, MINIMIZE, PRINT
+Bandwidth: "MINIMIZE"
 # 1: control data, 2: input data,
 # 3: created data, 4: maximum
-MeshOutput: 3
-# 0: minimal, 1: standard, 2: plus Duncan,
-# 3: plus interface, 4: plus Mohr Coulomb
-ResponseOutput: 0
+MeshOutput: "CREATED"
+# 0: minimal, 1: standard, 2: Duncan,
+# 3: interface, 4: MohrCoulomb
+ResponseOutput: "MINIMAL"
 
 PipeGroups:
     # repeat this section for each pipe group
@@ -52,7 +52,7 @@ PipeGroups:
         # Linear: 1, Bilinear: 2
         Behavior: 2
         # Small Deformation: 0, Large Deformation: 1, Plus Buckling: 2
-        Mode: 0
+        Mode: "SMALL"
 
         # B2AlumA
         # for ANALYS mode only
@@ -613,7 +613,8 @@ SoilMaterials:
     -
         # material number/identifier
         ID: 0
-        # Isotropic, Orthotropic, Duncan, Selig, Overburden, Extended Hardin, MohrCoulomb
+         # 1: Isotropic, 2: Orthotropic, 3: Duncan or Selig, 4: Overburden,
+         # 5: Extended Hardin, 8: MohrCoulomb
         Model: ""
         Density: 0.0
         # User defined or "canned" names, 20 character limit
