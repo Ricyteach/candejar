@@ -5,7 +5,7 @@ data model object."""
 
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import List, Iterable, Optional, Generator, Tuple, Type, Sequence
+from typing import List, Iterable, Optional, Generator, Tuple, Type, Sequence, TypeVar
 
 from ..utilities.descriptors import AttributeDelegator
 from ..cidrw.write import CidLineStr
@@ -16,6 +16,9 @@ from .cidrwabc import CidRW
 from .cidseq import CidSeq
 from .cidseq.names import ALL_SEQ_CLASS_NAMES
 from .exc import CidObjFromLinesError
+
+
+CidObjChild = TypeVar("CidObjChild", bound="CidObj")
 
 
 @dataclass
@@ -73,8 +76,8 @@ class CidObj(CidRW):
         self.line_objs: List[CidLine] = []
 
     @classmethod
-    def from_lines(cls, lines: Optional[Sequence[CidLineStr]]=None,
-                   line_types: Optional[Iterable[Type[CidLine]]]=None) -> CidObj:
+    def from_lines(cls: Type[CidObjChild], lines: Optional[Sequence[CidLineStr]]=None,
+                   line_types: Optional[Iterable[Type[CidLine]]]=None) -> CidObjChild:
         """Build an instance using line input strings and line types
 
         If no lines or existing instance are provided, result is same as cls()

@@ -5,7 +5,7 @@
 from __future__ import annotations
 import re
 from dataclasses import make_dataclass, dataclass, field, asdict
-from typing import Optional, Type, Pattern
+from typing import Optional, Type, Pattern, TypeVar
 
 from .exc import CIDError, LineError, LineParseError
 from .cidfield import make_field_obj
@@ -39,6 +39,9 @@ class Parser:
                 parser_str = parser_str + " *"
             p = owner._parser = re.compile(parser_str)
         return p
+
+
+CidLineChild = TypeVar("CidLineChild", bound="CidLine")
 
 
 @dataclass
@@ -75,7 +78,7 @@ class CidLine:
         else:
             return super().__format__(format_spec)
     @classmethod
-    def parse(cls: Type[CidLine], line: str) -> CidLine:
+    def parse(cls: Type[CidLineChild], line: str) -> CidLineChild:
         if line.startswith(cls.prefix):
             line = line[slice(cls.start_, None)]
         try:

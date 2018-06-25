@@ -5,7 +5,7 @@
 from __future__ import annotations
 from abc import abstractmethod, ABC
 from pathlib import Path
-from typing import Union, Iterator, Type, Iterable, Optional
+from typing import Union, Iterator, Type, Iterable, Optional, TypeVar
 
 from ..cid import CidLine
 from ..cidprocessing.main import process
@@ -13,10 +13,13 @@ from ..cidrw.write import line_strings as write_line_strings, CidLineStr
 from .exc import CidRWSubclassSignatureError
 
 
+CidRWChild = TypeVar("CidRWChild", bound="CidRW")
+
+
 class CidRW(ABC):
     """Abstract base class for read/write processing of .cid file types"""
 
-    def __init_subclass__(cls, **kwargs):
+    def __init_subclass__(cls: Type[CidRWChild], **kwargs) -> None:
         try:
             cls()
         except TypeError:
@@ -25,7 +28,7 @@ class CidRW(ABC):
                                               "all arguments.")
 
     @classmethod
-    def open(cls, path: Union[str, Path]) -> CidRW:
+    def open(cls: Type[CidRWChild], path: Union[str, Path]) -> CidRWChild:
         """Make an instance from a .cid file."""
         path = Path(path).with_suffix(".cid")
         lines = path.read_text().split("\n")
@@ -34,8 +37,8 @@ class CidRW(ABC):
 
     @classmethod
     @abstractmethod
-    def from_lines(cls, lines: Optional[Iterable[CidLineStr]]=None,
-                         line_types: Optional[Iterable[Type[CidLine]]]=None) -> CidRW:
+    def from_lines(cls: Type[CidRWChild], lines: Optional[Iterable[CidLineStr]]=None,
+                   line_types: Optional[Iterable[Type[CidLine]]]=None) -> CidRWChild:
         """Construct or edit an object instance from line string and line type inputs."""
         pass
 

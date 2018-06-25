@@ -27,6 +27,7 @@ class CandeComposite(ChildRegistryMixin["CandeComposite"], CompositeMixin):
     pass
 
 CCompSubcls = TypeVar("CCompSubcls", bound="CandeComponent")
+CCompSubclsChild = TypeVar("CCompSubclsChild", bound=CCompSubcls)
 
 class CandeComponent(Generic[CCompSubcls], ChildRegistryMixin["CandeComponent"]):
     """Base class for components that make up cande objects (such as pipe groups)
@@ -34,6 +35,6 @@ class CandeComponent(Generic[CCompSubcls], ChildRegistryMixin["CandeComponent"])
     CandeComponent children are registered with CC by name
     """
     @classmethod
-    def getsubcls(cls, key: str) -> Type[CCompSubcls]:
+    def getsubcls(cls: Type[CCompSubcls], key: str) -> Type[CCompSubclsChild]:
         """Get the registered component from the key"""
         return super().getsubcls(key)

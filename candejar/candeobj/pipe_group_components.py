@@ -11,6 +11,7 @@ from ..utilities.mixins import child_dispatcher
 from .bases import CandeComponent, LinetypeKeyFactory, CandeStr, CandeNum, CandeFloat
 
 PGrpSubcls = TypeVar("PGrpSubcls", bound="PipeGroupComponent")
+PGrpSubclsChild = TypeVar("PGrpSubclsChild", bound=PGrpSubcls)
 
 @dataclass
 class PipeGroupComponent(Generic[PGrpSubcls], CandeComponent["PipeGroupComponent"], key_factory=LinetypeKeyFactory):
@@ -19,11 +20,13 @@ class PipeGroupComponent(Generic[PGrpSubcls], CandeComponent["PipeGroupComponent
     Each PGC child component is registered with PGC using its `linetype_key` attribute.
     """
     @classmethod
-    def getsubcls(cls, key: CidLineType) -> Type[PGrpSubcls]:
+    def getsubcls(cls: Type[PGrpSubcls], key: CidLineType) -> Type[PGrpSubclsChild]:
         """Get the pipe group component corresponding to the cid line type"""
         return super().getsubcls(key)
 
 PGrpGenSubcls = TypeVar("PGrpGenSubcls", bound="PipeGroupGeneralComponent")
+PGrpGenSubclsChild = TypeVar("PGrpGenSubclsChild", bound=PGrpGenSubcls)
+
 
 @child_dispatcher("type_")
 @dataclass
@@ -37,7 +40,7 @@ class PipeGroupGeneralComponent(Generic[PGrpGenSubcls], PipeGroupComponent["Pipe
     type_: CandeStr  # ALUMINUM, BASIC, CONCRETE, PLASTIC, STEEL, CONRIB, CONTUBE
     num: CandeNum = 0
     @classmethod
-    def getsubcls(cls, key: CidLineType) -> Type[PGrpGenSubcls]:
+    def getsubcls(cls: Type[PGrpGenSubcls], key: CidLineType) -> Type[PGrpGenSubclsChild]:
         """Get the non case-sensitive pipe group component from the key"""
         return super().getsubcls(key.lower())
 

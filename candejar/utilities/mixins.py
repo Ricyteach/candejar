@@ -13,6 +13,7 @@ class ChildRegistryError(Exception):
 
 
 MixinSubcls = TypeVar("MixinSubcls", bound="ChildRegistryMixin")
+MixinSubclsChild = TypeVar("MixinSubclsChild", bound=MixinSubcls)
 
 
 class ChildRegistryMixin(Generic[MixinSubcls]):
@@ -80,7 +81,7 @@ class ChildRegistryMixin(Generic[MixinSubcls]):
             subcls._make_reg_key = key_factory()
 
     @classmethod
-    def getsubcls(cls, key: Any) -> Type[MixinSubcls]:
+    def getsubcls(cls: Type[MixinSubcls], key: Any) -> Type[MixinSubclsChild]:
         """Get the registered subclass from the key"""
         try:
             return cls._subclasses[key]

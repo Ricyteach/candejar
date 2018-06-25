@@ -7,7 +7,7 @@ from __future__ import annotations
 import operator
 from dataclasses import dataclass, InitVar, field
 from pathlib import Path
-from typing import Union, Type, Optional, Iterable, ClassVar, MutableMapping, Sequence, Iterator
+from typing import Union, Type, Optional, Iterable, ClassVar, MutableMapping, Sequence, Iterator, TypeVar
 
 from .. import msh
 from .candeseq import cande_seq_dict, PipeGroups, Nodes, Elements, Boundaries, SoilMaterials, InterfMaterials, Factors
@@ -69,6 +69,9 @@ class SectionNameSet:
         return name
 
 
+CandeObjChild = TypeVar("CandeObjChild", "CandeObj")
+
+
 @dataclass
 class CandeObj(CidRW):
     """For cande problem representation objects."""
@@ -122,7 +125,7 @@ class CandeObj(CidRW):
                 seq_obj[name].nodes = self.nodes[name]
 
     @classmethod
-    def load_cidobj(cls, cid: CidObj) -> CandeObj:
+    def load_cidobj(cls: Type[CandeObjChild], cid: CidObj) -> CandeObjChild:
         mmap: MutableMapping = shallow_mapify(cid)
         # skip properties
         mmap.pop("materials", None)
@@ -144,8 +147,8 @@ class CandeObj(CidRW):
             path.write_text("\n".join(self.iter_line_strings()))
 
     @classmethod
-    def from_lines(cls, lines: Optional[Iterable[CidLineStr]] = None,
-                   line_types: Optional[Iterable[Type[CidLine]]] = None) -> CandeObj:
+    def from_lines(cls: Type[CandeObjChild], lines: Optional[Iterable[CidLineStr]] = None,
+                   line_types: Optional[Iterable[Type[CidLine]]] = None) -> CandeObjChild:
         """Construct or edit an object instance from line string and line type inputs."""
         cidobj = CidObj.from_lines(lines, line_types)
         return cls.load_cidobj(cidobj)

@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 from pathlib import Path
-from typing import Union, Optional, Iterable, List
+from typing import Union, Optional, Iterable, List, TypeVar, Type
 from dataclasses import dataclass, field
 
 from .mshrw.read import line_strings as read_line_strings
@@ -19,6 +19,9 @@ def open(path: Union[str, Path]):
     return open_path(path)
 
 
+MshChild = TypeVar("MshChild", bound="MshChild")
+
+
 @dataclass(repr=False)
 class Msh:
     nodes: List = field(default_factory=list)
@@ -26,7 +29,7 @@ class Msh:
     boundaries: List = field(default_factory=list)
 
     @classmethod
-    def open(cls, path: Union[str, Path]) -> Msh:
+    def open(cls: Type[MshChild], path: Union[str, Path]) -> MshChild:
         """Make an instance from a .msh file."""
         path = Path(path).with_suffix(".msh")
         lines = path.read_text().split("\n")
@@ -34,7 +37,7 @@ class Msh:
         return obj.from_lines(lines)
 
     @classmethod
-    def from_lines(cls, lines: Optional[Iterable[str]] = None) -> Msh:
+    def from_lines(cls: Type[MshChild], lines: Optional[Iterable[str]] = None) -> MshChild:
         """Build an instance using line input strings
 
         If no lines or existing instance are provided, result is same as cls()
