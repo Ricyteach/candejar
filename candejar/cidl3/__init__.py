@@ -56,7 +56,10 @@ def candeobj(path:Path) -> CandeObj:
 
 def cidl3_dict_to_candeobj_dict(cidl3: Dict[str, Any], *,
                current_lookups=TOP_LEVEL_LOOKUPS) -> Dict[str, Any]:
-    cobj_dict = lowerify_mapping(cidl3)
+    if current_lookups is TOP_LEVEL_LOOKUPS:
+        cobj_dict = lowerify_mapping(cidl3, recursive=True)
+    else:
+        cobj_dict = cidl3
     for k, v in cobj_dict.items():
         do_replace(k, v, cobj_dict, current_lookups=current_lookups)
     return cobj_dict
