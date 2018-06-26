@@ -69,7 +69,7 @@ class SectionNameSet:
         return name
 
 
-CandeObjChild = TypeVar("CandeObjChild", "CandeObj")
+CandeObjChild = TypeVar("CandeObjChild", bound="CandeObj")
 
 
 @dataclass
