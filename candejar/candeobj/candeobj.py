@@ -20,24 +20,37 @@ from ..utilities.mapping_tools import shallow_mapify
 from ..utilities.collections import KeyedChainView
 
 
+T = TypeVar("T", bound="TotalDef")
+
+
 class TotalDef(NamedTuple):
+    """Each of these relate the sequence attribute name, total attribute name, and the other sequences attributes whose
+    members containt attribute references to compute the total number of relevant objects.
+    """
     seq_name: str
     total_name: str
     attr_dict: Dict[str,Union[str, List[str]]]
+    @classmethod
+    def make(cls: Type[T], seq_name: str, total_name: str, attr_dict: Dict[str,Union[str, List[str]]]=None) -> T:
+        """The attr_dict argument is optional when using this factory method."""
+        if attr_dict is None:
+            attr_dict = dict()
+        return cls(seq_name, total_name, attr_dict)
 
 
-CANDE_TOTAL_DEFS = (TotalDef("ngroups", "pipegroups", dict(pipeelements="mat")),
-                    TotalDef("nnodes", "nodes", dict(elements=list("ijkl"),
-                                                     boundaries="node")),
-                    TotalDef("nelements", "elements", dict()),
-                    TotalDef("nboundaries", "boundaries", dict()),
-                    TotalDef("nsoilmaterials", "soilmaterials", dict(soilelements=list("ijkl"))),
-                    TotalDef("ninterfmaterials", "interfmaterials", dict(interfelements=list("ijkl"))),
-                    TotalDef("nsteps", "factors", dict(elements="step", boundaries="step")),
+# see CandeObj.update_totals method below for explanation
+CANDE_TOTAL_DEFS = (TotalDef.make("ngroups", "pipegroups", dict(pipeelements="mat")),
+                    TotalDef.make("nnodes", "nodes", dict(elements=list("ijkl"), boundaries="node")),
+                    TotalDef.make("nelements", "elements"),
+                    TotalDef.make("nboundaries", "boundaries"),
+                    TotalDef.make("nsoilmaterials", "soilmaterials", dict(soilelements=list("ijkl"))),
+                    TotalDef.make("ninterfmaterials", "interfmaterials", dict(interfelements=list("ijkl"))),
+                    TotalDef.make("nsteps", "factors", dict(elements="step", boundaries="step")),
                     )
 
 
 class SectionNameSet:
+    """Handles section naming."""
     def __get__(self, instance: Optional[CandeObj], owner: Type[CandeObj]):
         if instance is not None:
             return set(k for s_name in "nodes elements boundaries".split()
@@ -230,6 +243,20 @@ class CandeObj(CidRW):
                 self.boundaries[section_name].append(d)
 
     def update_totals(self):
+        """Computes the total number of relevant objects for all object types contained in CandeObj. The length of the
+        relevant sequence is considered, as well as the highest number referenced elsewhere in the CandeObj object (if
+        there are any such references).
+
+        The totals considered are:
+            - pipegroups: referenced in pipeelements
+            - nodes: referenced in elements and boundaries
+            - elements: referenced nowhere
+            - boundaries: referenced nowhere
+            - soilmaterials: referenced in soilelements
+            - interfmaterials: referenced in interfelements
+            - steps*: referenced in elements and boundaries
+        * steps is unique; if not in LRFD method, then the length of the factors sequence is ignored for computation
+        """
         total_def: TotalDef
         for total_def in CANDE_TOTAL_DEFS:
             attr_len = len(getattr(self, total_def.seq_name))
