@@ -7,7 +7,8 @@ from __future__ import annotations
 import operator
 from dataclasses import dataclass, InitVar, field
 from pathlib import Path
-from typing import Union, Type, Optional, Iterable, ClassVar, MutableMapping, Sequence, Iterator, TypeVar
+from typing import Union, Type, Optional, Iterable, ClassVar, MutableMapping, Sequence, Iterator, TypeVar, NamedTuple, \
+    Dict, List
 
 from .. import msh
 from .candeseq import cande_seq_dict, PipeGroups, Nodes, Elements, Boundaries, SoilMaterials, InterfMaterials, Factors
@@ -17,6 +18,23 @@ from ..cidobjrw.cidrwabc import CidRW
 from ..cidobjrw.cidobj import CidObj
 from ..utilities.mapping_tools import shallow_mapify
 from ..utilities.collections import KeyedChainView
+
+
+class TotalDef(NamedTuple):
+    seq_name: str
+    total_name: str
+    attr_dict: Dict[str,Union[str, List[str]]]
+
+
+CANDE_TOTAL_DEFS = (TotalDef("ngroups", "pipegroups", dict(pipeelements="mat")),
+                    TotalDef("nnodes", "nodes", dict(elements=list("ijkl"),
+                                                     boundaries="node")),
+                    TotalDef("nelements", "elements", dict()),
+                    TotalDef("nboundaries", "boundaries", dict()),
+                    TotalDef("nsoilmaterials", "soilmaterials", dict(soilelements=list("ijkl"))),
+                    TotalDef("ninterfmaterials", "interfmaterials", dict(interfelements=list("ijkl"))),
+                    TotalDef("nsteps", "factors", dict(elements="step", boundaries="step")),
+                    )
 
 
 class SectionNameSet:
@@ -210,3 +228,14 @@ class CandeObj(CidRW):
             if d:
                 d.update(step=step)
                 self.boundaries[section_name].append(d)
+
+    def update_totals(self):
+        total_def: TotalDef
+        for total_def in CANDE_TOTAL_DEFS:
+            attr_len = len(getattr(self, total_def.seq_name))
+            for check_attr, sub_attrs in total_def.attr_dict.items():
+                check_obj = getattr(self, check_attr)
+                if isinstance(sub_attrs, str):
+                    sub_attrs = [sub_attrs]
+                for sub_attr in sub_attrs:
+                    getattr(check_obj, sub_attr)
