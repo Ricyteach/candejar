@@ -29,6 +29,8 @@ RESPONSEOUTPUT = dict(minimal=0, standard=1, duncan=2, interface=3, mohrcoulomb=
 # 5: Extended Hardin, 8: MohrCoulomb
 MODEL = dict(isotropic = 1, orthotropic = 2, duncan = 3, selig = 3,
              overburden = 4, extendedhardin = 5, hardin = 5, mohrcoulomb = 8)
+# Duncan: 0, Duncan/Selig: 1
+DSMODEL = dict(duncan = 0, selig = 1)
 
 TOP_LEVEL_LOOKUPS_TYPE = Dict[str, Dict[str, Union[int, str, Dict[str, Union[int, str]]]]]
 
@@ -37,7 +39,7 @@ TOP_LEVEL_LOOKUPS: TOP_LEVEL_LOOKUPS_TYPE = dict(method = METHOD,
                                                  bandwidth = BANDWIDTH,
                                                  meshoutput = MESHOUTPUT,
                                                  responseoutput = RESPONSEOUTPUT,
-                                                 soilmaterials = dict(model = MODEL),
+                                                 soilmaterials = dict(model = MODEL, dsmodel = DSMODEL),
                                                  )
 
 
