@@ -10,6 +10,8 @@ from pathlib import Path
 from typing import Union, Type, Optional, Iterable, ClassVar, MutableMapping, Sequence, Iterator, TypeVar, NamedTuple, \
     Dict, List
 
+import itertools
+
 from .. import msh
 from .candeseq import cande_seq_dict, PipeGroups, Nodes, Elements, Boundaries, SoilMaterials, InterfMaterials, Factors
 from ..cid import CidLine
@@ -18,7 +20,6 @@ from ..cidobjrw.cidrwabc import CidRW
 from ..cidobjrw.cidobj import CidObj
 from ..utilities.mapping_tools import shallow_mapify
 from ..utilities.collections import KeyedChainView
-
 
 T = TypeVar("T", bound="TotalDef")
 
@@ -29,9 +30,10 @@ class TotalDef(NamedTuple):
     """
     seq_name: str
     total_name: str
-    attr_dict: Dict[str,Union[str, List[str]]]
+    attr_dict: Dict[str, Union[str, List[str]]]
+
     @classmethod
-    def make(cls: Type[T], seq_name: str, total_name: str, attr_dict: Dict[str,Union[str, List[str]]]=None) -> T:
+    def make(cls: Type[T], seq_name: str, total_name: str, attr_dict: Dict[str, Union[str, List[str]]] = None) -> T:
         """The attr_dict argument is optional when using this factory method."""
         if attr_dict is None:
             attr_dict = dict()
@@ -51,6 +53,7 @@ CANDE_TOTAL_DEFS = (TotalDef.make("ngroups", "pipegroups", dict(pipeelements="ma
 
 class SectionNameSet:
     """Handles section naming."""
+
     def __get__(self, instance: Optional[CandeObj], owner: Type[CandeObj]):
         if instance is not None:
             return set(k for s_name in "nodes elements boundaries".split()
@@ -260,9 +263,9 @@ class CandeObj(CidRW):
         total_def: TotalDef
         for total_def in CANDE_TOTAL_DEFS:
             attr_len = len(getattr(self, total_def.seq_name))
-            for check_attr, sub_attrs in total_def.attr_dict.items():
-                check_obj = getattr(self, check_attr)
-                if isinstance(sub_attrs, str):
-                    sub_attrs = [sub_attrs]
-                for sub_attr in sub_attrs:
-                    getattr(check_obj, sub_attr)
+            attr_max = 0
+            for check_obj, sub_attrs in ((getattr(self, ch), [sub] if isinstance(sub, str) else sub)
+                                         for ch, sub in total_def.attr_dict.items()):
+                attr_max = max(itertools.chain([attr_max] + (getattr(check_obj, sub_attr)
+                                                             for sub_attr in sub_attrs)))
+            setattr(self, total_def.total_name, max(attr_len, attr_max))
