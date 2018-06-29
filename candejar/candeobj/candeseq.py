@@ -93,7 +93,11 @@ CandeSequence.register(CandeMapSequence)
 candesequence_item_converter_dict = dict(pipegroups=types.SimpleNamespace,
                                          nodes=Node,
                                          elements=Element,
+                                         pipeelements=Element,
+                                         soilelements=Element,
+                                         interfelements=Element,
                                          boundaries=Boundary,
+                                         materials=types.SimpleNamespace,
                                          soilmaterials=types.SimpleNamespace,
                                          interfmaterials=types.SimpleNamespace,
                                          factors=types.SimpleNamespace,
@@ -105,6 +109,9 @@ def mapify_and_unpack_decorator(f: Callable[..., Any]) -> Callable[[Any], Any]:
     def wrapped(v: Any) -> Any:
         return f(**shallow_mapify(v))
     return wrapped
+
+
+cande_seq_dict = dict()
 
 
 def make_cande_list_class(name: str, value_type: Optional[T] = None) -> Type[CandeSequence[T]]:
@@ -119,10 +126,15 @@ def make_cande_list_class(name: str, value_type: Optional[T] = None) -> Type[Can
     # change the converter so it accepts a single argument instead of an unpacked map
     wrapped_converter = mapify_and_unpack_decorator(converter)
     cls: Type[CandeSequence] = types.new_class(name, (CandeList[value_type],), dict(converter=wrapped_converter))
+    # add the new cande_seq class to cande_seq_dict
+    cande_seq_dict[name.lower()] = cls
     return cls
 
 
-def make_cande_map_seq_and_list_class(name: str, value_type: Optional[T] = None) -> Tuple[Type[CandeMapSequence[T]], Type[CandeList[T]]]:
+cande_section_dict = dict()
+
+
+def make_cande_map_seq_and_list_class(section_name: str, name: str, *, value_type: Optional[T] = None) -> Tuple[Type[CandeMapSequence[T]], Type[CandeList[T]]]:
     # get the item converter from the dictionary
     converter = candesequence_item_converter_dict[name.lower()]
     # the value_type is just for type annotation
@@ -132,31 +144,38 @@ def make_cande_map_seq_and_list_class(name: str, value_type: Optional[T] = None)
         else:
             raise exc.CandeTypeError("container type needs to be specified for type checker when using a non-type as a converter")
     # change the converter so it accepts a single argument instead of an unpacked map
-    wrapped_converter = mapify_and_unpack_decorator(converter)
-    subseq_cls: Type[CandeList] = types.new_class(f"{name}Section", (GeoMixin,CandeList[value_type]),
-                                                  dict(converter=wrapped_converter, geo_type=geo_type_lookup[name.lower()]))
-    cls: Type[CandeMapSequence] = types.new_class(name, (CandeMapSequence[value_type],), dict(seq_type=subseq_cls))
-    return cls, subseq_cls
+    try:
+        section_cls = cande_section_dict[section_name]
+    except KeyError:
+        wrapped_converter = mapify_and_unpack_decorator(converter)
+        try:
+            # check if appears in geo_type registry
+            geo_type = geo_type_lookup[section_name]
+        except KeyError:
+            # not a geo_type
+            section_cls: Type[CandeList] = types.new_class(f"{name}Section", (CandeList[value_type],),
+                                                           dict(converter=wrapped_converter))
+        else:
+            # is geo_type
+            section_cls: Type[CandeList] = types.new_class(f"{name}Section", (GeoMixin,CandeList[value_type]),
+                                                           dict(converter=wrapped_converter, geo_type=geo_type))
+        # add the new cande_section class to cande_section_dict
+        cande_section_dict[section_name] = section_cls
+
+    cls: Type[CandeMapSequence] = types.new_class(name, (CandeMapSequence[value_type],), dict(seq_type=section_cls))
+    # add the new cande_map class to cande_seq_dict
+    cande_seq_dict[name.lower()] = cls
+    return cls, section_cls
+
 
 PipeGroups = make_cande_list_class("PipeGroups")
-Nodes, NodesSection = make_cande_map_seq_and_list_class("Nodes")
-Elements, ElementsSection = make_cande_map_seq_and_list_class("Elements")
-Boundaries, BoundariesSection = make_cande_map_seq_and_list_class("Boundaries")
+Nodes, NodesSection = make_cande_map_seq_and_list_class("nodes", "Nodes")
+Elements, ElementsSection = make_cande_map_seq_and_list_class("elements", "Elements")
+PipeElements, _ = make_cande_map_seq_and_list_class("elements", "PipeElements")
+SoilElements, _ = make_cande_map_seq_and_list_class("elements", "SoilElements")
+InterfElements, _ = make_cande_map_seq_and_list_class("elements", "InterfElements")
+Boundaries, BoundariesSection = make_cande_map_seq_and_list_class("boundaries", "Boundaries")
+Materials, _ = make_cande_map_seq_and_list_class("materials", "Materials")
 SoilMaterials = make_cande_list_class("SoilMaterials")
 InterfMaterials = make_cande_list_class("InterfMaterials")
 Factors = make_cande_list_class("Factors")
-
-cande_seq_dict = dict(pipegroups=PipeGroups,
-                      nodes=Nodes,
-                      elements=Elements,
-                      boundaries=Boundaries,
-                      soilmaterials=SoilMaterials,
-                      interfmaterials=InterfMaterials,
-                      factors=Factors,
-                      )
-
-
-cande_section_dict = dict(nodes=NodesSection,
-                          elements=ElementsSection,
-                          boundaries=BoundariesSection,
-                          )

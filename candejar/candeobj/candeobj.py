@@ -13,13 +13,13 @@ from typing import Union, Type, Optional, Iterable, ClassVar, MutableMapping, Se
 import itertools
 
 from .. import msh
-from .candeseq import cande_seq_dict, PipeGroups, Nodes, Elements, Boundaries, SoilMaterials, InterfMaterials, Factors
+from .candeseq import cande_seq_dict, PipeGroups, Nodes, Elements, PipeElements, SoilElements, InterfElements, \
+    Boundaries, Materials, SoilMaterials, InterfMaterials, Factors
 from ..cid import CidLine
 from ..cidrw import CidLineStr
 from ..cidobjrw.cidrwabc import CidRW
 from ..cidobjrw.cidobj import CidObj
 from ..utilities.mapping_tools import shallow_mapify
-from ..utilities.collections import KeyedChainView
 
 T = TypeVar("T", bound="TotalDef")
 
@@ -28,8 +28,8 @@ class TotalDef(NamedTuple):
     """Each of these relate the sequence attribute name, total attribute name, and the other sequences attributes whose
     members containt attribute references to compute the total number of relevant objects.
     """
-    seq_name: str
     total_name: str
+    seq_name: str
     attr_dict: Dict[str, Union[str, List[str]]]
 
     @classmethod
@@ -141,6 +141,23 @@ class CandeObj(CidRW):
     name: InitVar[Optional[str]] = None
     section_names: ClassVar[set] = SectionNameSet()
 
+    # additional sub object iterable properties
+    @property
+    def pipeelements(self):
+        return PipeElements({k:v for k,v in self.elements.seq_map.items() if v and v[0].k==0 and v[0].l==0 and v[0].interflink==0})
+
+    @property
+    def soilelements(self):
+        return SoilElements({k:v for k,v in self.elements.seq_map.items() if v and v[0].k!=0 and v[0].interflink==0})
+
+    @property
+    def interfelements(self):
+        return InterfElements({k:v for k,v in self.elements.seq_map.items() if v and v[0].interflink==1})
+
+    @property
+    def materials(self):
+        return Materials(soil=self.soilmaterials, interface=self.interfmaterials)
+
     def __post_init__(self, name):
         name = type(self).section_names.handle_section_name(self, name)
 
@@ -165,10 +182,6 @@ class CandeObj(CidRW):
         mmap.pop("materials", None)
         mmap.pop("nmaterials", None)
         return cls(**mmap)
-
-    @property
-    def materials(self):
-        return KeyedChainView(soil=self.soilmaterials, interface=self.interfmaterials)
 
     @property
     def nmaterials(self):
@@ -264,8 +277,7 @@ class CandeObj(CidRW):
         for total_def in CANDE_TOTAL_DEFS:
             attr_len = len(getattr(self, total_def.seq_name))
             attr_max = 0
-            for check_obj, sub_attrs in ((getattr(self, ch), [sub] if isinstance(sub, str) else sub)
+            for seq_obj, sub_attrs in ((getattr(self, ch), [sub] if isinstance(sub, str) else sub)
                                          for ch, sub in total_def.attr_dict.items()):
-                attr_max = max(itertools.chain([attr_max] + (getattr(check_obj, sub_attr)
-                                                             for sub_attr in sub_attrs)))
+                attr_max = max(itertools.chain([attr_max], (getattr(sub_obj, sub_attr) for sub_obj in seq_obj for sub_attr in sub_attrs)))
             setattr(self, total_def.total_name, max(attr_len, attr_max))
