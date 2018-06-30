@@ -39,12 +39,12 @@ class Element(WithKwargsMixin, GeoMixin, geo_type="Polygon"):
     l: int = 0
     mat: int = 0
     step: int = 0
-    interflink: int = 0
+    joined: int = 0
     death: int = 0
 
     def __init__(self, num: int, i: int, j: int, k: int = 0, l: int = 0, *, mat: int = 0, step: int = 0,
-                 interflink: int = 0, death: int = 0, **kwargs) -> None:
-        self.num, self.i, self.j, self.k, self.l, self.mat, self.step, self.interflink, self.death = num, i, j, k, l, mat, step, interflink, death
+                 joined: int = 0, death: int = 0, **kwargs) -> None:
+        self.num, self.i, self.j, self.k, self.l, self.mat, self.step, self.joined, self.death = num, i, j, k, l, mat, step, joined, death
         super().__init__(**kwargs)
 
 

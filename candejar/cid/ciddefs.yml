@@ -88,7 +88,7 @@
         Step: [5, 0]
         # 0 for normal, 1 for interface
         # 8 for link element fixed, 9 for link element pinned
-        InterfLink: [5, 0, True]
+        Joined: [5, 0, True]
         IncrementAdded: [5, 0, True]
         RowsAdded: [5, 0, True]
         IncrementBetween: [5, 0, True]
