@@ -45,8 +45,8 @@ CANDE_TOTAL_DEFS = (TotalDef.make("ngroups", "pipegroups", dict(pipeelements="ma
                     TotalDef.make("nnodes", "nodes", dict(elements=list("ijkl"), boundaries="node")),
                     TotalDef.make("nelements", "elements"),
                     TotalDef.make("nboundaries", "boundaries"),
-                    TotalDef.make("nsoilmaterials", "soilmaterials", dict(soilelements=list("ijkl"))),
-                    TotalDef.make("ninterfmaterials", "interfmaterials", dict(interfelements=list("ijkl"))),
+                    TotalDef.make("nsoilmaterials", "soilmaterials", dict(soilelements="mat")),
+                    TotalDef.make("ninterfmaterials", "interfmaterials", dict(interfelements="mat")),
                     TotalDef.make("nsteps", "factors", dict(elements="step", boundaries="step")),
                     )
 
