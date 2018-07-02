@@ -19,4 +19,4 @@ def has_mats_seq(test_type):
 
 def test_by_material(has_mats_seq):
     x = list(select.by_material(has_mats_seq, 1))
-    assert x
+    assert len(x)==1
