@@ -71,7 +71,7 @@ def by_sliceable_attr(selectables: T_Sequence, s: slice, *, attr: str) -> T_Iter
 def by_sliceable_attr(selectables, x, *, attr):
     if isinstance(x,int):
         function = lambda s: by_equal_attr(s, attr, x)
-        return by_filter(selectables, function=function)
+        yield from by_filter(selectables, function=function)
     if isinstance(x,slice):
         if x.step is not None and x.step<0:
             raise exc.CandejarValueError(f"negative attribute slice steps are not allowed")
