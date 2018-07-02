@@ -46,7 +46,7 @@ def copy(selectables: T_Sequence, select_f: Callable[..., T_Iterator], *args, **
 
 def by_shape(selectables: T_Iterable, shape: geo.base.BaseGeometry) -> T_Iterator:
     selectable_geo = geo.asShape(selectables)
-    yield from (s for s,s_geo in zip(selectables, selectable_geo) if shape.contains(s_geo))
+    yield from (s for s,s_geo in zip(selectables, selectable_geo) if shape.contains(s_geo.representative_point()))
 
 
 def by_filter(selectables: T_Iterable, *, function: Callable[[T], Any]) -> T_Iterator:
