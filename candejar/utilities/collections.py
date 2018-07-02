@@ -554,11 +554,16 @@ class Converter:
 
         Has no effect if the converter is just a function.
         """
-        converter_is_cls = isinstance(f, type)
+        try:
+            f_actual = f.__wrapped__
+        except AttributeError:
+            f_actual = f
+
+        converter_is_cls = isinstance(f_actual, type)
 
         @functools.wraps(f)
         def wrapped(v):
-            return f(v) if not converter_is_cls or (converter_is_cls and not isinstance(v, f)) else v
+            return f(v) if not converter_is_cls or (converter_is_cls and not isinstance(v, f_actual)) else v
         return staticmethod(wrapped)
 
 
