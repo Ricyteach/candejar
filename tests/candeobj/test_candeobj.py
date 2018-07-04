@@ -58,3 +58,17 @@ def test_add_from_msh_all_obj(monkeypatch, cande_obj_standard: CandeObj, msh_all
     assert cande_obj_standard.nodes["section2"]
     assert cande_obj_standard.elements["section2"].nodes
     assert cande_obj_standard.boundaries["section2"].nodes
+
+
+@pytest.fixture
+def new_cobj():
+    new_cobj = CandeObj()
+    return new_cobj
+
+
+def test_update_totals(new_cobj):
+    TEST = "TEST"
+    new_cobj.elements[TEST] = []
+    new_cobj.elements.append(dict(num=1, i=1, j=2, k=0, l=0, mat=1, step=1))
+    new_cobj.update_totals()
+    assert all(getattr(new_cobj, attr)==v for attr, v in zip("ngroups nsteps nnodes nelements".split(), (1,1,2,1)))

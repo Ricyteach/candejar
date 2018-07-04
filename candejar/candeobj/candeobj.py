@@ -7,8 +7,8 @@ from __future__ import annotations
 import operator
 from dataclasses import dataclass, InitVar, field
 from pathlib import Path
-from typing import Union, Type, Optional, Iterable, ClassVar, MutableMapping, Sequence, Iterator, TypeVar, NamedTuple, \
-    Dict, List
+from typing import Union, Type, Optional, Iterable, ClassVar, MutableMapping, Sequence, TypeVar, NamedTuple, Dict, List, \
+    Counter
 
 import itertools
 
@@ -261,7 +261,7 @@ class CandeObj(CidRW):
     def update_totals(self):
         """Computes the total number of relevant objects for all object types contained in CandeObj. The length of the
         relevant sequence is considered, as well as the highest number referenced elsewhere in the CandeObj object (if
-        there are any such references).
+        there are any such references). Highest number wins.
 
         The totals considered are:
             - pipegroups: referenced in pipeelements
@@ -273,6 +273,7 @@ class CandeObj(CidRW):
             - steps*: referenced in elements and boundaries
         * steps is unique; if not in LRFD method, then the length of the factors sequence is ignored for computation
         """
+        # top level totals
         total_def: TotalDef
         for total_def in CANDE_TOTAL_DEFS:
             attr_len = len(getattr(self, total_def.seq_name))
@@ -281,3 +282,7 @@ class CandeObj(CidRW):
                                          for ch, sub in total_def.attr_dict.items()):
                 attr_max = max(itertools.chain([attr_max], (getattr(sub_obj, sub_attr) for sub_obj in seq_obj for sub_attr in sub_attrs)))
             setattr(self, total_def.total_name, max(attr_len, attr_max))
+        # pipe group totals
+        num_ctr = Counter([e.mat for e in self.pipeelements])
+        for group_num, group in enumerate(self.pipegroups, 1):
+            group.num = num_ctr[group_num]
