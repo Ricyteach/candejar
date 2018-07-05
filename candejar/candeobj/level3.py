@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
 """Module for working with cande level 3 type objects."""
-
+import enum
 from dataclasses import dataclass
 from typing import ClassVar
 
+from . import exc
 from ..utilities.mixins import GeoMixin
 
 class WithKwargsMixin:
@@ -30,6 +31,14 @@ class Node(WithKwargsMixin, GeoMixin, geo_type="Point"):
         return dict(type=self.geo_type, coordinates=(self.x, self.y))
 
 
+class ElementCategory(enum.Enum):
+    PIPE = -1
+    SOIL = 0
+    INTERFACE = 1
+    FIXED = 8
+    PINNED = 9
+
+
 @dataclass(init=False)
 class Element(WithKwargsMixin, GeoMixin, geo_type="Polygon"):
     num: int
@@ -46,6 +55,22 @@ class Element(WithKwargsMixin, GeoMixin, geo_type="Polygon"):
                  joined: int = 0, death: int = 0, **kwargs) -> None:
         self.num, self.i, self.j, self.k, self.l, self.mat, self.step, self.joined, self.death = num, i, j, k, l, mat, step, joined, death
         super().__init__(**kwargs)
+
+    @property
+    def category(self) -> ElementCategory:
+        join_value = self.joined
+        if not join_value:
+            # regular geometric element
+            if not self.k and not self.l:
+                return ElementCategory["PIPE"]
+            else:
+                return ElementCategory["SOIL"]
+        else:
+            # interface or link element
+            try:
+                return ElementCategory(join_value)
+            except ValueError as e:
+                raise exc.CandeValueError(f"Invalid field value for Joined: {join_value}") from e
 
 
 @dataclass(init=False)
