@@ -144,15 +144,15 @@ class CandeObj(CidRW):
     # additional sub object iterable properties
     @property
     def pipeelements(self):
-        return PipeElements({k:v for k,v in self.elements.seq_map.items() if v and v[0].k==0 and v[0].l==0 and v[0].joined==0})
+        return PipeElements({k:v for k,v in self.elements.seq_map.items() if v and v[0].category.name=="PIPE"})
 
     @property
     def soilelements(self):
-        return SoilElements({k:v for k,v in self.elements.seq_map.items() if v and v[0].k!=0 and v[0].joined==0})
+        return SoilElements({k:v for k,v in self.elements.seq_map.items() if v and v[0].category.name=="SOIL"})
 
     @property
     def interfelements(self):
-        return InterfElements({k:v for k,v in self.elements.seq_map.items() if v and v[0].joined==1})
+        return InterfElements({k:v for k,v in self.elements.seq_map.items() if v and v[0].category.name=="INTERFACE"})
 
     @property
     def materials(self):
@@ -286,3 +286,6 @@ class CandeObj(CidRW):
         num_ctr = Counter([e.mat for e in self.pipeelements])
         for group_num, group in enumerate(self.pipegroups, 1):
             group.num = num_ctr[group_num]
+
+    def update_node_numbers(self):
+        pass
