@@ -162,7 +162,16 @@ def make_cande_map_seq_and_list_class(section_name: str, name: str, *, value_typ
         # add the new cande_section class to cande_section_dict
         cande_section_dict[section_name] = section_cls
 
-    cls: Type[CandeMapSequence] = types.new_class(name, (CandeMapSequence[value_type],), dict(seq_type=section_cls))
+    # set default parent class and exec_body
+    parent = CandeMapSequence[value_type]
+    exec_body = lambda ns: ns
+    # make Elements the parent class for PipeElements, SoilElements, and InterfElements
+    if section_name == "elements" and name.lower() != "elements":
+        parent = cande_seq_dict["elements"]
+    # add elements methods using exec_body
+    if section_name == "elements" and name.lower() == "elements":
+        pass
+    cls: Type[CandeMapSequence] = types.new_class(name, (parent,), dict(seq_type=section_cls), exec_body=exec_body)
     # add the new cande_map class to cande_seq_dict
     cande_seq_dict[name.lower()] = cls
     return cls, section_cls

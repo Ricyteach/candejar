@@ -47,6 +47,13 @@ class Element(WithKwargsMixin, GeoMixin, geo_type="Polygon"):
         self.num, self.i, self.j, self.k, self.l, self.mat, self.step, self.joined, self.death = num, i, j, k, l, mat, step, joined, death
         super().__init__(**kwargs)
 
+    def remove_repeats(self):
+        """Change repeated node numbers to zero."""
+        i,j = (getattr(self, attr) for attr in "ij")
+        for a,b in zip((i,i,j,j), "klkl"):
+            if a == getattr(self, b):
+                setattr(self, b, 0)
+
 
 @dataclass(init=False)
 class Boundary(WithKwargsMixin, GeoMixin, geo_type="Node"):
