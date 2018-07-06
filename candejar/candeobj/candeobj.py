@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import operator
+from collections import defaultdict
 from dataclasses import dataclass, InitVar, field
 from pathlib import Path
 from typing import Union, Type, Optional, Iterable, ClassVar, MutableMapping, Sequence, TypeVar, NamedTuple, Dict, List, \
@@ -290,9 +291,46 @@ class CandeObj(CidRW):
     def prepare(self):
         """Make CANDE problem ready for saving.
 
-            1. Move beam sections to the front of the elements map
-            2. Move interface sections to the back of the nodes map
-            3. Convert repeated point numbers to 0
-            4. Update point numbers to global values
+            1. Move interface sections to the back of the nodes map
+            2. Convert repeated node numbers to 0
+            3. Update node numbers to global values
+            4. Move beam sections to the front of the elements map
         """
-        pass
+        # TODO: move interface sections to back of nodes section map
+
+        # build node number conversion map and reset node.num attribute
+        ctr = itertools.count(1)
+        convert_map = defaultdict(dict)
+        for seq in self.nodes.seq_map.values():
+            seq_id = id(seq)
+            sub_map = convert_map[seq_id]
+            for node, num in zip(seq, ctr):
+                sub_map[node.num] = num
+                node.num = num
+
+        # remove repeats and reassign node numbers
+        for seq in self.elements.seq_map.values():
+            nodes_id = id(seq.nodes)
+            sub_map = convert_map[nodes_id]
+            for element in seq:
+                element.remove_repeats()
+                # TODO: relocate below routine to method on Element class
+                for attr in "ijkl":
+                    old = getattr(element, attr)
+                    # skip zero entries
+                    if old:
+                        new = sub_map[old]
+                        setattr(element, attr, new)
+
+        # move pipe element sequences to front of seq_map
+        if self.elements:
+            seq_map_copy = self.elements.seq_map.copy()
+            self.elements.seq_map.clear()
+            tuple_map = dict(pipes = [], others = [])
+            for section_key, seq in seq_map_copy.items():
+                key = "others"
+                # if the first element is PIPE, assume all are
+                if seq and seq[0].category.name=="PIPE":
+                    key = "pipes"
+                tuple_map[key].append((section_key, seq))
+            self.elements.seq_map.update(itertools.chain(*tuple_map.values()))
