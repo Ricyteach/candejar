@@ -612,7 +612,7 @@ SoilMaterials:
     # repeat section for each
     -
         # material number/identifier
-        ID: 0
+        Num: 0
          # 1: Isotropic, 2: Orthotropic, 3: Duncan or Selig, 4: Overburden,
          # 5: Extended Hardin, 8: MohrCoulomb
         Model: ""
@@ -721,7 +721,7 @@ CompositeMaterials:
     # repeat section for each
     -
         # material number/identifier
-        ID: 0
+        Num: 0
         # 20 character limit
         Name: ""
         Group1: 0
@@ -732,7 +732,7 @@ InterfMaterials:
     # repeat section for each
     -
         # material number/identifier
-        ID: 0
+        Num: 0
         # 20 character limit
         Name: ""
         # degrees

@@ -283,23 +283,21 @@ class CandeObj(CidRW):
                                          for ch, sub in total_def.attr_dict.items()):
                 attr_max = max(itertools.chain([attr_max], (getattr(sub_obj, sub_attr) for sub_obj in seq_obj for sub_attr in sub_attrs)))
             setattr(self, total_def.total_name, max(attr_len, attr_max))
+
         # pipe group totals
         num_ctr = Counter([e.mat for e in self.pipeelements])
         for group_num, group in enumerate(self.pipegroups, 1):
             group.num = num_ctr[group_num]
 
-    def prepare(self):
-        """Make CANDE problem ready for saving. Effects all elements AND all boundaries.
+    def update_nums(self):
+        """Re-numbers all node  numbers, and references to them, based on current global node order.
 
-            1. Move interface sections to the back of the nodes map
-            2. Convert repeated node numbers to 0
-            3. Update node numbers to global values
-            4. Move beam sections to the front of the elements map
+        Elements are also renumbered, and repeated node numbers in elements are removed.
         """
-        # TODO: move interface sections to back of nodes section map
+        start = 1
 
         # build node number conversion map and reset node.num attribute
-        node_ctr = itertools.count(1)
+        node_ctr = itertools.count(start)
         convert_map = defaultdict(dict)
         for seq in self.nodes.seq_map.values():
             seq_id = id(seq)
@@ -309,7 +307,7 @@ class CandeObj(CidRW):
                 node.num = num
 
         # reset element.num attribute, remove repeats and reassign i,j,k,l numbers
-        element_ctr = itertools.count(1)
+        element_ctr = itertools.count(start)
         for seq in self.elements.seq_map.values():
             nodes_id = id(seq.nodes)
             sub_map = convert_map[nodes_id]
@@ -334,6 +332,20 @@ class CandeObj(CidRW):
                 new = sub_map[old]
                 boundary.node = new
 
+    def prepare(self):
+        """Make CANDE problem ready for saving. Effects all elements AND all boundaries.
+
+            1. Moves interface sections to the back of the nodes map
+            2. Converts repeated node numbers to 0
+            3. Updates .num attribute for nodes, elements
+            4. Updates node numbers to global values
+            5. Moves beam sections to the front of the elements map
+            6. Updates all totals (nodes, elements, boundaries, soil/interf materials, pipe groups, steps)
+        """
+        # TODO: move interface sections to back of nodes section map
+
+        self.update_nums()
+
         # move pipe element sequences to front of seq_map
         if self.elements:
             seq_map_copy = self.elements.seq_map.copy()
@@ -346,3 +358,5 @@ class CandeObj(CidRW):
                     key = "pipes"
                 tuple_map[key].append((section_key, seq))
             self.elements.seq_map.update(itertools.chain(*tuple_map.values()))
+
+        self.update_totals()

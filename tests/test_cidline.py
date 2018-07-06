@@ -28,7 +28,7 @@ yml_sample = [
             prefix= "D-1",
             # Note: moved limit field to line prefix
             # Limit: [1, " "]
-            id= [4, 0],
+            num= [4, 0],
             # 1: Isotropic, 2: Orthotropic,
             # 3: Duncan/Selig, 4: Overburden,
             # 5: Extended Hardin, 6: Interface,
