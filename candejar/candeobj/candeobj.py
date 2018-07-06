@@ -289,10 +289,10 @@ class CandeObj(CidRW):
         for group_num, group in enumerate(self.pipegroups, 1):
             group.num = num_ctr[group_num]
 
-    def update_nums(self):
-        """Re-numbers all node  numbers, and references to them, based on current global node order.
+    def update_node_nums(self):
+        """Re-numbers all node numbers, and references to them, based on current global node order.
 
-        Elements are also renumbered, and repeated node numbers in elements are removed.
+        Repeated node numbers in elements are removed.
         """
         start = 1
 
@@ -306,13 +306,11 @@ class CandeObj(CidRW):
                 sub_map[node.num] = num
                 node.num = num
 
-        # reset element.num attribute, remove repeats and reassign i,j,k,l numbers
-        element_ctr = itertools.count(start)
+        # remove repeats and reassign i,j,k,l numbers
         for seq in self.elements.seq_map.values():
             nodes_id = id(seq.nodes)
             sub_map = convert_map[nodes_id]
-            for element, num in zip(seq, element_ctr):
-                element.num = num
+            for element in seq:
                 element.remove_repeats()
                 # TODO: relocate below routine to method on Element class
                 for attr in "ijkl":
@@ -332,6 +330,16 @@ class CandeObj(CidRW):
                 new = sub_map[old]
                 boundary.node = new
 
+    def update_element_nums(self):
+        """Re-numbers all element numbers based on current global element order."""
+        start = 1
+
+        # reset element.num attribute
+        element_ctr = itertools.count(start)
+        for seq in self.elements.seq_map.values():
+            for element, num in zip(seq, element_ctr):
+                element.num = num
+
     def prepare(self):
         """Make CANDE problem ready for saving. Effects all elements AND all boundaries.
 
@@ -344,7 +352,7 @@ class CandeObj(CidRW):
         """
         # TODO: move interface sections to back of nodes section map
 
-        self.update_nums()
+        self.update_node_nums()
 
         # move pipe element sequences to front of seq_map
         if self.elements:
@@ -358,5 +366,7 @@ class CandeObj(CidRW):
                     key = "pipes"
                 tuple_map[key].append((section_key, seq))
             self.elements.seq_map.update(itertools.chain(*tuple_map.values()))
+
+        self.update_element_nums()
 
         self.update_totals()

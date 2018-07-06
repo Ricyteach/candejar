@@ -117,7 +117,7 @@
         prefix: "D-1"
         # Note: moved limit field to line prefix
         # Limit: [1, " "]
-        Num: [4, 0]
+        Num: [4, 0]  # Changed from "ID" for consistency
         # 1: Isotropic, 2: Orthotropic,
         # 3: Duncan/Selig, 4: Overburden,
         # 5: Extended Hardin, 6: Interface,
