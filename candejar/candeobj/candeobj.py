@@ -221,6 +221,19 @@ class CandeObj(CidRW):
                     seq_obj[section_name].nodes = self.nodes[section_name]
 
     def add_standard_boundaries(self, name: Optional[str] = None, nodes: Optional[Iterable] = None, *, step: int = 1):
+        """Creates a new section of standard boundaries. The nodes section can either be provided, or an existing nodes
+        section referenced by name (the same name as the new boundaries section). However it is not required that the
+        new boundaries section name match the nodes section name (pass a reference to and existing nodes section name
+        to the nodes argument in this case).
+
+        The problem boundary extents are assumed to be rectangular. The max and min X coordinates, and the min Y
+        coordinate, define the boundaries.
+
+        NOTE: if a new nodes section is created it is NOT added to the nodes sections automatically! This needs to be
+        done separately. Might change this later?
+        """
+
+        # resolve the node section to be referenced by new boundaries section
         existing_nodes = None
         if name is None:
             section_name = type(self).section_names.section_auto_name(self, name)
@@ -243,12 +256,18 @@ class CandeObj(CidRW):
             section_nodes = self.nodes[section_name]
         else:
             section_nodes = nodes
+
+        # add new boundaries section
         self.boundaries[section_name] = list()
         self.boundaries[section_name].nodes = section_nodes
+
+        # build the defining boundaries info
         node_seq = self.boundaries[section_name].nodes
         y_min = min(node_seq, key=operator.attrgetter("y")).y
         x_min = min(node_seq, key=operator.attrgetter("x")).x
         x_max = max(node_seq, key=operator.attrgetter("x")).x
+
+        # find and add the correct nodes to the new boundary section
         for num, n in enumerate(node_seq, 1):
             d = dict()
             if n.x in (x_max, x_min):

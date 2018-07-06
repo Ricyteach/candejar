@@ -88,10 +88,11 @@ class Boundary(WithKwargsMixin, GeoMixin, geo_type="Node"):
     ycode: int = 0
     yvalue: float = 0.0
     angle: float = 0.0
+    step: int = 0
     pressure1: float = 0.0
     pressure2: float = 0.0
 
     def __init__(self, node: int, xcode: int = 0, xvalue: float = 0.0, ycode: int = 0, yvalue: float = 0.0, *,
-                 angle: float = 0.0, pressure1: float = 0.0, pressure2: float = 0.0, **kwargs) -> None:
-        self.node, self.xcode, self.xvalue, self.ycode, self.yvalue, self.angle, self.pressure1, self.pressure2 = node, xcode, xvalue, ycode, yvalue, angle, pressure1, pressure2
+                 angle: float = 0.0, step: int = 0, pressure1: float = 0.0, pressure2: float = 0.0, **kwargs) -> None:
+        self.node, self.xcode, self.xvalue, self.ycode, self.yvalue, self.angle, self.step, self.pressure1, self.pressure2 = node, xcode, xvalue, ycode, yvalue, angle, step, pressure1, pressure2
         super().__init__(**kwargs)
