@@ -276,6 +276,8 @@ class KeyedChainView(MutableSequence[V]):
     """
     __slots__ = ("seq_map")
 
+    seq_map: Mapping[Any, Sequence[V]]
+
     def __init__(self, seq_map: Optional[Mapping[Any, Sequence[V]]] = None, **kwargs: Iterable[V]) -> None:
         if seq_map and any(isinstance(k, int) for k in seq_map.keys()):
             raise TypeError("int keys are not allowed for seq_map")
