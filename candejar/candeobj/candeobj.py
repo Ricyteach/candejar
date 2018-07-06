@@ -289,7 +289,7 @@ class CandeObj(CidRW):
             group.num = num_ctr[group_num]
 
     def prepare(self):
-        """Make CANDE problem ready for saving.
+        """Make CANDE problem ready for saving. Effects all elements AND all boundaries.
 
             1. Move interface sections to the back of the nodes map
             2. Convert repeated node numbers to 0
@@ -299,20 +299,22 @@ class CandeObj(CidRW):
         # TODO: move interface sections to back of nodes section map
 
         # build node number conversion map and reset node.num attribute
-        ctr = itertools.count(1)
+        node_ctr = itertools.count(1)
         convert_map = defaultdict(dict)
         for seq in self.nodes.seq_map.values():
             seq_id = id(seq)
             sub_map = convert_map[seq_id]
-            for node, num in zip(seq, ctr):
+            for node, num in zip(seq, node_ctr):
                 sub_map[node.num] = num
                 node.num = num
 
-        # remove repeats and reassign node numbers
+        # reset element.num attribute, remove repeats and reassign i,j,k,l numbers
+        element_ctr = itertools.count(1)
         for seq in self.elements.seq_map.values():
             nodes_id = id(seq.nodes)
             sub_map = convert_map[nodes_id]
-            for element in seq:
+            for element, num in zip(seq, element_ctr):
+                element.num = num
                 element.remove_repeats()
                 # TODO: relocate below routine to method on Element class
                 for attr in "ijkl":
@@ -321,6 +323,16 @@ class CandeObj(CidRW):
                     if old:
                         new = sub_map[old]
                         setattr(element, attr, new)
+
+        # reassign boundary.node numbers
+        for seq in self.boundaries.seq_map.values():
+            nodes_id = id(seq.nodes)
+            sub_map = convert_map[nodes_id]
+            for boundary in seq:
+                # TODO: relocate below routine to method on Boundary class
+                old = boundary.node
+                new = sub_map[old]
+                boundary.node = new
 
         # move pipe element sequences to front of seq_map
         if self.elements:
