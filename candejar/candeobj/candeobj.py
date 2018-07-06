@@ -287,5 +287,12 @@ class CandeObj(CidRW):
         for group_num, group in enumerate(self.pipegroups, 1):
             group.num = num_ctr[group_num]
 
-    def update_node_numbers(self):
+    def prepare(self):
+        """Make CANDE problem ready for saving.
+
+            1. Move beam sections to the front of the elements map
+            2. Move interface sections to the back of the nodes map
+            3. Convert repeated point numbers to 0
+            4. Update point numbers to global values
+        """
         pass
