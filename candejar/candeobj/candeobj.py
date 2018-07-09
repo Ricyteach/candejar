@@ -13,9 +13,11 @@ from typing import Union, Type, Optional, Iterable, ClassVar, MutableMapping, Se
 
 import itertools
 
+from .exc import CandeValueError
 from .. import msh
 from .candeseq import cande_seq_dict, PipeGroups, Nodes, Elements, PipeElements, SoilElements, InterfElements, \
     Boundaries, Materials, SoilMaterials, InterfMaterials, Factors
+from .connections import Connection
 from ..cid import CidLine
 from ..cidrw import CidLineStr
 from ..cidobjrw.cidrwabc import CidRW
@@ -193,8 +195,18 @@ class CandeObj(CidRW):
 
     def save(self, path: Union[str, Path], mode="x"):
         """Save .cid file to the path."""
-        # move connections into the CANDE problem and resolve
-
+        # resolve CANDE problem connections
+        conn: Connection
+        for conn in self.connections:
+            if not conn.type_.value:
+                # merged connection - assume same nodes
+                self.merge_nodes(*conn.items)
+            else:
+                # special connection - only two nodes allowed
+                if len(conn.items)!=2:
+                    raise CandeValueError(f"Only 2 nodes allowed per {conn.type_.name} connection")
+                new_element = Element()
+                self.add_element(new_element)
 
         path = Path(path).with_suffix(".cid")
         with path.open(mode):

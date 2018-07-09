@@ -5,7 +5,7 @@
 from __future__ import annotations
 import enum
 from dataclasses import dataclass, field, InitVar
-from typing import Union, ClassVar, Sequence, Generic
+from typing import Union, ClassVar, Sequence, Generic, Any
 
 from .candeseq import CandeSection
 from .level3 import Node
@@ -45,6 +45,7 @@ class Connection(Generic[V]):
     tol: ClassVar[Tolerance[Connection,V]] = Tolerance()  # descriptor
     items: Sequence[V] = field(default_factory=list)
     type_: InitVar[Union[str, int, ConnectionType]] = 0
+    info: Any = None
 
     def __post_init__(self, type_) -> None:
         if isinstance(type_, str):
