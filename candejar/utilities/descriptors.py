@@ -3,12 +3,46 @@
 """Special descriptors for working with cande object types."""
 
 from __future__ import annotations
-from dataclasses import make_dataclass, field
+from dataclasses import make_dataclass, field, dataclass
 from typing import Any, Type, TypeVar, Generic
 
 from ..exc import CandejarError
 
+
 T = TypeVar("T")
+V = TypeVar("V")
+
+
+@dataclass
+class StandardDescriptor(Generic[T,V]):
+    """A typical descriptor.
+
+    The descriptor global default is stored as a StandardDescriptor child class
+    attribute but each descriptor instance can have its own default. The
+    value associated with each object using the descriptor can be unique.
+
+    The per-object value is stored in the same attribute name as the descriptor
+    is assigned at the class level, but preceded with an underscore.
+    """
+    default: Any
+
+    def __set_name__(self, owner: Type[T], name: str) -> None:
+        self.name = name
+        self._name = f"_{self.name}"
+
+    def __get__(self, instance: T, owner: Type[T]) -> V:
+        while True:
+            try:
+                return getattr(instance, self._name)
+            except AttributeError:
+                if instance is None:
+                    return self
+                else:
+                    return self.default
+
+    def __set__(self, instance: T, value: V) -> None:
+        setattr(instance, self._name, value)
+
 
 class AttributeDelegator:
     """Delegates attribute access to another named object attribute."""

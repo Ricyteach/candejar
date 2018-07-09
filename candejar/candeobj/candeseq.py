@@ -39,6 +39,11 @@ class CandeList(ConvertingList[T]):
         return f"{type(self).__qualname__}({super().__repr__()})"
 
 
+class CandeSection(CandeList):
+    """Parent class for all CANDE section objects"""
+    __slots__ = ()
+
+
 geo_type_lookup = dict(nodes="MultiPoint",
                        elements="MultiPolygon",
                        boundaries="MultiNode",
@@ -113,19 +118,19 @@ item_converters = dict(pipegroups=types.SimpleNamespace,
 #  CandeSection sequences  #
 ############################
 
-class NodesSection(GeoMixin, CandeList[item_converters["nodes"]],
+class NodesSection(GeoMixin, CandeSection[item_converters["nodes"]],
                    converter=item_converters["nodes"],
                    geo_type=geo_type_lookup["nodes"]):
     pass
 
 
-class ElementsSection(GeoMixin, CandeList[item_converters["elements"]],
+class ElementsSection(GeoMixin, CandeSection[item_converters["elements"]],
                       converter=item_converters["elements"],
                       geo_type=geo_type_lookup["elements"]):
     pass
 
 
-class BoundariesSection(GeoMixin, CandeList[item_converters["boundaries"]],
+class BoundariesSection(GeoMixin, CandeSection[item_converters["boundaries"]],
                         converter=item_converters["boundaries"],
                         geo_type=geo_type_lookup["boundaries"]):
     pass
@@ -173,6 +178,33 @@ class Nodes(CandeMapSequence[item_converters["nodes"]]):
 class Elements(CandeMapSequence[item_converters["elements"]]):
     seq_type = ElementsSection
 
+def make_cande_map_seq_and_list_class(section_name: str, name: str, *, value_type: Optional[T] = None) -> Tuple[Type[CandeMapSequence[T]], Type[CandeList[T]]]:
+    # get the item converter from the dictionary
+    converter = item_converters[name.lower()]
+    # the value_type is just for type annotation
+    if value_type is None:
+        if isinstance(converter, type):
+            value_type = converter
+        else:
+            raise exc.CandeTypeError("container type needs to be specified for type checker when using a non-type as a converter")
+    # change the converter so it accepts a single argument instead of an unpacked map
+    try:
+        section_cls = cande_section_dict[section_name]
+    except KeyError:
+        wrapped_converter = mapify_and_unpack_decorator(converter)
+        try:
+            # check if appears in geo_type registry
+            geo_type = geo_type_lookup[section_name]
+        except KeyError:
+            # not a geo_type
+            section_cls: Type[CandeSection] = types.new_class(f"{name}Section", (CandeSection[value_type],),
+                                                              dict(converter=wrapped_converter))
+        else:
+            # is geo_type
+            section_cls: Type[CandeSection] = types.new_class(f"{name}Section", (GeoMixin, CandeSection[value_type]),
+                                                              dict(converter=wrapped_converter, geo_type=geo_type))
+        # add the new cande_section class to cande_section_dict
+        cande_section_dict[section_name] = section_cls
 
 class Boundaries(CandeMapSequence[item_converters["boundaries"]]):
     seq_type = BoundariesSection

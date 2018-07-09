@@ -129,7 +129,7 @@ class CandeObj(CidRW):
     check: int = 1
     bandwidth: int = 1
 
-    # sub object iterables
+    # sub object map sequences
     pipegroups: PipeGroups = field(default_factory=PipeGroups, repr=False)
     nodes: Nodes = field(default_factory=Nodes, repr=False)
     elements: Elements = field(default_factory=Elements, repr=False)
@@ -137,6 +137,9 @@ class CandeObj(CidRW):
     soilmaterials: SoilMaterials = field(default_factory=SoilMaterials, repr=False)
     interfmaterials: InterfMaterials = field(default_factory=InterfMaterials, repr=False)
     factors: Factors = field(default_factory=Factors, repr=False)
+
+    # map sequence for section node connections
+    connections: Connections = field(default_factory=Connections)
 
     # required name for initial mesh objects added
     name: InitVar[Optional[str]] = None
@@ -190,6 +193,9 @@ class CandeObj(CidRW):
 
     def save(self, path: Union[str, Path], mode="x"):
         """Save .cid file to the path."""
+        # move connections into the CANDE problem and resolve
+
+
         path = Path(path).with_suffix(".cid")
         with path.open(mode):
             path.write_text("\n".join(self.iter_line_strings()))
@@ -369,8 +375,9 @@ class CandeObj(CidRW):
             5. Moves beam sections to the front of the elements map
             6. Updates all totals (nodes, elements, boundaries, soil/interf materials, pipe groups, steps)
         """
-        # TODO: move interface sections to back of nodes section map
+        # TODO: move existing interface sections to back of nodes section map
 
+        # globalize all node numbering and remove repeats
         self.update_node_nums()
 
         # move pipe element sequences to front of seq_map
@@ -386,6 +393,8 @@ class CandeObj(CidRW):
                 tuple_map[key].append((section_key, seq))
             self.elements.seq_map.update(itertools.chain(*tuple_map.values()))
 
+        # globalize element numbering
         self.update_element_nums()
 
+        # calculate and set the totals for all CANDE items
         self.update_totals()
