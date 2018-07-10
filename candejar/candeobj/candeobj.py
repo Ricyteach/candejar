@@ -13,12 +13,12 @@ from typing import Union, Type, Optional, Iterable, ClassVar, MutableMapping, Se
 
 import itertools
 
+from . import exc
 from .level3 import Element
-from .exc import CandeValueError
 from .. import msh
 from .candeseq import cande_seq_dict, PipeGroups, Nodes, Elements, PipeElements, SoilElements, InterfElements, \
-    Boundaries, Materials, SoilMaterials, InterfMaterials, Factors
-from .connections import Connection, Connections
+    Boundaries, Materials, SoilMaterials, InterfMaterials, CompositeMaterials, Factors
+from .connections import MergedConnection, InterfaceConnection, PairConnection, SteppedConnection, MaterialedConnection, LinkConnection, CompositeConnection, Connection, Connections
 from ..cid import CidLine
 from ..cidrw import CidLineStr
 from ..cidobjrw.cidrwabc import CidRW
@@ -139,6 +139,7 @@ class CandeObj(CidRW):
     boundaries: Boundaries = field(default_factory=Boundaries, repr=False)
     soilmaterials: SoilMaterials = field(default_factory=SoilMaterials, repr=False)
     interfmaterials: InterfMaterials = field(default_factory=InterfMaterials, repr=False)
+    compositematerials: CompositeMaterials = field(default_factory=InterfMaterials, repr=False)
     factors: Factors = field(default_factory=Factors, repr=False)
 
     # map sequence for section node connections
@@ -399,16 +400,31 @@ class CandeObj(CidRW):
         # resolve CANDE problem connections
         conn: Connection
         for conn in self.connections:
-            if not conn.type_.value:
-                # merged connection - assume same nodes
+            if not conn.category.value:
+                conn: MergedConnection
+                # merged connection - nodes all the same
                 self.merge_nodes(*conn.items)
             else:
-                # special connection - only two nodes allowed
-                if len(conn.items)!=2:
-                    raise CandeValueError(f"Only 2 nodes allowed per {conn.type_.name} connection")
+                conn: Union[SteppedConnection, PairConnection]
+                # only two nodes allowed
                 i, j = conn.items
-                new_element = Element(i=i, j=j, )
-                new_material = shallow_mapify(conn.material)
+                # create connection element
+                element_ns = dict(i=i, j=j, step=conn.step, connection=conn.category.value)
+                if hasattr(conn, "mat"):
+                    conn: MaterialedConnection
+                    element_ns["mat"] = conn.mat
+                if hasattr(conn, "death"):
+                    conn: LinkConnection
+                    element_ns["mat"] = conn.mat
+                new_element = Element(**element_ns)
+                # check valid connection material number if applicable (interfaces and composites only)
+                if isinstance(conn, (CompositeConnection, InterfaceConnection)):
+                    materials_attr = {isinstance(conn ,CompositeConnection): "compositematerials",
+                                      isinstance(conn, InterfaceConnection): "interfmaterials"}[True]
+                    if conn.mat-1 not in (mat.num for mat in getattr(self, materials_attr)):
+                        mat_nums = [mat.num for mat in getattr(self, materials_attr)]
+                        raise exc.CandeValueError(f"Mat number {conn.mat!s} was not found in the {materials_attr} list: {str(mat_nums)[1:-1]}")
+                # incorporate connection element into problem
                 self.add_element(new_element)
 
         # calculate and set the totals for all CANDE items

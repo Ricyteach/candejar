@@ -37,6 +37,8 @@ class ElementCategory(enum.Enum):
     INTERFACE = 1
     FIXED = 8
     PINNED = 9
+    TRANSVERSE = 10
+    LONGITUDINAL = 11
 
 
 @dataclass(init=False)
@@ -48,12 +50,12 @@ class Element(WithKwargsMixin, GeoMixin, geo_type="Polygon"):
     l: int = 0
     mat: int = 0
     step: int = 0
-    joined: int = 0
+    connection: int = 0
     death: int = 0
 
     def __init__(self, num: int, i: int, j: int, k: int = 0, l: int = 0, *, mat: int = 0, step: int = 0,
-                 joined: int = 0, death: int = 0, **kwargs) -> None:
-        self.num, self.i, self.j, self.k, self.l, self.mat, self.step, self.joined, self.death = num, i, j, k, l, mat, step, joined, death
+                 connection: int = 0, death: int = 0, **kwargs) -> None:
+        self.num, self.i, self.j, self.k, self.l, self.mat, self.step, self.connection, self.death = num, i, j, k, l, mat, step, connection, death
         super().__init__(**kwargs)
 
     def remove_repeats(self):
@@ -65,8 +67,8 @@ class Element(WithKwargsMixin, GeoMixin, geo_type="Polygon"):
 
     @property
     def category(self) -> ElementCategory:
-        join_value = self.joined
-        if not join_value:
+        connection_value = self.connection
+        if not connection_value:
             # regular geometric element
             if not self.k and not self.l:
                 return ElementCategory["PIPE"]
@@ -75,9 +77,9 @@ class Element(WithKwargsMixin, GeoMixin, geo_type="Polygon"):
         else:
             # interface or link element
             try:
-                return ElementCategory(join_value)
+                return ElementCategory(connection_value)
             except ValueError as e:
-                raise exc.CandeValueError(f"Invalid field value for Joined: {join_value}") from e
+                raise exc.CandeValueError(f"Invalid field value for Connection: {connection_value}") from e
 
 
 @dataclass(init=False)
