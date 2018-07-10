@@ -53,3 +53,13 @@ class Interface(Material):
     friction: float =  0.0
     tensile: float =  1.0  # lbs/in
     gap: float =  0.0  # in
+
+
+@dataclass
+class Link(Material):
+    # D2
+    group1: int
+    group2: int
+    fraction: float
+    # D1
+    model: int = 7
