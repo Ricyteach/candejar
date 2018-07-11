@@ -397,6 +397,8 @@ class CandeObj(CidRW):
                 # create connection element
                 element_ns = dict(num=0, i=i, j=j, step=conn.step, connection=conn.category.value)
                 for attr in "mat death".split():
+                    # some link elements don't have a material (PINNED, FIXED)
+                    # interface elements don't have death
                     try:
                         element_ns[attr] = getattr(conn, attr)
                     except AttributeError:
