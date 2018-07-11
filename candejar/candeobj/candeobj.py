@@ -372,7 +372,7 @@ class CandeObj(CidRW):
                 element.num = num
 
     def prepare(self):
-        """Make CANDE problem ready for saving. Effects all elements AND all boundaries.
+        """Make CANDE problem ready for saving. Affects all elements AND all boundaries.
 
             1. Moves interface sections to the back of the nodes map
             2. Converts repeated node numbers to 0
@@ -381,23 +381,6 @@ class CandeObj(CidRW):
             5. Moves beam sections to the front of the elements map
             6. Updates all totals (nodes, elements, boundaries, soil/interf materials, pipe groups, steps)
         """
-        # TODO: move existing interface sections to back of nodes section map
-
-        # globalize all node numbering and remove repeats
-        self.update_node_nums()
-
-        # move pipe element sequences to front of seq_map
-        if self.elements:
-            seq_map_copy = self.elements.seq_map.copy()
-            self.elements.seq_map.clear()
-            tuple_map = dict(pipes = [], others = [])
-            for section_key, seq in seq_map_copy.items():
-                key = "others"
-                # if the first element is PIPE, assume all are
-                if seq and seq[0].category.name=="PIPE":
-                    key = "pipes"
-                tuple_map[key].append((section_key, seq))
-            self.elements.seq_map.update(itertools.chain(*tuple_map.values()))
 
         # resolve CANDE problem connections
         connection_elements: List[Dict[str, Any]] = []
@@ -427,8 +410,26 @@ class CandeObj(CidRW):
                         raise exc.CandeValueError(f"Mat number {conn.mat!s} was not found in the {materials_attr} list: {str(mat_nums)[1:-1]}")
                 connection_elements.append(element_ns)
 
-        # incorporate connection element into problem
+        # incorporate connection elements into problem
         self.elements[self.connections_key] = connection_elements
+
+        # TODO: move existing interface sections to back of nodes section map
+
+        # globalize all node numbering and remove repeats
+        self.update_node_nums()
+
+        # move pipe element sequences to front of seq_map
+        if self.elements:
+            seq_map_copy = self.elements.seq_map.copy()
+            self.elements.seq_map.clear()
+            tuple_map = dict(pipes = [], others = [])
+            for section_key, seq in seq_map_copy.items():
+                key = "others"
+                # if the first element is PIPE, assume all are
+                if seq and seq[0].category.name=="PIPE":
+                    key = "pipes"
+                tuple_map[key].append((section_key, seq))
+            self.elements.seq_map.update(itertools.chain(*tuple_map.values()))
 
         # globalize element numbering
         self.update_element_nums()
