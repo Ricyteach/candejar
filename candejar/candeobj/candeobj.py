@@ -399,9 +399,6 @@ class CandeObj(CidRW):
                 tuple_map[key].append((section_key, seq))
             self.elements.seq_map.update(itertools.chain(*tuple_map.values()))
 
-        # globalize element numbering
-        self.update_element_nums()
-
         # resolve CANDE problem connections
         connection_elements: List[Dict[str, Any]] = []
         conn: Connection
@@ -415,13 +412,12 @@ class CandeObj(CidRW):
                 # only two nodes allowed
                 i, j = conn.items
                 # create connection element
-                element_ns = dict(i=i, j=j, step=conn.step, connection=conn.category.value)
+                element_ns = dict(num=0, i=i, j=j, step=conn.step, connection=conn.category.value)
                 for attr in "mat death".split():
                     try:
                         element_ns[attr] = getattr(conn, attr)
                     except AttributeError:
                         pass
-                new_element = Element(**element_ns)
                 # check valid connection material number if applicable (interfaces and composites only)
                 if isinstance(conn, (CompositeConnection, InterfaceConnection)):
                     materials_attr = {isinstance(conn ,CompositeConnection): "compositematerials",
@@ -429,9 +425,13 @@ class CandeObj(CidRW):
                     if conn.mat-1 not in (mat.num for mat in getattr(self, materials_attr)):
                         mat_nums = [mat.num for mat in getattr(self, materials_attr)]
                         raise exc.CandeValueError(f"Mat number {conn.mat!s} was not found in the {materials_attr} list: {str(mat_nums)[1:-1]}")
+                connection_elements.append(element_ns)
 
         # incorporate connection element into problem
-        self.elements[self.connections_key] = cande_seq_dict["compositematerials"](connection_elements)
+        self.elements[self.connections_key] = connection_elements
+
+        # globalize element numbering
+        self.update_element_nums()
 
         # calculate and set the totals for all CANDE items
         self.update_totals()
