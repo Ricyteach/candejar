@@ -121,7 +121,7 @@ class InterfaceConnection(PairConnection, MaterialedConnection, SteppedConnectio
 
 
 @dataclass
-class LinkConnection(abc.ABC, PairConnection, SteppedConnection):
+class LinkConnection(PairConnection, SteppedConnection):
     """Parent for link (fixed, pinned, and composite) connections."""
 
     def __post_init__(self):

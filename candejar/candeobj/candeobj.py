@@ -9,7 +9,7 @@ from collections import defaultdict
 from dataclasses import dataclass, InitVar, field
 from pathlib import Path
 from typing import Union, Type, Optional, Iterable, ClassVar, MutableMapping, Sequence, TypeVar, NamedTuple, Dict, List, \
-    Counter
+    Counter, Any
 
 import itertools
 
@@ -139,11 +139,13 @@ class CandeObj(CidRW):
     boundaries: Boundaries = field(default_factory=Boundaries, repr=False)
     soilmaterials: SoilMaterials = field(default_factory=SoilMaterials, repr=False)
     interfmaterials: InterfMaterials = field(default_factory=InterfMaterials, repr=False)
-    compositematerials: CompositeMaterials = field(default_factory=InterfMaterials, repr=False)
+    compositematerials: CompositeMaterials = field(default_factory=CompositeMaterials, repr=False)
     factors: Factors = field(default_factory=Factors, repr=False)
 
     # map sequence for section node connections
     connections: Connections = field(default_factory=Connections)
+    # key for connection elements section
+    connections_key: ClassVar[object] = object()
 
     # required name for initial mesh objects added
     name: InitVar[Optional[str]] = None
@@ -164,13 +166,15 @@ class CandeObj(CidRW):
 
     @property
     def materials(self):
-        return Materials(soil=self.soilmaterials, interface=self.interfmaterials)
+        return Materials(soil=self.soilmaterials, interface=self.interfmaterials, composite=self.compositematerials)
 
     def __post_init__(self, name):
         name = type(self).section_names.handle_section_name(self, name)
 
         cande_list_seq_kwargs = dict(pipegroups=self.pipegroups, soilmaterials=self.soilmaterials,
-                                     interfmaterials=self.interfmaterials, factors=self.factors)
+                                     interfmaterials=self.interfmaterials, compositematerials=self.compositematerials,
+                                     factors=self.factors)
+
         for k, v in cande_list_seq_kwargs.items():
             cande_sub_seq = v if isinstance(v, cande_seq_dict[k]) else cande_seq_dict[k](v)
             setattr(self, k, cande_sub_seq)
@@ -179,6 +183,7 @@ class CandeObj(CidRW):
         for k, v in cande_map_seq_kwargs.items():
             cande_sub_seq = v if isinstance(v, cande_seq_dict[k]) else cande_seq_dict[k]({name: v})
             setattr(self, k, cande_sub_seq)
+
         for seq_obj in (self.elements, self.boundaries):
             if seq_obj:
                 seq_obj[name].nodes = self.nodes[name]
@@ -398,6 +403,7 @@ class CandeObj(CidRW):
         self.update_element_nums()
 
         # resolve CANDE problem connections
+        connection_elements: List[Dict[str, Any]] = []
         conn: Connection
         for conn in self.connections:
             if not conn.category.value:
@@ -405,17 +411,16 @@ class CandeObj(CidRW):
                 # merged connection - nodes all the same
                 self.merge_nodes(*conn.items)
             else:
-                conn: Union[SteppedConnection, PairConnection]
+                conn: Union[InterfaceConnection, LinkConnection]
                 # only two nodes allowed
                 i, j = conn.items
                 # create connection element
                 element_ns = dict(i=i, j=j, step=conn.step, connection=conn.category.value)
-                if hasattr(conn, "mat"):
-                    conn: MaterialedConnection
-                    element_ns["mat"] = conn.mat
-                if hasattr(conn, "death"):
-                    conn: LinkConnection
-                    element_ns["mat"] = conn.mat
+                for attr in "mat death".split():
+                    try:
+                        element_ns[attr] = getattr(conn, attr)
+                    except AttributeError:
+                        pass
                 new_element = Element(**element_ns)
                 # check valid connection material number if applicable (interfaces and composites only)
                 if isinstance(conn, (CompositeConnection, InterfaceConnection)):
@@ -424,8 +429,9 @@ class CandeObj(CidRW):
                     if conn.mat-1 not in (mat.num for mat in getattr(self, materials_attr)):
                         mat_nums = [mat.num for mat in getattr(self, materials_attr)]
                         raise exc.CandeValueError(f"Mat number {conn.mat!s} was not found in the {materials_attr} list: {str(mat_nums)[1:-1]}")
-                # incorporate connection element into problem
-                self.add_element(new_element)
+
+        # incorporate connection element into problem
+        self.elements[self.connections_key] = cande_seq_dict["compositematerials"](connection_elements)
 
         # calculate and set the totals for all CANDE items
         self.update_totals()
