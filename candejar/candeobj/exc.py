@@ -13,3 +13,6 @@ class CandeAttributeError(CandeError, AttributeError):
 
 class CandeTypeError(CandeError, TypeError):
     pass
+
+class CandeKeyError(CandeError, KeyError):
+    pass

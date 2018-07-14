@@ -5,11 +5,10 @@
 from __future__ import annotations
 
 import operator
-from collections import defaultdict
 from dataclasses import dataclass, InitVar, field
 from pathlib import Path
 from typing import Union, Type, Optional, Iterable, ClassVar, MutableMapping, Sequence, TypeVar, NamedTuple, Dict, List, \
-    Counter, Any
+    Counter, Any, DefaultDict
 
 import itertools
 
@@ -320,6 +319,11 @@ class CandeObj(CidRW):
         for group_num, group in enumerate(self.pipegroups, 1):
             group.num = num_ctr[group_num]
 
+
+    def merge_nodes(self, *nodes, converter: Dict[int, int]):
+
+
+
     def update_node_nums(self):
         """Re-numbers all node numbers, and references to them, based on current global node order.
 
@@ -329,7 +333,7 @@ class CandeObj(CidRW):
 
         # build node number conversion map and reset node.num attribute
         node_ctr = itertools.count(start)
-        convert_map = defaultdict(dict)
+        convert_map = DefaultDict(dict)
         for seq in self.nodes.seq_map.values():
             seq_id = id(seq)
             sub_map = convert_map[seq_id]
@@ -415,6 +419,7 @@ class CandeObj(CidRW):
         # incorporate connection elements into problem
         self.elements[self.connections_key] = connection_elements
 
+        # TODO: add interface node section for newly added interface connections and update interface element k values
         # TODO: move existing interface sections to back of nodes section map
 
         # globalize all node numbering and remove repeats
