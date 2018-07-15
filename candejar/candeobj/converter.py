@@ -3,8 +3,7 @@
 """Special tools for working with candeobj types."""
 
 from dataclasses import dataclass, field
-from typing import _KT, _VT_co, MutableMapping, _VT, Iterator, _T_co, DefaultDict, Union, Generic, TypeVar, Any, Dict, \
-    List
+from typing import MutableMapping, Iterator, Union, TypeVar, Any, Dict
 import itertools
 
 from . import exc
@@ -23,66 +22,97 @@ class SubConverter(MutableMapping[int, int]):
     start: int
     seq: SectionSeq
     _d: Dict[int, int] = field(init=False)
-    _keys: List[int] = field(init=False)
 
     def __post_init__(self) -> None:
         seen = set()
-        self._keys = [(num, seen.add(num))[0] for num in self.seq if num not in seen]
-        self._d = dict(zip(self._keys, itertools.count(self.start)))
+        keys = [(num, seen.add(num))[0] for num in self.nums if num not in seen]
+        self._d = dict(zip(keys, itertools.count(self.start)))
 
     def __getitem__(self, k: int) -> int:
-        return self._d.__getitem__(k)
+        try:
+            return self._d.__getitem__(k)
+        except KeyError:
+            if k in self.nums:
+                raise exc.CandeKeyError(f"conversion value missing for item num {k!s}")
+            raise exc.CandeKeyError(f"item num {k!s} does not appear in {type(self.seq).__qualname__}")
 
     def __setitem__(self, k: int, v: int) -> None:
-        if k in self._keys:
-            self._d.__setitem__(k, v)
+        if k not in self._d.keys() and k not in self.nums:
+            raise exc.CandeKeyError(f"can only change existing keys - {k!s} not in nums;")
         else:
-            raise exc.CandeKeyError(f"can only change existing keys - {k!s} not"
-                                    f" in nums;")
+            self._d.__setitem__(k, v)
 
-    def __delitem__(self, v: int) -> None:
-        self._d.__delitem__(v)
-        self._keys.remove(v)
+    def __delitem__(self, k: int) -> None:
+        if k in self.nums:
+            raise exc.CandeKeyError(f"item num {k!s} must first be removed from {type(self.seq).__qualname__}")
+        self._d.__delitem__(k)
 
     def __iter__(self) -> Iterator[int]:
-        return iter(self._keys)
+        return iter(self._d)
 
     def __len__(self) -> int:
         return self._d.__len__()
 
+    def __repr__(self) -> str:
+        return f'SubConverter(start={self.start!r}, {self._d!r})'
 
-@dataclass(eq=False)
+    @property
+    def nums(self) -> Iterator[int]:
+        """The current num attributes for the referenced section sequence"""
+        yield from (i.num for i in self.seq)
+
+
+@dataclass(eq=False, repr=False)
 class NumConverter(MutableMapping[Any, SubConverter]):
+    """Builds a mapping of SubConverter objects assigned to each section"""
+    type_: str = field(init=False)
     seq: CandeSeq = field(repr=False)
-    _d: Dict[_KT, _VT] = field(init=False, repr=False)
-    name: str = field(init=False)
+    seq_id: int = field(init=False)
+    _d: Dict[Any, SubConverter] = field(init=False, repr=False)
 
     def __post_init__(self):
-        self.name = type(self.seq).__qualname__.lower()
+        self.type_ = type(self.seq).__qualname__
+        self.seq_id = id(self.seq)
+        self._d = dict()
 
-        # build node number conversion map and reset node.num attribute
-        node_ctr = itertools.count(self.start)
-        convert_map = DefaultDict(dict)
-        for seq in self.seq.seq_map.values():
-            seq_id = id(seq)
-            sub_map = convert_map[seq_id]
-            for node, num in zip(seq, node_ctr):
-                sub_map[node.num] = num
-                node.num = num
+        start = 1
+        for section_key, section_seq in self.seq.seq_map.items():
+            c = self._d[section_key] = SubConverter(start, section_seq)
+            start = len(c)
 
-        self._d = Converter(zip(self.seq.seq_map.keys(), int))
+    def __getitem__(self, k: Any) -> SubConverter:
+        try:
+            return self._d.__getitem__(k)
+        except KeyError:
+            if k in self.names:
+                raise exc.CandeKeyError(f"conversion mapping missing for section name {k!s}")
+            raise exc.CandeKeyError(f"section name {k!s} does not appear in {type(self.seq).__qualname__}")
 
-    def __getitem__(self, k: _KT) -> _VT_co:
-        return self._d.__getitem__(k)
+    def __setitem__(self, k: Any, v: SubConverter) -> None:
+        if k not in self._d.keys() and k not in self.names:
+            raise exc.CandeKeyError(f"can only change existing keys - {k!s} not in sections;")
+        else:
+            self._d.__setitem__(k, v)
 
-    def __setitem__(self, k: _KT, v: _VT) -> None:
-        self._d.__setitem__(k, v)
+    def __delitem__(self, k: Any) -> None:
+        if k in self.names:
+            raise exc.CandeKeyError(f"section name {k!s} must first be removed from {type(self.seq).__qualname__}")
+        self._d.__delitem__(k)
 
-    def __delitem__(self, v: _KT) -> None:
-        self._d.__delitem__(v)
-
-    def __iter__(self) -> Iterator[_T_co]:
+    def __iter__(self) -> Iterator[Any]:
         return self._d.__iter__()
 
     def __len__(self) -> int:
         return self._d.__len__()
+
+    def __repr__(self) -> str:
+        return f'NumConverter(type_={self.type_!r}, seq_len={self.seq_len!r}, seq_id={self.seq_id!r})'
+
+    @property
+    def seq_len(self) -> int:
+        return len(self.seq)
+
+    @property
+    def names(self) -> Iterator[Any]:
+        """The current section names for the referenced CANDE item sequence"""
+        yield from self.seq.seq_map.keys()
