@@ -8,16 +8,16 @@ import operator
 from dataclasses import dataclass, InitVar, field
 from pathlib import Path
 from typing import Union, Type, Optional, Iterable, ClassVar, MutableMapping, Sequence, TypeVar, NamedTuple, Dict, List, \
-    Counter, Any, DefaultDict
+    Counter, Any
 
 import itertools
 
 from . import exc
-from .level3 import Element
 from .. import msh
 from .candeseq import cande_seq_dict, PipeGroups, Nodes, Elements, PipeElements, SoilElements, InterfElements, \
     Boundaries, Materials, SoilMaterials, InterfMaterials, CompositeMaterials, Factors
-from .connections import MergedConnection, InterfaceConnection, PairConnection, SteppedConnection, MaterialedConnection, LinkConnection, CompositeConnection, Connection, Connections
+from .connections import MergedConnection, InterfaceConnection, LinkConnection, CompositeConnection, Connection, Connections
+from .converter import NumConverter
 from ..cid import CidLine
 from ..cidrw import CidLineStr
 from ..cidobjrw.cidrwabc import CidRW
@@ -321,30 +321,18 @@ class CandeObj(CidRW):
 
 
     def merge_nodes(self, *nodes, converter: Dict[int, int]):
+        pass
 
 
-
-    def update_node_nums(self):
+    def update_node_nums(self, converter: NumConverter):
         """Re-numbers all node numbers, and references to them, based on current global node order.
 
         Repeated node numbers in elements are removed.
         """
-        start = 1
-
-        # build node number conversion map and reset node.num attribute
-        node_ctr = itertools.count(start)
-        convert_map = DefaultDict(dict)
-        for seq in self.nodes.seq_map.values():
-            seq_id = id(seq)
-            sub_map = convert_map[seq_id]
-            for node, num in zip(seq, node_ctr):
-                sub_map[node.num] = num
-                node.num = num
-
         # remove repeats and reassign i,j,k,l numbers
         for seq in self.elements.seq_map.values():
             nodes_id = id(seq.nodes)
-            sub_map = convert_map[nodes_id]
+            sub_map = converter[nodes_id]
             for element in seq:
                 element.remove_repeats()
                 # TODO: relocate below routine to method on Element class
@@ -358,7 +346,7 @@ class CandeObj(CidRW):
         # reassign boundary.node numbers
         for seq in self.boundaries.seq_map.values():
             nodes_id = id(seq.nodes)
-            sub_map = convert_map[nodes_id]
+            sub_map = converter[nodes_id]
             for boundary in seq:
                 # TODO: relocate below routine to method on Boundary class
                 old = boundary.node
@@ -385,8 +373,10 @@ class CandeObj(CidRW):
             5. Moves beam sections to the front of the elements map
             6. Updates all totals (nodes, elements, boundaries, soil/interf materials, pipe groups, steps)
         """
+        # init conversion map
+        convert_map = NumConverter(self.nodes)
 
-        # resolve CANDE problem connections
+        # resolve CANDE problem connections (change conversion map target numbers)
         connection_elements: List[Dict[str, Any]] = []
         conn: Connection
         for conn in self.connections:
@@ -423,7 +413,7 @@ class CandeObj(CidRW):
         # TODO: move existing interface sections to back of nodes section map
 
         # globalize all node numbering and remove repeats
-        self.update_node_nums()
+        self.update_node_nums(convert_map)
 
         # move pipe element sequences to front of seq_map
         if self.elements:

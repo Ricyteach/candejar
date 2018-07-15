@@ -3,11 +3,7 @@
 """Special tools for working with candeobj types."""
 
 from abc import ABC
-from dataclasses import dataclass, field
-from typing import TypeVar, Generic, Sequence, Any, Iterable, overload, Optional, Mapping, _KT, _VT_co, MutableMapping, \
-    _VT, Iterator, _T_co, DefaultDict
-
-import itertools
+from typing import TypeVar, Generic, Sequence, Any, Iterable, overload, Optional, Mapping
 
 from ..candeobj import exc
 from .collections import KeyedChainView, ConvertingList

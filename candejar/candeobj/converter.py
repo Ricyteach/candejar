@@ -63,12 +63,12 @@ class SubConverter(MutableMapping[int, int]):
 
 
 @dataclass(eq=False, repr=False)
-class NumConverter(MutableMapping[Any, SubConverter]):
+class NumConverter(MutableMapping[int, SubConverter]):
     """Builds a mapping of SubConverter objects assigned to each section"""
     type_: str = field(init=False)
     seq: CandeSeq = field(repr=False)
     seq_id: int = field(init=False)
-    _d: Dict[Any, SubConverter] = field(init=False, repr=False)
+    _d: Dict[int, SubConverter] = field(init=False, repr=False)
 
     def __post_init__(self):
         self.type_ = type(self.seq).__qualname__
@@ -76,11 +76,11 @@ class NumConverter(MutableMapping[Any, SubConverter]):
         self._d = dict()
 
         start = 1
-        for section_key, section_seq in self.seq.seq_map.items():
-            c = self._d[section_key] = SubConverter(start, section_seq)
+        for section_seq in self.seq.seq_map.values():
+            c = self._d[id(section_seq)] = SubConverter(start, section_seq)
             start = len(c)
 
-    def __getitem__(self, k: Any) -> SubConverter:
+    def __getitem__(self, k: int) -> SubConverter:
         try:
             return self._d.__getitem__(k)
         except KeyError:
@@ -88,18 +88,18 @@ class NumConverter(MutableMapping[Any, SubConverter]):
                 raise exc.CandeKeyError(f"conversion mapping missing for section name {k!s}")
             raise exc.CandeKeyError(f"section name {k!s} does not appear in {type(self.seq).__qualname__}")
 
-    def __setitem__(self, k: Any, v: SubConverter) -> None:
+    def __setitem__(self, k: int, v: SubConverter) -> None:
         if k not in self._d.keys() and k not in self.names:
             raise exc.CandeKeyError(f"can only change existing keys - {k!s} not in sections;")
         else:
             self._d.__setitem__(k, v)
 
-    def __delitem__(self, k: Any) -> None:
+    def __delitem__(self, k: int) -> None:
         if k in self.names:
             raise exc.CandeKeyError(f"section name {k!s} must first be removed from {type(self.seq).__qualname__}")
         self._d.__delitem__(k)
 
-    def __iter__(self) -> Iterator[Any]:
+    def __iter__(self) -> Iterator[int]:
         return self._d.__iter__()
 
     def __len__(self) -> int:
