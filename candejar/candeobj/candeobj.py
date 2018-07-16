@@ -365,6 +365,9 @@ class CandeObj(CidRW):
                 element.num = num
 
     def mate_sections(self, *sections: ElementsSection, tol: Optional[Union[float, Tolerance]] = None):
+        """Automatically populates the connections sequence with node merges when nodes from the sections are within the
+        tolerance buffer
+        """
 
         if not isinstance(tol, Tolerance) and tol is not None:
             tol = Tolerance(tol)
@@ -391,6 +394,7 @@ class CandeObj(CidRW):
                         curr_nodes.append(curr_node)
                     for _, compare_node in filter(polygon_intersects, zip(compare_mp, compare_section)):
                         compare_nodes.append(compare_node)
+                    # only add a connection if nodes from both sides fell in the polygon
                     if curr_nodes and compare_nodes:
                         merged_nodes = curr_nodes + compare_nodes
                         conn = MergedConnection(merged_nodes)  # this argument OK; pycharm can't handle dataclass inheritance yet
