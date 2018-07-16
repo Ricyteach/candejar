@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""The map sequence for section node connections and their connection objects ."""
+"""Objects for defining connections between nodes. The nodes can be in the same or different sections."""
 
 from __future__ import annotations
 
@@ -11,7 +11,6 @@ from typing import Union, ClassVar, Sequence, Generic, Optional
 import abc
 
 from .exc import CandeValueError, CandeTypeError
-from .candeseq import CandeSection
 from ..utilities.collections import KeyedChainView
 from .level3 import Node
 from ..utilities.descriptors import StandardDescriptor
@@ -49,15 +48,11 @@ class Tolerance(StandardDescriptor):
     default: float = 0.1
 
 
-V = Union[Node, CandeSection]
-
-
 @dataclass
-class Connection(abc.ABC, Generic[V]):
+class Connection(abc.ABC, Generic[Node]):
     """Connection parent class for all connection types (merged, interface, and link)."""
-    tol: float = field(init=False)  # for type hinting only
-    tol: ClassVar[Tolerance[Connection,V]] = Tolerance()  # descriptor
-    items: Sequence[V] = field(default_factory=list)  # items is the first argument in the init signature
+    items: Sequence[Node] = field(default_factory=list)  # items is the first argument in the init signature
+    tol: float = field(init=False, default=Tolerance())  # descriptor
 
     def __post_init__(self):
         check_abc(self, Connection)

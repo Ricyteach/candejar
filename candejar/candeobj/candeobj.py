@@ -9,17 +9,18 @@ from dataclasses import dataclass, InitVar, field
 from pathlib import Path
 from typing import Union, Type, Optional, Iterable, ClassVar, MutableMapping, Sequence, TypeVar, NamedTuple, Dict, List, \
     Counter, Any
-
 import itertools
+import shapely.geometry as geo
 
 from . import exc
 from .. import msh
 from .candeseq import cande_seq_dict, PipeGroups, Nodes, Elements, PipeElements, SoilElements, InterfElements, \
-    Boundaries, Materials, SoilMaterials, InterfMaterials, CompositeMaterials, Factors
-from .connections import MergedConnection, InterfaceConnection, LinkConnection, CompositeConnection, Connection, Connections
+    Boundaries, Materials, SoilMaterials, InterfMaterials, CompositeMaterials, Factors, NodesSection, ElementsSection, BoundariesSection
+from .connections import MergedConnection, InterfaceConnection, LinkConnection, CompositeConnection, Connection, Connections, Tolerance
 from .converter import NumConverter
 from ..cid import CidLine
 from ..cidrw import CidLineStr
+from .level3 import Node, Element
 from ..cidobjrw.cidrwabc import CidRW
 from ..cidobjrw.cidobj import CidObj
 from ..utilities.mapping_tools import shallow_mapify
@@ -327,7 +328,7 @@ class CandeObj(CidRW):
     def update_node_nums(self, converter: NumConverter):
         """Re-numbers all node numbers, and references to them, based on current global node order.
 
-        Repeated node numbers in elements are removed.
+        Repeated node numbers in element k and l fields are removed.
         """
         # remove repeats and reassign i,j,k,l numbers
         for seq in self.elements.seq_map.values():
@@ -363,31 +364,60 @@ class CandeObj(CidRW):
             for element, num in zip(seq, element_ctr):
                 element.num = num
 
-    def prepare(self):
-        """Make CANDE problem ready for saving. Affects all elements AND all boundaries.
+    def mate_sections(self, *sections: ElementsSection, tol: Optional[Union[float, Tolerance]] = None):
 
-            1. Moves interface sections to the back of the nodes map
-            2. Converts repeated node numbers to 0
-            3. Updates .num attribute for nodes, elements
-            4. Updates node numbers to global values
-            5. Moves beam sections to the front of the elements map
-            6. Updates all totals (nodes, elements, boundaries, soil/interf materials, pipe groups, steps)
+        if not isinstance(tol, Tolerance) and tol is not None:
+            tol = Tolerance(tol)
+
+        if len(sections)<2:
+            raise exc.CandeValueError(f"minimum of two sections must be provided to be mated together")
+
+        buffer = tol if tol is not None else MergedConnection.tol
+
+        nodes_sections: List[NodesSection]
+        nodes_sections = [s.nodes.copy() for s in sections]
+
+        for curr_section_idx, curr_section in enumerate(nodes_sections):
+            # compare against the other sections
+            compare_sections = [s for idx, s in enumerate(nodes_sections) if idx!=curr_section_idx]
+            for compare_section in compare_sections:
+                curr_mp = geo.mapping(curr_section)
+                compare_mp = geo.mapping(compare_section)
+                for polygon in curr_mp.buffer(buffer).intersection(compare_mp.buffer(buffer)):
+                    curr_nodes = list()
+                    compare_nodes = list()
+                    polygon_intersects = polygon.intersects
+                    for _, curr_node in filter(polygon_intersects, zip(curr_mp, curr_section)):
+                        curr_nodes.append(curr_node)
+                    for _, compare_node in filter(polygon_intersects, zip(compare_mp, compare_section)):
+                        compare_nodes.append(compare_node)
+                    if curr_nodes and compare_nodes:
+                        merged_nodes = curr_nodes + compare_nodes
+                        conn = MergedConnection(merged_nodes)  # this argument OK; pycharm can't handle dataclass inheritance yet
+                        if tol is not None:
+                            conn.tol = tol
+                        self.connections.append(conn)
+
+    def make_connections(self, node_converter):
+        """The global node numbers in the converter map are mutated so CANDE problem connections are resolved. The
+        converter numbers also renumbered starting at 1. The interface elements and nodes, and link elements, are also
+        created.
         """
-        # init conversion map
-        convert_map = NumConverter(self.nodes)
-
-        # resolve CANDE problem connections (change conversion map target numbers)
         connection_elements: List[Dict[str, Any]] = []
         conn: Connection
         for conn in self.connections:
             if not conn.category.value:
                 conn: MergedConnection
-                # merged connection - nodes all the same
-                self.merge_nodes(*conn.items)
+                # merged connection - renumber so all nodes all the same node number
+                num = conn.items[0].num
+                node: Node
+                for node in conn.items:
+                    node.num = num
             else:
                 conn: Union[InterfaceConnection, LinkConnection]
                 # only two nodes allowed
-                i, j = conn.items
+                item: Node
+                i, j = (item.num for item in conn.items)
                 # create connection element
                 element_ns = dict(num=0, i=i, j=j, step=conn.step, connection=conn.category.value)
                 for attr in "mat death".split():
@@ -406,14 +436,35 @@ class CandeObj(CidRW):
                         raise exc.CandeValueError(f"Mat number {conn.mat!s} was not found in the {materials_attr} list: {str(mat_nums)[1:-1]}")
                 connection_elements.append(element_ns)
 
-        # incorporate connection elements into problem
-        self.elements[self.connections_key] = connection_elements
+        if any(not conn.category.value for conn in self.connections):
+            # re-number node converter to account for unused numbers after handling of merged nodes
+            node_converter.renumber()
 
-        # TODO: add interface node section for newly added interface connections and update interface element k values
-        # TODO: move existing interface sections to back of nodes section map
+        if any(conn.category.value for conn in self.connections):
+            # TODO: add interface node section for newly added interface connections and update interface element k values
+            # TODO: move existing interface sections to back of nodes section map
+            raise NotImplementedError("Non-merged connections not yet fully supported")
+            # incorporate connection elements into problem
+            self.elements[self.connections_key] = connection_elements
 
-        # globalize all node numbering and remove repeats
-        self.update_node_nums(convert_map)
+    def prepare(self):
+        """Make CANDE problem ready for saving. Affects all elements AND all boundaries.
+
+            1. Moves interface sections to the back of the nodes map
+            2. Converts repeated node numbers to 0
+            3. Updates .num attribute for nodes, elements
+            4. Updates node numbers to global values
+            5. Moves beam sections to the front of the elements map
+            6. Updates all totals (nodes, elements, boundaries, soil/interf materials, pipe groups, steps)
+        """
+        # init conversion map
+        node_convert_map = NumConverter(self.nodes)
+
+        # change the converter map so CANDE problem connections are resolved (change conversion map target numbers)
+        self.make_connections(node_convert_map)
+
+        # globalize all node numbering (elements, boundaries) and remove node num repeats from element k,l fields
+        self.update_node_nums(node_convert_map)
 
         # move pipe element sequences to front of seq_map
         if self.elements:

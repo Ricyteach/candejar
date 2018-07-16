@@ -2,7 +2,7 @@
 
 """Special tools for working with candeobj types."""
 
-from typing import MutableMapping, Iterator, Union, TypeVar, Any, Dict
+from typing import MutableMapping, Iterator, Union, TypeVar, Any, Dict, Callable
 import itertools
 
 from . import exc
@@ -102,6 +102,18 @@ class NumConverter(MutableMapping[int, SubConverter]):
 
     def by_name(self, name: str):
         return self._d[id(self.seq[name])]
+
+    def renumber(self):
+        """Reset the global new_num values of exising converter taking into account repeated node numbers"""
+        count = 1
+        renumbered_lookup = dict()
+        for sub_converter in self.values():
+            for old_num, new_num in sub_converter.items():
+                if new_num not in renumbered_lookup.keys():
+                    sub_converter[old_num] = count
+                    renumbered_lookup[new_num] = count
+                    count += 1
+                sub_converter[old_num] = renumbered_lookup[new_num]
 
     @property
     def seq_id(self) -> int:

@@ -635,3 +635,6 @@ class ConvertingList(HasConverterMixin[T], List[T]):
     def extend(self, iterable: Iterable[V]):
         iterable = map(self.converter, iterable)
         super().extend(iterable)
+
+    def copy(self) -> ConvertingList:
+        return ConvertingList[self]
