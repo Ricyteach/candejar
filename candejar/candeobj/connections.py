@@ -49,16 +49,14 @@ class Tolerance(StandardDescriptor):
 
 
 @dataclass
-class Connection(abc.ABC, Generic[Node]):
+class Connection(abc.ABC):
     """Connection parent class for all connection types (merged, interface, and link)."""
     items: Sequence[Node] = field(default_factory=list)  # items is the first argument in the init signature
     tol: float = field(init=False, default=Tolerance())  # descriptor
 
     def __post_init__(self):
         check_abc(self, Connection)
-
-    def __init_subclass__(cls, **kwargs):
-        if not isinstance(cls.category, ConnectionCategory):
+        if not isinstance(self.category, ConnectionCategory):
             raise CandeTypeError("A valid category attribute is required for the Connection subclass.")
 
     @property

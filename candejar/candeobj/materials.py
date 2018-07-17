@@ -58,8 +58,8 @@ class Interface(Material):
 @dataclass
 class Link(Material):
     # D2
-    group1: int
-    group2: int
-    fraction: float
+    group1: int = 0
+    group2: int = 0
+    fraction: float = 0
     # D1
     model: int = 7

@@ -19,7 +19,7 @@ class CandeList(ConvertingList[T]):
         return f"{type(self).__qualname__}({super().__repr__()})"
 
 
-class CandeSection(CandeList):
+class CandeSection(CandeList[T]):
     """Parent class for all CANDE section objects"""
     __slots__ = ()
 
