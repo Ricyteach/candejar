@@ -382,10 +382,10 @@ class CandeObj(CidRW):
 
         for curr_section_idx, curr_section in enumerate(nodes_sections):
             # compare against the other sections
-            compare_sections = [s for idx, s in enumerate(nodes_sections) if idx!=curr_section_idx]
+            compare_sections = (s for idx, s in enumerate(nodes_sections) if idx>curr_section_idx)
             for compare_section in compare_sections:
-                curr_mp = geo.mapping(curr_section)
-                compare_mp = geo.mapping(compare_section)
+                curr_mp = geo.shape(curr_section)
+                compare_mp = geo.shape(compare_section)
                 for polygon in curr_mp.buffer(buffer).intersection(compare_mp.buffer(buffer)):
                     curr_nodes = list()
                     compare_nodes = list()

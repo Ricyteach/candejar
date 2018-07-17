@@ -637,4 +637,4 @@ class ConvertingList(HasConverterMixin[T], List[T]):
         super().extend(iterable)
 
     def copy(self) -> ConvertingList:
-        return ConvertingList[self]
+        return type(self)(self)

@@ -38,7 +38,7 @@ class ConnectionCategory(enum.Enum):
 
 
 @dataclass
-class Tolerance(StandardDescriptor):
+class Tolerance(StandardDescriptor, float):
     """A standard descriptor that stores a tolerance.
 
     The Tolerance global default is stored as a Tolerance class attribute but
