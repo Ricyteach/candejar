@@ -42,8 +42,6 @@ class SubConverter(MutableMapping[int, int]):
             self._d.__setitem__(k, v)
 
     def __delitem__(self, k: int) -> None:
-        if k in self.nums:
-            raise exc.CandeKeyError(f"item num {k!s} must first be removed from {type(self.seq).__qualname__}")
         self._d.__delitem__(k)
 
     def __iter__(self) -> Iterator[int]:
@@ -76,7 +74,7 @@ class NumConverter(MutableMapping[int, SubConverter]):
         start = 1
         for section_seq in self.seq.seq_map.values():
             c = self._d[id(section_seq)] = SubConverter(start, section_seq)
-            start = len(c)
+            start += len(c)
 
     def __getitem__(self, k: int) -> SubConverter:
         try:
