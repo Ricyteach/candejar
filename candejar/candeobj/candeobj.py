@@ -325,7 +325,7 @@ class CandeObj(CidRW):
         pass
 
 
-    def update_node_nums(self, converter: NumConverter):
+    def globalize_node_references(self, converter: NumConverter):
         """Re-numbers all node numbers, and references to them, based on current global node order.
 
         Repeated node numbers in element k and l fields are removed.
@@ -354,7 +354,17 @@ class CandeObj(CidRW):
                 new = sub_map[old]
                 boundary.node = new
 
-    def update_element_nums(self):
+    def globalize_node_nums(self):
+        """Re-numbers all node numbers based on current global node order."""
+        start = 1
+
+        # reset node.num attribute
+        node_ctr = itertools.count(start)
+        for seq in self.nodes.seq_map.values():
+            for node, num in zip(seq, node_ctr):
+                node.num = num
+
+    def globalize_element_nums(self):
         """Re-numbers all element numbers based on current global element order."""
         start = 1
 
@@ -467,8 +477,11 @@ class CandeObj(CidRW):
         # change the converter map so CANDE problem connections are resolved (change conversion map target numbers)
         self.make_connections(node_convert_map)
 
-        # globalize all node numbering (elements, boundaries) and remove node num repeats from element k,l fields
-        self.update_node_nums(node_convert_map)
+        # globalize node numbering
+        self.globalize_node_nums()
+
+        # globalize node references for elements elements and boundaries AND remove node num repeats from element k,l fields
+        self.globalize_node_references(node_convert_map)
 
         # move pipe element sequences to front of seq_map
         if self.elements:
@@ -484,7 +497,7 @@ class CandeObj(CidRW):
             self.elements.seq_map.update(itertools.chain(*tuple_map.values()))
 
         # globalize element numbering
-        self.update_element_nums()
+        self.globalize_element_nums()
 
         # calculate and set the totals for all CANDE items
         self.update_totals()
