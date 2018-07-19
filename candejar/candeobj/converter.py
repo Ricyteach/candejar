@@ -2,6 +2,7 @@
 
 """Special tools for working with candeobj types."""
 
+from __future__ import annotations
 from typing import MutableMapping, Iterator, Union, TypeVar, Any, Dict, Callable
 import itertools
 
@@ -59,6 +60,11 @@ class SubConverter(MutableMapping[int, int]):
         """The current num attributes for the referenced section sequence"""
         yield from (i.num for i in self.seq)
 
+    def copy(self) -> SubConverter:
+        cls = type(self)
+        o = cls.__new__(cls)
+        o.start, o.seq, o._d = self.start, self.seq, self._d.copy()
+        return o
 
 class NumConverter(MutableMapping[int, SubConverter]):
     """Builds a mapping of SubConverter objects assigned to each section"""
