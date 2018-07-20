@@ -108,16 +108,18 @@ class NumConverter(MutableMapping[int, SubConverter]):
         return self._d[id(self.seq[name])]
 
     def renumber(self):
-        """Reset the global new_num values of exising converter taking into account repeated node numbers"""
-        count = 1
-        renumbered_lookup = dict()
+        """Re-globalize new_num values of existing converter
+
+        Repeated new_node numbers are set to zero to signify they are already in another NodesSection"""
+        ctr = itertools.count(1)
+        new_nums_seen = set()
         for sub_converter in self.values():
             for old_num, new_num in sub_converter.items():
-                if new_num not in renumbered_lookup.keys():
-                    sub_converter[old_num] = count
-                    renumbered_lookup[new_num] = count
-                    count += 1
-                sub_converter[old_num] = renumbered_lookup[new_num]
+                if new_num not in new_nums_seen:
+                    sub_converter[old_num] = next(ctr)
+                    new_nums_seen.add(new_num)
+                else:
+                    sub_converter[old_num] = SKIP
 
     @property
     def seq_id(self) -> int:

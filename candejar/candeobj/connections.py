@@ -6,14 +6,14 @@ from __future__ import annotations
 
 import enum
 from dataclasses import dataclass, field, InitVar
-from typing import Union, ClassVar, Sequence, Generic, Optional
+from typing import Union, ClassVar, Sequence, SupportsFloat, List
 
 import abc
 
 from .exc import CandeValueError, CandeTypeError
-from ..utilities.collections import KeyedChainView
 from .level3 import Node
 from ..utilities.descriptors import StandardDescriptor
+from ..utilities.candeobj import CandeList
 
 
 def check_abc(instance, cls):
@@ -37,7 +37,10 @@ class ConnectionCategory(enum.Enum):
     LONGITUDINAL = 11
 
 
-@dataclass
+ARG_SENTINEL_T = type("ARG_SENTINEL_T", (), {})
+ARG_SENTINEL = ARG_SENTINEL_T()
+
+
 class Tolerance(StandardDescriptor, float):
     """A standard descriptor that stores a tolerance.
 
@@ -46,6 +49,11 @@ class Tolerance(StandardDescriptor, float):
     object using the descriptor can be unique.
     """
     default: float = 0.1
+
+    def __new__(cls, x: Union[ARG_SENTINEL_T, SupportsFloat, str, bytes] = ARG_SENTINEL):
+        if x is ARG_SENTINEL:
+            x = cls.default
+        return super().__new__(cls, x)
 
 
 @dataclass
@@ -167,5 +175,7 @@ class LongitudinalConnection(CompositeConnection):
     category: ClassVar[ConnectionCategory] = ConnectionCategory.LONGITUDINAL
 
 
-class Connections(KeyedChainView[Connection]):
-    pass
+class Connections(List[Connection]):
+    def __repr__(self):
+        r = super().__repr__()
+        return f"{type(self).__qualname__}({r})"

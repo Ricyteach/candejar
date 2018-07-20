@@ -30,7 +30,7 @@ T = TypeVar("T", bound="TotalDef")
 
 class TotalDef(NamedTuple):
     """Each of these relate the sequence attribute name, total attribute name, and the other sequences attributes whose
-    members containt attribute references to compute the total number of relevant objects.
+    members contain attribute references to compute the total number of relevant objects.
     """
     total_name: str
     seq_name: str
@@ -309,6 +309,7 @@ class CandeObj(CidRW):
         total_def: TotalDef
         for total_def in CANDE_TOTAL_DEFS:
             attr_len = len(getattr(self, total_def.seq_name))
+            # TODO: handle situation when attr_len includes nodes with num set to zero because exist in another NodesSection
             attr_max = 0
             for seq_obj, sub_attrs in ((getattr(self, ch), [sub] if isinstance(sub, str) else sub)
                                          for ch, sub in total_def.attr_dict.items()):
@@ -386,7 +387,6 @@ class CandeObj(CidRW):
         """Automatically populates the connections sequence with node merges when nodes from the sections are within the
         tolerance buffer
         """
-
         if not isinstance(tol, Tolerance) and tol is not None:
             tol = Tolerance(tol)
 
@@ -399,15 +399,15 @@ class CandeObj(CidRW):
         nodes_sections = [s.nodes.copy() for s in sections]
 
         for curr_section_idx, curr_section in enumerate(nodes_sections):
+            curr_mp = geo.shape(curr_section)
             # compare against the other sections
             compare_sections = (s for idx, s in enumerate(nodes_sections) if idx>curr_section_idx)
             for compare_section in compare_sections:
-                curr_mp = geo.shape(curr_section)
                 compare_mp = geo.shape(compare_section)
                 for polygon in curr_mp.buffer(buffer).intersection(compare_mp.buffer(buffer)):
                     curr_nodes = list()
                     compare_nodes = list()
-                    polygon_intersects = polygon.intersects
+                    polygon_intersects = lambda point_node: polygon.intersects(point_node[0])
                     for _, curr_node in filter(polygon_intersects, zip(curr_mp, curr_section)):
                         curr_nodes.append(curr_node)
                     for _, compare_node in filter(polygon_intersects, zip(compare_mp, compare_section)):
@@ -431,7 +431,7 @@ class CandeObj(CidRW):
             if not conn.category.value:
                 conn: MergedConnection
                 # merged connection - renumber so all nodes all the same node number
-                num = conn.items[0].num
+                num = min(node.num for node in conn.items)
                 node: Node
                 for node in conn.items:
                     node.num = num
@@ -481,6 +481,7 @@ class CandeObj(CidRW):
         """
         # init conversion map
         node_convert_map = NumConverter(self.nodes)
+        breakpoint()
 
         # change the converter map so CANDE problem connections are resolved (change conversion map target numbers)
         self.make_connections(node_convert_map)

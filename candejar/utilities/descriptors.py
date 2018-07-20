@@ -13,7 +13,6 @@ T = TypeVar("T")
 V = TypeVar("V")
 
 
-@dataclass
 class StandardDescriptor(Generic[T,V]):
     """A typical descriptor.
 
@@ -24,7 +23,9 @@ class StandardDescriptor(Generic[T,V]):
     The per-object value is stored in the same attribute name as the descriptor
     is assigned at the class level, but preceded with an underscore.
     """
-    default: Any
+    def __init_subclass__(cls, **kwargs):
+        if not hasattr(cls, "default"):
+            raise TypeError(f"StandardDescriptor subclass {cls.__qualname__} requires a default class attribute")
 
     def __set_name__(self, owner: Type[T], name: str) -> None:
         self.name = name
