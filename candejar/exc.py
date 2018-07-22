@@ -2,11 +2,18 @@
 
 """`candejar` exceptions"""
 
+
 class CandejarError(Exception):
     pass
 
-class CandejarTypeError(CandejarError):
+
+class CandejarTypeError(CandejarError, TypeError):
     pass
 
-class CandejarValueError(CandejarError):
+
+class CandejarValueError(CandejarError, ValueError):
+    pass
+
+
+class CandeAttributeError(CandejarError, AttributeError):
     pass

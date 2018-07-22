@@ -3,9 +3,7 @@
 """Special mixin classes."""
 
 from __future__ import annotations
-
-from dataclasses import dataclass
-from typing import Callable, Any, Dict, Optional, Counter, TypeVar, Generic, Type, Sequence, NamedTuple
+from typing import Callable, Any, Dict, Optional, Counter, TypeVar, Generic, Type, Sequence, NamedTuple, ClassVar
 
 
 class ChildRegistryError(Exception):
@@ -349,6 +347,7 @@ class GeoMixin:
         - Point, MultiPoint, Polygon, LineString, MultiPolygon, MultiLineString
         - Any Polygon with only 2 valid points will delegate to a LineString instead
     """
+    __geo_interface__: ClassVar[GeoInterface]
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         try:

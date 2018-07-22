@@ -1,6 +1,9 @@
 {
   "tests/candeobj/test_candemapseq.py::test_c_instance_invalid_dict": true,
   "tests/candeobj/test_candemapseq.py::test_c_instance_invalid_kwargs": true,
+  "tests/candeobj/test_candeobj.py::test_add_from_msh_all_obj": true,
+  "tests/candeobj/test_candeobj.py::test_load_cid_standard": true,
+  "tests/candeobj/test_candeobj.py::test_update_totals": true,
   "tests/candeobj/test_candeseq.py::test_c_instance_seqmap_type": true,
   "tests/candeobj/test_materials.py::test_something": true,
   "tests/candeobj/test_pipe_groups.py::test_PipeGroup": true,

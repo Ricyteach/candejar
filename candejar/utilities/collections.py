@@ -583,7 +583,10 @@ class HasConverterMixin(Generic[T]):
         super().__init_subclass__(**kwargs)
 
     def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+        try:
+            super().__init__(*args, **kwargs)
+        except TypeError:
+            breakpoint()
         if not hasattr(self, "converter"):
             raise AttributeError(f"{type(self).__qualname__} requires a 'converter' attribute for instantiation")
 
