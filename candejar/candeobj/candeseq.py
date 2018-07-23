@@ -108,9 +108,6 @@ item_converters = dict(pipegroups=types.SimpleNamespace,
                        interfelements=Element,
                        boundaries=Boundary,
                        materials=types.SimpleNamespace,
-                       soilmaterials=types.SimpleNamespace,
-                       interfmaterials=types.SimpleNamespace,
-                       compositematerials=types.SimpleNamespace,
                        factors=types.SimpleNamespace,
                        )
 
@@ -137,17 +134,18 @@ class BoundariesSection(GeoMixin, CandeSection[item_converters["boundaries"]],
     pass
 
 
+class MaterialsSection(CandeList[item_converters["materials"]],
+                       converter=item_converters["materials"]):
+    """NOTE: the only materials sections are soil, interface, and composite (for link elements)."""
+    pass
+
+
 #########################
 #  CandeList sequences  #
 #########################
 
 class PipeGroups(CandeList[item_converters["pipegroups"]],
                  converter=item_converters["pipegroups"], ):
-    pass
-
-
-class Materials(CandeList[item_converters["materials"]],
-                converter=item_converters["materials"], ):
     pass
 
 
@@ -160,15 +158,15 @@ class Factors(CandeList[item_converters["factors"]],
 #  Materials sequences  #
 ##########################
 
-class SoilMaterials(Materials, converter=item_converters["soilmaterials"]):
+class SoilMaterials(MaterialsSection):
     pass
 
 
-class InterfMaterials(Materials, converter=item_converters["interfmaterials"]):
+class InterfMaterials(MaterialsSection):
     pass
 
 
-class CompositeMaterials(Materials, converter=item_converters["compositematerials"]):
+class CompositeMaterials(MaterialsSection):
     pass
 
 
@@ -186,6 +184,10 @@ class Elements(CandeMapSequence[item_converters["elements"]]):
 
 class Boundaries(CandeMapSequence[item_converters["boundaries"]]):
     seq_type = BoundariesSection
+
+
+class Materials(CandeMapSequence[item_converters["materials"]]):
+    seq_type = MaterialsSection
 
 
 #######################

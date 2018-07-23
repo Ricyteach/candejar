@@ -481,7 +481,6 @@ class CandeObj(CidRW):
         """
         # init conversion map
         node_convert_map = NumConverter(self.nodes)
-        breakpoint()
 
         # change the converter map so CANDE problem connections are resolved (change conversion map target numbers)
         self.make_connections(node_convert_map)
@@ -489,7 +488,7 @@ class CandeObj(CidRW):
         # globalize node numbering
         self.globalize_node_nums(node_convert_map)
 
-        # globalize node references for elements elements and boundaries AND remove node num repeats from element k,l fields
+        # globalize node references for elements and boundaries AND remove node num repeats from element k,l fields
         self.globalize_node_references(node_convert_map)
 
         # move pipe element sequences to front of seq_map
