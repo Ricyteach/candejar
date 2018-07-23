@@ -110,6 +110,7 @@ item_converters = dict(pipegroups=types.SimpleNamespace,
                        materials=types.SimpleNamespace,
                        soilmaterials=types.SimpleNamespace,
                        interfmaterials=types.SimpleNamespace,
+                       compositematerials=types.SimpleNamespace,
                        factors=types.SimpleNamespace,
                        )
 
@@ -167,6 +168,10 @@ class InterfMaterials(Materials, converter=item_converters["interfmaterials"]):
     pass
 
 
+class CompositeMaterials(Materials, converter=item_converters["compositematerials"]):
+    pass
+
+
 ################################
 #  CandeMapSequence sequences  #
 ################################
@@ -199,12 +204,16 @@ class InterfElements(Elements):
     pass
 
 
+###############################
+#  CANDE sequence registries  #
+###############################
+
 cande_seq_dict = dict(zip("pipegroups nodes elements pipeelements soilelements "
                           "interfelements boundaries materials soilmaterials "
-                          "interfmaterials factors".split(),
+                          "interfmaterials compositematerials factors".split(),
                           (PipeGroups, Nodes, Elements, PipeElements,
                            SoilElements, InterfElements, Boundaries, Materials,
-                           SoilMaterials, InterfMaterials, Factors)))
+                           SoilMaterials, InterfMaterials, CompositeMaterials, Factors)))
 
 
 cande_section_dict = dict(zip("nodessection elementssection boundariessection".split(),
