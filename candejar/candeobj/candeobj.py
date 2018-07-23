@@ -423,18 +423,17 @@ class CandeObj(CidRW):
     def make_connections(self, node_converter):
         """The global node numbers in the converter map are mutated so CANDE problem connections are resolved. The
         converter numbers also renumbered starting at 1. The interface elements and nodes, and link elements, are also
-        created.
+        created. Node num attributes are set to zero if the same node already appears in another NodesSection.
         """
         connection_elements: List[Dict[str, Any]] = []
         conn: Connection
         for conn in self.connections:
             if not conn.category.value:
                 conn: MergedConnection
-                # merged connection - renumber so all nodes all the same node number
-                num = min(node.num for node in conn.items)
+                # merged connection - remove number from other sections
                 node: Node
-                for node in conn.items:
-                    node.num = num
+                for node in conn.items[1:]:
+                    node.num = node.skip
             else:
                 conn: Union[InterfaceConnection, LinkConnection]
                 # only two nodes allowed

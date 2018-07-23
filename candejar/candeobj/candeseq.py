@@ -2,9 +2,10 @@
 
 """The interface for cid type objects expected by the module."""
 
+from __future__ import annotations
 import functools
 import types
-from typing import Callable, Any, Optional, TypeVar, overload, Iterable, Sequence, Mapping
+from typing import Callable, Any, Optional, TypeVar, overload, Iterable, Sequence, Mapping, Generic
 
 from . import exc
 from ..candeobj.level3 import Node, Element, Boundary
@@ -48,6 +49,22 @@ geo_type_lookup = dict(nodes="MultiPoint",
                        elements="MultiPolygon",
                        boundaries="MultiNode",
                        )
+
+
+class SkippableMixin(Generic[T]):
+
+    @overload
+    def __getitem__(self, i: int) -> T:
+        ...
+
+    @overload
+    def __getitem__(self, s: slice) -> SkippableMixin[T]:
+        ...
+
+    def __getitem__(self, x):
+        result = super().__getitem__(x)
+        if not result.num:
+            raise exc.CandeIndexError(f"{type(self).__qualname__} index out of range for non-skipped items")
 
 
 class CandeMapSequence(KeyedChainView[T]):
@@ -116,13 +133,13 @@ item_converters = dict(pipegroups=types.SimpleNamespace,
 #  CandeSection sequences  #
 ############################
 
-class NodesSection(GeoMixin, CandeSection[item_converters["nodes"]],
+class NodesSection(GeoMixin, SkippableMixin, CandeSection[item_converters["nodes"]],
                    converter=item_converters["nodes"],
                    geo_type=geo_type_lookup["nodes"]):
     pass
 
 
-class ElementsSection(GeoMixin, CandeSection[item_converters["elements"]],
+class ElementsSection(GeoMixin, SkippableMixin, CandeSection[item_converters["elements"]],
                       converter=item_converters["elements"],
                       geo_type=geo_type_lookup["elements"]):
     pass
@@ -134,7 +151,7 @@ class BoundariesSection(GeoMixin, CandeSection[item_converters["boundaries"]],
     pass
 
 
-class MaterialsSection(CandeList[item_converters["materials"]],
+class MaterialsSection(SkippableMixin, CandeList[item_converters["materials"]],
                        converter=item_converters["materials"]):
     """NOTE: the only materials sections are soil, interface, and composite (for link elements)."""
     pass

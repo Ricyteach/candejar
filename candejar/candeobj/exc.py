@@ -16,3 +16,6 @@ class CandeTypeError(CandeError, TypeError):
 
 class CandeKeyError(CandeError, KeyError):
     pass
+
+class CandeIndexError(CandeError, IndexError):
+    pass

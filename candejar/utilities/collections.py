@@ -598,11 +598,11 @@ class ConvertingList(HasConverterMixin[T], List[T]):
         super().__init__(iterable)
 
     @overload
-    def __getitem__(self, i: int) -> None:
+    def __getitem__(self, i: int) -> T:
         ...
 
     @overload
-    def __getitem__(self, s: slice) -> None:
+    def __getitem__(self, s: slice) -> ConvertingList[T]:
         ...
 
     def __getitem__(self, x):
@@ -632,9 +632,9 @@ class ConvertingList(HasConverterMixin[T], List[T]):
         v = self.converter(v)
         super().append(v)
 
-    def extend(self, iterable: Iterable[V]):
+    def extend(self, iterable: Iterable[V]) -> None:
         iterable = map(self.converter, iterable)
         super().extend(iterable)
 
-    def copy(self) -> ConvertingList:
+    def copy(self) -> ConvertingList[T]:
         return type(self)(self)
