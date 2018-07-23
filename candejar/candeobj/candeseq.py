@@ -15,9 +15,25 @@ from ..utilities.mixins import GeoMixin
 T = TypeVar("T")
 
 
+def mapify_and_unpack_decorator(f: Callable[..., Any]) -> Callable[[Any], Any]:
+    @functools.wraps(f)
+    def wrapped(v: Any) -> Any:
+        return f(**shallow_mapify(v))
+    return wrapped
+
+
 class CandeList(ConvertingList[T]):
     """Extends ConvertingList with a better repr and for specialized subclassing"""
     __slots__ = ()
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        try:
+            # change the converter so it accepts a single argument instead of an unpacked map
+            decorated_converter = mapify_and_unpack_decorator(kwargs.pop("converter"))
+        except KeyError:
+            super().__init_subclass__(**kwargs)
+        else:
+            super().__init_subclass__(converter=decorated_converter, **kwargs)
 
     def __repr__(self) -> str:
         return f"{type(self).__qualname__}({super().__repr__()})"
@@ -43,7 +59,6 @@ class CandeMapSequence(KeyedChainView[T]):
             # seq_type is option so children of subclasses can be created with their own seq_type
             pass
         super().__init_subclass__(**kwargs)
-
 
     def __init__(self, seq_map: Optional[Mapping[Any, CandeList[T]]] = None, **kwargs: Iterable[T]) -> None:
         if type(self) is CandeMapSequence:
@@ -94,63 +109,57 @@ item_converters = dict(pipegroups=types.SimpleNamespace,
                        )
 
 
-def mapify_and_unpack_decorator(f: Callable[..., Any]) -> Callable[[Any], Any]:
-    @functools.wraps(f)
-    def wrapped(v: Any) -> Any:
-        return f(**shallow_mapify(v))
-    return wrapped
-
-
 ############################
 #  CandeSection sequences  #
 ############################
 
-class NodesSection(GeoMixin, CandeList[item_converters["nodes"]], geo_type=geo_type_lookup["nodes"]):
-    # change the converter so it accepts a single argument instead of an unpacked map
-    converter = mapify_and_unpack_decorator(item_converters["nodes"])
+class NodesSection(GeoMixin, CandeList[item_converters["nodes"]],
+                   converter=item_converters["nodes"],
+                   geo_type=geo_type_lookup["nodes"]):
+    pass
 
 
-class ElementsSection(GeoMixin, CandeList[item_converters["elements"]], geo_type=geo_type_lookup["elements"]):
-    # change the converter so it accepts a single argument instead of an unpacked map
-    converter = mapify_and_unpack_decorator(item_converters["elements"])
+class ElementsSection(GeoMixin, CandeList[item_converters["elements"]],
+                      converter=item_converters["elements"],
+                      geo_type=geo_type_lookup["elements"]):
+    pass
 
 
-class BoundariesSection(GeoMixin, CandeList[item_converters["boundaries"]], geo_type=geo_type_lookup["boundaries"]):
-    # change the converter so it accepts a single argument instead of an unpacked map
-    converter = mapify_and_unpack_decorator(item_converters["boundaries"])
+class BoundariesSection(GeoMixin, CandeList[item_converters["boundaries"]],
+                        converter=item_converters["boundaries"],
+                        geo_type=geo_type_lookup["boundaries"]):
+    pass
 
 
 #########################
 #  CandeList sequences  #
 #########################
 
-class PipeGroups(CandeList[item_converters["pipegroups"]]):
-    # change the converter so it accepts a single argument instead of an unpacked map
-    converter = mapify_and_unpack_decorator(item_converters["pipegroups"])
+class PipeGroups(CandeList[item_converters["pipegroups"]],
+                 converter=item_converters["pipegroups"], ):
+    pass
 
 
-class Materials(CandeList[item_converters["materials"]]):
-    # change the converter so it accepts a single argument instead of an unpacked map
-    converter = mapify_and_unpack_decorator(item_converters["materials"])
+class Materials(CandeList[item_converters["materials"]],
+                converter=item_converters["materials"], ):
+    pass
 
 
-class Factors(CandeList[item_converters["factors"]]):
-    # change the converter so it accepts a single argument instead of an unpacked map
-    converter = mapify_and_unpack_decorator(item_converters["factors"])
+class Factors(CandeList[item_converters["factors"]],
+              converter=item_converters["factors"], ):
+    pass
 
 
 ##########################
 #  Materials sequences  #
 ##########################
 
-class SoilMaterials(Materials):
-    # change the converter so it accepts a single argument instead of an unpacked map
-    converter = mapify_and_unpack_decorator(item_converters["soilmaterials"])
+class SoilMaterials(Materials, converter=item_converters["soilmaterials"]):
+    pass
 
 
-class InterfMaterials(Materials):
-    # change the converter so it accepts a single argument instead of an unpacked map
-    converter = mapify_and_unpack_decorator(item_converters["interfmaterials"])
+class InterfMaterials(Materials, converter=item_converters["interfmaterials"]):
+    pass
 
 
 ################################
