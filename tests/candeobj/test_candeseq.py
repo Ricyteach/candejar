@@ -14,16 +14,18 @@ def test_cande_sequence_subclass_missing_converter_error():
         C()
 
 @pytest.fixture
-def c_list():
-    return list(range(1,7))
-
-@pytest.fixture
 def C_str_holder():
-    return types.new_class("C", (CandeList[str],), dict(converter = str))
+    return types.new_class("C", (CandeList[str],), dict(converter = types.SimpleNamespace))
+
+range_ = range(3)
 
 @pytest.fixture
-def c_instance(C_str_holder, c_list):
-    return C_str_holder(c_list)
+def list_():
+    return [dict(a=i+1, b=i+2) for i in range_]
+
+@pytest.fixture
+def c_instance(C_str_holder, list_):
+    return C_str_holder(list_)
 
 def test_cande_sequence():
     with pytest.raises(AttributeError):
@@ -33,23 +35,12 @@ def test_cande_sequence_subclass(C_str_holder):
     assert C_str_holder
     assert not C_str_holder()
 
-@pytest.mark.parametrize("i, int_result", [
-    (-1, 6),
-    (0, 1),
-    (1, 2),
-    (2, 3),
-    (3, 4),
-    (4, 5),
-    (5, 6),
-    (7, None),
-])
-def test_c_instance_(i, int_result, c_instance):
-    if int_result is None:
+@pytest.mark.parametrize("i", [-1, *range_, max(range_)+1])
+def test_c_instance_(i, list_, c_instance):
+    if i>=len(c_instance):
         with pytest.raises(IndexError):
             c_instance[i]
     else:
-        assert c_instance[i]==str(int_result)
-        assert c_instance[i]!=int(int_result)
+        assert c_instance[i]==types.SimpleNamespace(**list_[i])
+        assert c_instance[i]!=list_[i]
 
-def test_make_candesequence():
-    assert cande_seq_dict
