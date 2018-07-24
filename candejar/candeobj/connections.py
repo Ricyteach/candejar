@@ -37,8 +37,7 @@ class ConnectionCategory(enum.Enum):
     LONGITUDINAL = 11
 
 
-ARG_SENTINEL_T = type("ARG_SENTINEL_T", (), {})
-ARG_SENTINEL = ARG_SENTINEL_T()
+ARG_SENTINEL = type("ARG_SENTINEL_T", (), {})
 
 
 class Tolerance(StandardDescriptor, float):
@@ -50,7 +49,7 @@ class Tolerance(StandardDescriptor, float):
     """
     default: float = 0.1
 
-    def __new__(cls, x: Union[ARG_SENTINEL_T, SupportsFloat, str, bytes] = ARG_SENTINEL):
+    def __new__(cls, x: Union[SupportsFloat, str, bytes] = ARG_SENTINEL):
         if x is ARG_SENTINEL:
             x = cls.default
         return super().__new__(cls, x)

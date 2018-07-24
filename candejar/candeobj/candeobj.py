@@ -24,6 +24,7 @@ from .level3 import Node
 from ..cidobjrw.cidrwabc import CidRW
 from ..cidobjrw.cidobj import CidObj
 from ..utilities.mapping_tools import shallow_mapify
+from ..utilities.skip import skippable_len, SkipInt
 
 T = TypeVar("T", bound="TotalDef")
 
@@ -308,7 +309,7 @@ class CandeObj(CidRW):
         # top level totals
         total_def: TotalDef
         for total_def in CANDE_TOTAL_DEFS:
-            attr_len = len(getattr(self, total_def.seq_name))
+            attr_len = skippable_len(getattr(self, total_def.seq_name))
             # TODO: handle situation when attr_len includes nodes with num set to zero because exist in another NodesSection
             attr_max = 0
             for seq_obj, sub_attrs in ((getattr(self, ch), [sub] if isinstance(sub, str) else sub)
@@ -420,20 +421,21 @@ class CandeObj(CidRW):
                             conn.tol = tol
                         self.connections.append(conn)
 
-    def make_connections(self, node_converter):
+    def make_connections(self):
         """The global node numbers in the converter map are mutated so CANDE problem connections are resolved. The
         converter numbers also renumbered starting at 1. The interface elements and nodes, and link elements, are also
-        created. Node num attributes are set to zero if the same node already appears in another NodesSection.
+        created. Node num attributes are set to SkipInt() (ie, zero) if the same node already appears in another
+        NodesSection.
         """
         connection_elements: List[Dict[str, Any]] = []
         conn: Connection
         for conn in self.connections:
             if not conn.category.value:
                 conn: MergedConnection
-                # merged connection - remove number from other sections
+                # merged connection - set num to be skipped in all sections but first
                 node: Node
                 for node in conn.items[1:]:
-                    node.num = node.skip
+                    node.num = SkipInt(node.num)
             else:
                 conn: Union[InterfaceConnection, LinkConnection]
                 # only two nodes allowed
@@ -457,17 +459,6 @@ class CandeObj(CidRW):
                         raise exc.CandeValueError(f"Mat number {conn.mat!s} was not found in the {materials_attr} list: {str(mat_nums)[1:-1]}")
                 connection_elements.append(element_ns)
 
-        if any(not conn.category.value for conn in self.connections):
-            # re-number node converter to account for unused numbers after handling of merged nodes
-            node_converter.renumber()
-
-        if any(conn.category.value for conn in self.connections):
-            # TODO: add interface node section for newly added interface connections and update interface element k values
-            # TODO: move existing interface sections to back of nodes section map
-            raise NotImplementedError("Non-merged connections not yet fully supported")
-            # incorporate connection elements into problem
-            self.elements[self.connections_key] = connection_elements
-
     def prepare(self):
         """Make CANDE problem ready for saving. Affects all elements AND all boundaries.
 
@@ -478,11 +469,22 @@ class CandeObj(CidRW):
             5. Moves beam sections to the front of the elements map
             6. Updates all totals (nodes, elements, boundaries, soil/interf materials, pipe groups, steps)
         """
+        # change the converter map so CANDE problem connections are resolved (change conversion map target numbers)
+        self.make_connections()
+
         # init conversion map
         node_convert_map = NumConverter(self.nodes)
 
-        # change the converter map so CANDE problem connections are resolved (change conversion map target numbers)
-        self.make_connections(node_convert_map)
+        if any(not conn.category.value for conn in self.connections):
+            # re-number node converter to account for unused numbers after handling of merged nodes
+            node_convert_map.renumber()
+
+        if any(conn.category.value for conn in self.connections):
+            # TODO: add interface node section for newly added interface connections and update interface element k values
+            # TODO: move existing interface sections to back of nodes section map
+            raise NotImplementedError("Non-merged connections not yet fully supported")
+            # incorporate connection elements into problem
+            self.elements[self.connections_key] = connection_elements
 
         # globalize node numbering
         self.globalize_node_nums(node_convert_map)

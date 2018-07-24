@@ -3,29 +3,27 @@
 """Special tools for working with candeobj types."""
 
 from __future__ import annotations
-from typing import MutableMapping, Iterator, Union, TypeVar, Any, Dict, Callable
+from typing import MutableMapping, Iterator, Union, TypeVar, Any, Dict
 import itertools
 
 from . import exc
-from .candeseq import Nodes, Elements, NodesSection, ElementsSection
+from .candeseq import Nodes, Elements, Materials, NodesSection, ElementsSection, MaterialsSection
+from ..utilities.skip import skippable_len, iter_skippable
 
-CandeSeq = TypeVar("CandeSeq", bound=Union[Nodes, Elements])
-SectionSeq = TypeVar("SectionSeq", bound=Union[NodesSection, ElementsSection])
+CandeSeq = TypeVar("CandeSeq", bound=Union[Nodes, Elements, Materials])
+SectionSeq = TypeVar("SectionSeq", bound=Union[NodesSection, ElementsSection, MaterialsSection])
 
 
 class SubConverter(MutableMapping[int, int]):
     """Builds a mapping that turns an old item num attribute into a new one
-    based on the order. The new new item num attributed begins at the starting
+    based on the order. The new new item num attribute begins at the starting
     point, start.
     """
 
     def __init__(self, start: int, seq: SectionSeq) -> None:
         self.start = start
         self.seq = seq
-
-        seen = set()
-        keys = [(num, seen.add(num))[0] for num in self.nums if num not in seen]
-        self._d: Dict[int, int] = dict(zip(keys, itertools.count(self.start)))
+        self._d: Dict[int, int] = dict(zip(list(self.nums), itertools.count(self.start)))
 
     def __getitem__(self, k: int) -> int:
         try:
@@ -55,14 +53,15 @@ class SubConverter(MutableMapping[int, int]):
 
     @property
     def nums(self) -> Iterator[int]:
-        """The current num attributes for the referenced section sequence"""
-        yield from (i.num for i in self.seq)
+        """The current num attributes for the referenced section sequence, including skippable items"""
+        yield from (i.num for i in iter_skippable(self.seq))
 
     def copy(self) -> SubConverter:
         cls = type(self)
         o = cls.__new__(cls)
         o.start, o.seq, o._d = self.start, self.seq, self._d.copy()
         return o
+
 
 class NumConverter(MutableMapping[int, SubConverter]):
     """Builds a mapping of SubConverter objects assigned to each section"""
@@ -110,9 +109,9 @@ class NumConverter(MutableMapping[int, SubConverter]):
     def renumber(self):
         """Re-globalize new_num values of existing converter
 
-        Repeated new_node numbers are set to zero to signify they are already in another NodesSection"""
+        Numbers for repeated nodes should have been already set to zero to signify they are already in another
+        NodesSection. These node numbers are not changed."""
         ctr = itertools.count(1)
-        new_nums_seen = set()
         for sub_converter in self.values():
             for old_num, new_num in sub_converter.items():
                 if new_num not in new_nums_seen:
@@ -127,7 +126,7 @@ class NumConverter(MutableMapping[int, SubConverter]):
 
     @property
     def seq_len(self) -> int:
-        return len(self.seq)
+        return sum(skippable_len(s) for s in self.seq.seq_map.values())
 
     @property
     def seq_type(self) -> str:
