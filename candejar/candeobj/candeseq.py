@@ -5,13 +5,14 @@
 from __future__ import annotations
 import functools
 import types
-from typing import Callable, Any, Optional, TypeVar, overload, Iterable, Sequence, Mapping, Generic
+from typing import Callable, Any, Optional, TypeVar, overload, Iterable, Sequence, Mapping
 
 from . import exc
 from ..candeobj.level3 import Node, Element, Boundary
 from ..utilities.mapping_tools import shallow_mapify
 from ..utilities.collections import KeyedChainView, ConvertingList
 from ..utilities.mixins import GeoMixin
+from ..utilities.skip import SkippableIterMixin
 
 T = TypeVar("T")
 
@@ -49,22 +50,6 @@ geo_type_lookup = dict(nodes="MultiPoint",
                        elements="MultiPolygon",
                        boundaries="MultiNode",
                        )
-
-
-class SkippableMixin(Generic[T]):
-
-    @overload
-    def __getitem__(self, i: int) -> T:
-        ...
-
-    @overload
-    def __getitem__(self, s: slice) -> SkippableMixin[T]:
-        ...
-
-    def __getitem__(self, x):
-        result = super().__getitem__(x)
-        if not result.num:
-            raise exc.CandeIndexError(f"{type(self).__qualname__} index out of range for non-skipped items")
 
 
 class CandeMapSequence(KeyedChainView[T]):
@@ -133,16 +118,16 @@ item_converters = dict(pipegroups=types.SimpleNamespace,
 #  CandeSection sequences  #
 ############################
 
-class NodesSection(GeoMixin, SkippableMixin, CandeSection[item_converters["nodes"]],
+class NodesSection(GeoMixin, SkippableIterMixin, CandeSection[item_converters["nodes"]],
                    converter=item_converters["nodes"],
                    geo_type=geo_type_lookup["nodes"]):
-    pass
+    skippable_attr = "num"
 
 
-class ElementsSection(GeoMixin, SkippableMixin, CandeSection[item_converters["elements"]],
+class ElementsSection(GeoMixin, SkippableIterMixin, CandeSection[item_converters["elements"]],
                       converter=item_converters["elements"],
                       geo_type=geo_type_lookup["elements"]):
-    pass
+    skippable_attr = "num"
 
 
 class BoundariesSection(GeoMixin, CandeSection[item_converters["boundaries"]],
@@ -151,10 +136,10 @@ class BoundariesSection(GeoMixin, CandeSection[item_converters["boundaries"]],
     pass
 
 
-class MaterialsSection(SkippableMixin, CandeList[item_converters["materials"]],
+class MaterialsSection(SkippableIterMixin, CandeList[item_converters["materials"]],
                        converter=item_converters["materials"]):
     """NOTE: the only materials sections are soil, interface, and composite (for link elements)."""
-    pass
+    skippable_attr = "num"
 
 
 #########################
