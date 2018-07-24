@@ -24,6 +24,7 @@ from .level3 import Node
 from ..cidobjrw.cidrwabc import CidRW
 from ..cidobjrw.cidobj import CidObj
 from ..utilities.mapping_tools import shallow_mapify
+from ..utilities.skip import skippable_len
 
 T = TypeVar("T", bound="TotalDef")
 
@@ -308,7 +309,7 @@ class CandeObj(CidRW):
         # top level totals
         total_def: TotalDef
         for total_def in CANDE_TOTAL_DEFS:
-            attr_len = len(getattr(self, total_def.seq_name))
+            attr_len = skippable_len(getattr(self, total_def.seq_name))
             # TODO: handle situation when attr_len includes nodes with num set to zero because exist in another NodesSection
             attr_max = 0
             for seq_obj, sub_attrs in ((getattr(self, ch), [sub] if isinstance(sub, str) else sub)
