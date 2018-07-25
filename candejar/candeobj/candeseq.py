@@ -100,17 +100,32 @@ class CandeMapSequence(KeyedChainView[T]):
         super().__setitem__(x, v)
 
 
+############################
+#  Cande Item converters   #
+############################
+
 # TODO: replace types.SimpleNamespace kwarg converters with cool types that do stuff
 # TODO: maybe make these more robust so filters out unnecessary keyword arguments...?
-item_converters = dict(pipegroups=types.SimpleNamespace,
+
+Pipegroup = types.SimpleNamespace
+Node = Node
+Element = Element
+PipeElement = Element
+SoilElement = Element
+InterfElement = Element
+Boundary = Boundary
+Material = types.SimpleNamespace
+Factor = types.SimpleNamespace
+
+item_converters = dict(pipegroups=Pipegroup,
                        nodes=Node,
                        elements=Element,
-                       pipeelements=Element,
-                       soilelements=Element,
-                       interfelements=Element,
+                       pipeelements=PipeElement,
+                       soilelements=SoilElement,
+                       interfelements=InterfElement,
                        boundaries=Boundary,
-                       materials=types.SimpleNamespace,
-                       factors=types.SimpleNamespace,
+                       materials=Material,
+                       factors=Factor,
                        )
 
 

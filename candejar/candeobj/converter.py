@@ -3,39 +3,39 @@
 """Special tools for working with candeobj types."""
 
 from __future__ import annotations
-from typing import MutableMapping, Iterator, Union, TypeVar, Any, Dict
+from typing import MutableMapping, Iterator, Union, TypeVar, Any, Dict, Generic
 import itertools
 
 from . import exc
-from .candeseq import Nodes, Elements, Materials, NodesSection, ElementsSection, MaterialsSection
+from .candeseq import Nodes, Elements, Materials, NodesSection, ElementsSection, \
+    MaterialsSection, Node, Element, Material
 from ..utilities.skip import skippable_len, iter_skippable
 
 CandeSeq = TypeVar("CandeSeq", bound=Union[Nodes, Elements, Materials])
-SectionSeq = TypeVar("SectionSeq", bound=Union[NodesSection, ElementsSection, MaterialsSection])
+SectionSeq = TypeVar("SectionSeq", bound=Union[NodesSection, ElementsSection,
+                                               MaterialsSection])
+HasNum = TypeVar("HasNum", bound=Union[Node, Element, Material])
 
 
-class SubConverter(MutableMapping[int, int]):
-    """Builds a mapping that turns an old item num attribute into a new one
-    based on the order. The new new item num attribute begins at the starting
-    point, start.
-    """
+class NumMap(Generic[HasNum], MutableMapping[int, HasNum]):
+    """Maps item num attribute values to Cande sequence member objects."""
 
-    def __init__(self, start: int, seq: SectionSeq) -> None:
-        self.start = start
+    def __init__(self, seq: SectionSeq) -> None:
         self.seq = seq
-        self._d: Dict[int, int] = dict(zip(list(self.nums), itertools.count(self.start)))
+        self._d: Dict[int, HasNum] = dict((has_n.num, has_n)
+                                          for has_n in iter_skippable(self.seq))
 
-    def __getitem__(self, k: int) -> int:
+    def __getitem__(self, k: int) -> HasNum:
         try:
             return self._d.__getitem__(k)
         except KeyError:
-            if k in self.nums:
-                raise exc.CandeKeyError(f"conversion value missing for item num {k!s}")
-            raise exc.CandeKeyError(f"item num {k!s} does not appear in {type(self.seq).__qualname__}")
+            raise exc.CandeKeyError(f"item num {k!s} does not appear in "
+                                    f"{type(self.seq).__qualname__}")
 
-    def __setitem__(self, k: int, v: int) -> None:
-        if k not in self._d.keys() and k not in self.nums:
-            raise exc.CandeKeyError(f"can only change existing keys - {k!s} not in nums;")
+    def __setitem__(self, k: int, v: HasNum) -> None:
+        if k not in self._d.keys():
+            raise exc.CandeKeyError(f"can only change existing keys - "
+                                    f"{k!s} not in nums;")
         else:
             self._d.__setitem__(k, v)
 
@@ -49,49 +49,57 @@ class SubConverter(MutableMapping[int, int]):
         return self._d.__len__()
 
     def __repr__(self) -> str:
-        return f'SubConverter(start={self.start!r}, {self._d!r})'
+        return f'NumMap(start={self.start!r}, {self._d!r})'
 
-    @property
-    def nums(self) -> Iterator[int]:
-        """The current num attributes for the referenced section sequence, including skippable items"""
-        yield from (i.num for i in iter_skippable(self.seq))
-
-    def copy(self) -> SubConverter:
+    def copy(self) -> NumMap[HasNum]:
         cls = type(self)
         o = cls.__new__(cls)
         o.start, o.seq, o._d = self.start, self.seq, self._d.copy()
         return o
 
+    def renumber(self, start: int):
+        """Mutates the num attribute values based on the target node order.
 
-class NumConverter(MutableMapping[int, SubConverter]):
-    """Builds a mapping of SubConverter objects assigned to each section"""
+        The first num attribute is determined by start argument. Each old item
+        num attribute then maps to a node with a new num attribute value. The
+        new item num attribute begins at the starting point, start.
+        """
+        ctr = itertools.count(start)
+        for has_num in self.values():
+            has_num.num = next(ctr)
+
+
+class NumMapsManager(MutableMapping[int, NumMap]):
+    """Builds a mapping of NumMap objects assigned to each section"""
 
     def __init__(self, seq: CandeSeq):
         self.seq = seq
-        self._d: Dict[int, SubConverter] = dict()
+        self._d: Dict[int, NumMap] = dict()
 
-        start = 1
         for section_seq in self.seq.seq_map.values():
-            c = self._d[id(section_seq)] = SubConverter(start, section_seq)
-            start += len(c)
+            self._d[id(section_seq)] = NumMap(section_seq)
 
-    def __getitem__(self, k: int) -> SubConverter:
+    def __getitem__(self, k: int) -> NumMap:
         try:
             return self._d.__getitem__(k)
         except KeyError:
             if k in self.ids:
-                raise exc.CandeKeyError(f"conversion mapping missing for section name {k!s}")
-            raise exc.CandeKeyError(f"section name {k!s} does not appear in {type(self.seq).__qualname__}")
+                raise exc.CandeKeyError(f"conversion mapping missing for "
+                                        f"section name {k!s}")
+            raise exc.CandeKeyError(f"section name {k!s} does not appear in "
+                                    f"{type(self.seq).__qualname__}")
 
-    def __setitem__(self, k: int, v: SubConverter) -> None:
+    def __setitem__(self, k: int, v: NumMap) -> None:
         if k not in self._d.keys() and k not in self.ids:
-            raise exc.CandeKeyError(f"can only change existing keys - {k!s} not in sections;")
+            raise exc.CandeKeyError(f"can only change existing keys - "
+                                    f"{k!s} not in sections;")
         else:
             self._d.__setitem__(k, v)
 
     def __delitem__(self, k: int) -> None:
         if k in self.ids:
-            raise exc.CandeKeyError(f"section name {k!s} must first be removed from {type(self.seq).__qualname__}")
+            raise exc.CandeKeyError(f"section name {k!s} must first be removed "
+                                    f"from {type(self.seq).__qualname__}")
         self._d.__delitem__(k)
 
     def __iter__(self) -> Iterator[int]:
@@ -101,24 +109,19 @@ class NumConverter(MutableMapping[int, SubConverter]):
         return self._d.__len__()
 
     def __repr__(self) -> str:
-        return f'NumConverter(seq_type={self.seq_type!r}, seq_len={self.seq_len!r}, seq_id={self.seq_id!r})'
+        return f'NumMapsManager(seq_type={self.seq_type!r}, seq_len={self.seq_len!r}, seq_id={self.seq_id!r})'
 
     def by_name(self, name: str):
         return self._d[id(self.seq[name])]
 
     def renumber(self):
-        """Re-globalize new_num values of existing converter
+        """Globalize num attribute values of all the target nodes.
 
-        Numbers for repeated nodes should have been already set to zero to signify they are already in another
-        NodesSection. These node numbers are not changed."""
-        ctr = itertools.count(1)
-        for sub_converter in self.values():
-            for old_num, new_num in sub_converter.items():
-                if new_num not in new_nums_seen:
-                    sub_converter[old_num] = next(ctr)
-                    new_nums_seen.add(new_num)
-                else:
-                    sub_converter[old_num] = SKIP
+        """
+        start = 1
+        for num_map in self.values():
+            num_map.renumber(start)
+            start += len(num_map)
 
     @property
     def seq_id(self) -> int:

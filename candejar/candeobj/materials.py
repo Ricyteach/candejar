@@ -56,7 +56,7 @@ class Interface(Material):
 
 
 @dataclass
-class Link(Material):
+class Composite(Material):
     # D2
     group1: int = 0
     group2: int = 0

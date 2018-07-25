@@ -17,7 +17,7 @@ from .. import msh
 from .candeseq import cande_seq_dict, PipeGroups, Nodes, Elements, PipeElements, SoilElements, InterfElements, \
     Boundaries, Materials, SoilMaterials, InterfMaterials, CompositeMaterials, Factors, NodesSection, ElementsSection, BoundariesSection
 from .connections import MergedConnection, InterfaceConnection, LinkConnection, CompositeConnection, Connection, Connections, Tolerance
-from .converter import NumConverter
+from .converter import NumMapsManager
 from ..cid import CidLine
 from ..cidrw import CidLineStr
 from .level3 import Node
@@ -327,7 +327,7 @@ class CandeObj(CidRW):
         pass
 
 
-    def globalize_node_references(self, converter: NumConverter):
+    def globalize_node_references(self, converter: NumMapsManager):
         """Re-numbers all node numbers, and references to them, based on current global node order.
 
         Repeated node numbers in element k and l fields are removed.
@@ -356,7 +356,7 @@ class CandeObj(CidRW):
                 new = sub_map[old]
                 boundary.node = new
 
-    def globalize_node_nums(self, converter: NumConverter):
+    def globalize_node_nums(self, converter: NumMapsManager):
         """Re-numbers all node numbers based on converter."""
         start = 1
 
@@ -469,11 +469,11 @@ class CandeObj(CidRW):
             5. Moves beam sections to the front of the elements map
             6. Updates all totals (nodes, elements, boundaries, soil/interf materials, pipe groups, steps)
         """
+        # init conversion map
+        node_convert_map = NumMapsManager(self.nodes)
+
         # change the converter map so CANDE problem connections are resolved (change conversion map target numbers)
         self.make_connections()
-
-        # init conversion map
-        node_convert_map = NumConverter(self.nodes)
 
         if any(not conn.category.value for conn in self.connections):
             # re-number node converter to account for unused numbers after handling of merged nodes
