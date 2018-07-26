@@ -5,7 +5,7 @@
 
 import pytest
 
-from candejar.candeobj.pipe_groups import Basic
+from candejar.candeobj.parts.pipe_groups import Basic
 from candejar.candeobj.keyby import key_by_cid_linetype
 
 @pytest.fixture

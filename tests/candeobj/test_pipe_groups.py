@@ -5,8 +5,8 @@
 
 import pytest
 
-from candejar.candeobj.pipe_groups import PipeGroup, Basic, Aluminum, Steel, Plastic, make_pipe_group, CandeValueError
-from candejar.candeobj.bases import CandeNum, CandeStr
+from candejar.candeobj.parts.pipe_groups import PipeGroup, Basic, Aluminum, Steel, Plastic, make_pipe_group, CandeValueError
+from candejar.candeobj.parts.bases import CandeNum, CandeStr
 
 @pytest.fixture
 def dumb_cid():

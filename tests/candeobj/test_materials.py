@@ -5,8 +5,8 @@
 
 import pytest
 
-from candejar.candeobj.materials import Isotropic, MohrCoulomb, Interface
-from candejar.candeobj.duncanselig import  DuncanSelig, Duncan, Selig, \
+from candejar.candeobj.parts.materials import Isotropic, MohrCoulomb, Interface
+from candejar.candeobj.parts.duncanselig import  DuncanSelig, Duncan, Selig, \
     DuncanCanned, SeligCanned
 from candejar.candeobj.exc import CandeValueError
 

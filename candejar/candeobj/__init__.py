@@ -2,9 +2,8 @@
 
 """Sub package for working with CANDE problems as a Python data model object."""
 
-from . import materials, pipe_groups, level3
-from .materials import Material
-from .pipe_groups import  PipeGroup
-from .level3 import  Node, Element, Boundary
+from .parts import  Node, Element, Boundary, level3, materials, pipe_groups
+from .parts.materials import Material
+from .parts.pipe_groups import  PipeGroup
 
 __all__ = "level3 pipe_groups materials".split()

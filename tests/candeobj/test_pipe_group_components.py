@@ -5,7 +5,7 @@
 
 import pytest
 
-from candejar.candeobj.bases import CandeStr, CandeNum
+from candejar.candeobj.parts.bases import CandeStr, CandeNum
 
 zero=CandeNum(0)
 BASIC=CandeStr("BASIC")
@@ -17,7 +17,7 @@ SMOOTH=CandeStr("SMOOTH")
 PROFILE=CandeStr("PROFILE")
 
 
-from candejar.candeobj.pipe_group_components import CandeComponent, PipeGroupComponent, PipeGroupGeneralComponent, \
+from candejar.candeobj.parts.pipe_group_components import CandeComponent, PipeGroupComponent, PipeGroupGeneralComponent, \
     BasicComponent, AluminumComponent, SteelComponent, PlasticComponent, \
     Basic1Component, Basic2Component,\
     Plastic1Component, Plastic1GeneralComponent, Plastic1SmoothComponent, Plastic1ProfileComponent,\

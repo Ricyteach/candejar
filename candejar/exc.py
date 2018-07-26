@@ -18,5 +18,6 @@ class CandejarValueError(CandejarError, ValueError):
 class CandeAttributeError(CandejarError, AttributeError):
     pass
 
+
 class CandeIndexError(CandejarError, IndexError):
     pass

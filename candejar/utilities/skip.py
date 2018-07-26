@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 
-"""Module for items that can be skipped during iteration. The default is for a Skip() instance to be skipped during
-iteration but not during any other operation.
+"""Module for items that can be skipped during iteration. The default is for a
+Skip() instance to be skipped during iteration but not during any other operation.
 
-Special skippable_len and iter_skippable functions also provided to manage ignoring of skipped items appropriately.
+Special skippable_len and iter_skippable functions also provided to manage
+ignoring of skipped items appropriately.
 """
 
 from __future__ import annotations
 from .. import exc
-from typing import TypeVar, Union, Sequence, ClassVar, Iterator, Generic, Sized, SupportsInt, Iterable
+from typing import TypeVar, Union, Sequence, ClassVar, Iterator, Generic, Sized, \
+    SupportsInt, Iterable
 
 
 class Skip:
@@ -32,7 +34,7 @@ T = TypeVar('T')
 S_co = TypeVar('S', bound='SkippableIterMixin')
 
 
-class SkippableIterMixin(Generic[T], Sequence[Union[T, Skip]]):
+class SkippableIterMixin(Generic[T]):
     """Items are skipped during iteration if the inspected field is a subclass of Skip"""
 
     skippable_attr: ClassVar[str]
@@ -40,7 +42,8 @@ class SkippableIterMixin(Generic[T], Sequence[Union[T, Skip]]):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         if not hasattr(self, "skippable_attr"):
-            raise exc.CandejarTypeError(f"SkippableMixin subclass 'skippable_attr' missing for "
+            raise exc.CandejarTypeError(f"SkippableIterMixin subclass "
+                                        f"'skippable_attr' missing for "
                                         f"{type(self).__qualname__} object ")
 
     def __iter__(self) -> Iterator[T]:

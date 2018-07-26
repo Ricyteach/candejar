@@ -3,7 +3,8 @@
 """Special mixin classes."""
 
 from __future__ import annotations
-from typing import Callable, Any, Dict, Optional, Counter, TypeVar, Generic, Type, Sequence, NamedTuple, ClassVar
+from typing import Callable, Any, Dict, Optional, Counter, TypeVar, Generic, \
+    Type, Sequence, NamedTuple, ClassVar
 
 
 class ChildRegistryError(Exception):
@@ -356,3 +357,10 @@ class GeoMixin:
             raise GeoInterfaceError(f"geo_type argument required to subclass {cls.__qualname__}")
         cls.__geo_interface__ = GeoInterface(geo_type)
         super().__init_subclass__(**kwargs)
+
+
+class WithKwargsMixin:
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args)
+        for k, v in kwargs.items():
+            setattr(self, k, v)

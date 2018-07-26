@@ -11,9 +11,8 @@ from typing import Union, ClassVar, Sequence, SupportsFloat, List
 import abc
 
 from .exc import CandeValueError, CandeTypeError
-from .level3 import Node
+from .parts import Node
 from ..utilities.descriptors import StandardDescriptor
-from ..utilities.candeobj import CandeList
 
 
 def check_abc(instance, cls):

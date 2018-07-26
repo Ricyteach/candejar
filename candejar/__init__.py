@@ -8,4 +8,4 @@ __version__ = '0.1.0'
 
 from . import cande, select
 from .candeobj.candeobj import CandeObj
-from .candeobj.pipe_groups import PipeType
+from .candeobj.parts.pipe_groups import PipeType

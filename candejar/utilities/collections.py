@@ -6,8 +6,9 @@ from __future__ import annotations
 
 import functools
 import itertools
-from typing import List, Tuple, Any, overload, Sequence, MutableSequence, Generic, TypeVar, Type, Union, Optional, \
-    Iterable, Iterator, Mapping, Callable, ClassVar
+from typing import List, Tuple, Any, overload, Sequence, MutableSequence, \
+    Generic, TypeVar, Type, Union, Optional, Iterable, Iterator, Mapping, \
+    Callable, ClassVar
 
 T = TypeVar("T")
 NO_SLICE = object()

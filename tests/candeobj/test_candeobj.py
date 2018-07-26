@@ -62,8 +62,8 @@ def test_add_from_msh_all_obj(monkeypatch, cande_obj_standard: CandeObj, msh_all
 
 @pytest.fixture
 def new_cobj():
-    new_cobj = CandeObj()
-    return new_cobj
+    c = CandeObj()
+    return c
 
 
 def test_update_totals(new_cobj):

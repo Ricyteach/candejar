@@ -20,7 +20,7 @@ from .connections import MergedConnection, InterfaceConnection, LinkConnection, 
 from .converter import NumMapsManager
 from ..cid import CidLine
 from ..cidrw import CidLineStr
-from .level3 import Node
+from .parts import Node
 from ..cidobjrw.cidrwabc import CidRW
 from ..cidobjrw.cidobj import CidObj
 from ..utilities.mapping_tools import shallow_mapify
