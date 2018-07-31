@@ -24,7 +24,7 @@ class NumMap(Generic[HasNum], MutableMapping[int, HasNum]):
 
     def __getitem__(self, k: int) -> HasNum:
         try:
-            return self._d.__getitem__(k)
+            return self._d[k]
         except KeyError:
             raise exc.CandeKeyError(f"item num {k!s} does not appear in "
                                     f"{type(self.section).__qualname__}")
@@ -32,21 +32,21 @@ class NumMap(Generic[HasNum], MutableMapping[int, HasNum]):
     def __setitem__(self, k: int, v: HasNum) -> None:
         if k not in self._d.keys():
             raise exc.CandeKeyError(f"can only change existing keys - "
-                                    f"{k!s} not in nums;")
+                                    f"use update() instead")
         else:
-            self._d.__setitem__(k, v)
+            self._d[k] = v
 
     def __delitem__(self, k: int) -> None:
-        self._d.__delitem__(k)
+        del self._d[k]
 
     def __iter__(self) -> Iterator[int]:
         return iter(self._d)
 
     def __len__(self) -> int:
-        return self._d.__len__()
+        return len(self._d)
 
     def __repr__(self) -> str:
-        return f'NumMap(start={self.start!r}, {self._d!r})'
+        return f'{type(self).__qualname__!s}({self._d!r})'
 
     def copy(self) -> NumMap[HasNum]:
         cls = type(self)
