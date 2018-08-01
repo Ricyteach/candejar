@@ -433,9 +433,11 @@ class CandeObj(CidRW):
             if not conn.category.value:
                 conn: MergedConnection
                 # merged connection - set num to be skipped in all sections but first
-                node: Node
-                for node in conn.items[1:]:
-                    node.num = SkipInt(node.num)
+                master, *slaves = conn.items
+                master.slaves = slaves
+                for slave in slaves:
+                    slave.num = SkipInt(slave.num)
+                    slave.master = master
             else:
                 conn: Union[InterfaceConnection, LinkConnection]
                 # only two nodes allowed
