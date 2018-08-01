@@ -4,7 +4,9 @@
 
 from inspect import getfullargspec
 from functools import wraps
-from typing import Callable, Generator, Any, Optional, Union, Type, Iterable, Counter
+from typing import Callable, Any, Optional, Union, Iterable, Counter
+from inspect import signature
+
 
 _NO_CALLABLE_TYPE = type("_NO_CALLABLE_TYPE", (), {})
 _NO_CALLABLE = _NO_CALLABLE_TYPE()
@@ -117,3 +119,30 @@ def generator_ended_signal(generator_func: Union[_NO_GEN_TYPE,GeneratorFunction]
         # outer decorator was called like @generator_ended_signal or generator_ended_signal(my_gen, return_value="foo")
         return generator_decorator(generator_func)
 '''
+
+
+def init_kwargs(cls):
+    """Calls super().__init__(*kwargs) at the end of the defined __init__ method.
+
+    Intended for use on @dataclass classes.
+
+    Example usage:
+
+        class P:
+            def __init__(self, **kwargs):
+                print(f"UNUSED KWARGS: {kwargs}")
+
+        @init_kwargs
+        class C(P):
+            def __init__(self, a):
+                print(f"C object!!! a = {a!r}")
+    """
+    init = cls.__init__
+    @wraps(cls.__init__)
+    def wrapped__init(self, *args, **kwargs):
+        i_kwargs = {k: kwargs.pop(k) for k, v in kwargs.copy().items()
+                       if k in signature(cls.__init__).parameters}
+        init(self, *args, **i_kwargs)
+        super(cls, self).__init__(**kwargs)
+    cls.__init__ = wrapped__init
+    return cls

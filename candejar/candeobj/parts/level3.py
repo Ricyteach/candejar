@@ -2,26 +2,24 @@
 
 """Module for working with cande level 3 type objects."""
 
+from __future__ import annotations
 import enum
 from dataclasses import dataclass
-from typing import ClassVar
+from typing import ClassVar, Iterable
 
 from .. import exc
+from ...utilities.decorators import init_kwargs
 from ...utilities.mixins import GeoMixin, WithKwargsMixin
 
 
+@init_kwargs
 @dataclass(init=False)
 class Node(WithKwargsMixin, GeoMixin, geo_type="Point"):
     num: int
     x: float
     y: float
+    master: Node = None
     geo_type: ClassVar[str] = "Point"
-
-    def __init__(self, num: int, x: float, y: float, **kwargs) -> None:
-        self.num = num
-        self.x = x
-        self.y = y
-        super().__init__(**kwargs)
 
     @property
     def __geo_interface__(self):
@@ -38,6 +36,7 @@ class ElementCategory(enum.Enum):
     LONGITUDINAL = 11
 
 
+@init_kwargs
 @dataclass(init=False)
 class Element(WithKwargsMixin, GeoMixin, geo_type="Polygon"):
     num: int
@@ -49,20 +48,6 @@ class Element(WithKwargsMixin, GeoMixin, geo_type="Polygon"):
     step: int = 0
     connection: int = 0
     death: int = 0
-
-    def __init__(self, num: int, i: int, j: int, k: int = 0, l: int = 0, *,
-                 mat: int = 0, step: int = 0, connection: int = 0,
-                 death: int = 0, **kwargs) -> None:
-        self.num = num
-        self.i = i
-        self.j = j
-        self.k = k
-        self.l = l
-        self.mat = mat
-        self.step = step
-        self.connection = connection
-        self.death = death
-        super().__init__(**kwargs)
 
     def remove_repeats(self):
         """Change repeated node numbers to zero."""
@@ -89,6 +74,7 @@ class Element(WithKwargsMixin, GeoMixin, geo_type="Polygon"):
                                           f"{connection_value}") from e
 
 
+@init_kwargs
 @dataclass(init=False)
 class Boundary(WithKwargsMixin, GeoMixin, geo_type="Node"):
     node: int
@@ -100,18 +86,3 @@ class Boundary(WithKwargsMixin, GeoMixin, geo_type="Node"):
     step: int = 0
     pressure1: float = 0.0
     pressure2: float = 0.0
-
-    def __init__(self, node: int, xcode: int = 0, xvalue: float = 0.0,
-                 ycode: int = 0, yvalue: float = 0.0, *, angle: float = 0.0,
-                 step: int = 0, pressure1: float = 0.0, pressure2: float = 0.0,
-                 **kwargs) -> None:
-        self.node = node
-        self.xcode = xcode
-        self.xvalue = xvalue
-        self.ycode = ycode
-        self.yvalue = yvalue
-        self.angle = angle
-        self.step = step
-        self.pressure1 = pressure1
-        self.pressure2 = pressure2
-        super().__init__(**kwargs)

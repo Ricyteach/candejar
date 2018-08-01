@@ -1,7 +1,7 @@
 from typing import Dict, Callable, Any
 import pytest
 
-from candejar.utilities.decorators import case_insensitive_arguments, CaseInsensitiveDecoratorError
+from candejar.utilities.decorators import case_insensitive_arguments, CaseInsensitiveDecoratorError, init_kwargs
 
 CallableAny = Callable[...,Any]
 
@@ -44,3 +44,36 @@ def test_decorator_error_invalid_insensitive_args(f: CallableAny):
 def test_decorator(f: CallableAny, kwargs_lower: Dict):
     f=case_insensitive_arguments(f)
     assert f(**kwargs_lower) == tuple(kwargs_lower.values())
+
+def test_init_kwargs():
+    class P:
+        def __init__(self, **kwargs):
+            print(f"UNUSED KWARGS: {kwargs}")
+
+
+    @init_kwargs
+    class C1(P):
+        def __init__(self, a, **kwargs):
+            print(f"C1 object!!! a = {a!r}")
+
+
+    C1(1, b=2)
+
+    @init_kwargs
+    class C2(P):
+        def __init__(self, a):
+            print(f"C2 object!!! a = {a!r}")
+
+
+    C2(1, b=2)
+
+
+    from dataclasses import dataclass
+
+    @init_kwargs
+    @dataclass
+    class C3(P):
+        a: int = 1
+
+
+    print(C3(1, b=2))
