@@ -122,7 +122,7 @@ def generator_ended_signal(generator_func: Union[_NO_GEN_TYPE,GeneratorFunction]
 
 
 def init_kwargs(cls):
-    """Calls super().__init__(*kwargs) at the end of the defined __init__ method.
+    """Calls super().__init__(**kwargs) at the end of the defined __init__ method.
 
     Intended for use on @dataclass classes.
 
