@@ -126,7 +126,7 @@ def init_kwargs(cls):
 
     Intended for use on @dataclass classes.
 
-    Example usage:
+    Example usage (see tests for other configurations):
 
         class P:
             def __init__(self, **kwargs):
