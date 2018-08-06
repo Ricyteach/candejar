@@ -5,7 +5,7 @@
 from .candeseqbase import CandeSection, CandeList, CandeMapSequence
 from .parts import PipeGroup, Node, Element, Boundary, Material, Factor
 from ..utilities.mixins import GeoMixin
-from ..utilities.skip import SkippableIterMixin
+from ..utilities.skip import SkipAttrIterMixin
 
 
 ############################
@@ -18,12 +18,12 @@ geo_type_lookup = dict(nodes="MultiPoint",
                        )
 
 
-class NodesSection(GeoMixin, SkippableIterMixin[Node], CandeSection[Node],
+class NodesSection(GeoMixin, SkipAttrIterMixin[Node], CandeSection[Node],
                    converter=Node, geo_type=geo_type_lookup["nodes"]):
     skippable_attr = "num"
 
 
-class ElementsSection(GeoMixin, SkippableIterMixin[Element], CandeSection[Element],
+class ElementsSection(GeoMixin, SkipAttrIterMixin[Element], CandeSection[Element],
                       converter=Element, geo_type=geo_type_lookup["elements"]):
     skippable_attr = "num"
 
@@ -33,7 +33,7 @@ class BoundariesSection(GeoMixin, CandeSection[Boundary], converter=Boundary,
     pass
 
 
-class MaterialsSection(SkippableIterMixin[Material], CandeList[Material],
+class MaterialsSection(SkipAttrIterMixin[Material], CandeList[Material],
                        converter=Material):
     """NOTE: the only materials sections are soil, interface, and composite
     (for link elements)."""

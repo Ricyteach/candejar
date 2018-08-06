@@ -318,14 +318,12 @@ class CandeObj(CidRW):
             setattr(self, total_def.total_name, max(attr_len, attr_max))
 
         # pipe group totals
-        num_ctr = Counter([e.mat for e in self.pipeelements])
+        num_ctr = Counter[int](e.mat for e in self.pipeelements)
         for group_num, group in enumerate(self.pipegroups, 1):
             group.num = num_ctr[group_num]
 
-
     def merge_nodes(self, *nodes, converter: Dict[int, int]):
         pass
-
 
     def globalize_node_references(self, converter: NumMapsManager):
         """Re-numbers all node numbers, and references to them, based on current global node order.
@@ -432,11 +430,13 @@ class CandeObj(CidRW):
         for conn in self.connections:
             if not conn.category.value:
                 conn: MergedConnection
-                # merged connection - set num to be skipped in all sections but first
+                # merged connection
                 master, *slaves = conn.items
                 master.slaves = slaves
                 for slave in slaves:
+                    # set num to be skipped in all slaves
                     slave.num = SkipInt(slave.num)
+                    # set master node for all slaves
                     slave.master = master
             else:
                 conn: Union[InterfaceConnection, LinkConnection]
@@ -474,18 +474,18 @@ class CandeObj(CidRW):
         # init conversion map
         node_convert_map = NumMapsManager(self.nodes)
 
-        # change the converter map so CANDE problem connections are resolved (change conversion map target numbers)
+        # resolve CANDE problem node connections (merges, interfaces, links)
         self.make_connections()
 
         if any(not conn.category.value for conn in self.connections):
-            # re-number node converter to account for unused numbers after handling of merged nodes
+            # re-number nodes after handling of merged nodes
             node_convert_map.renumber()
 
         if any(conn.category.value for conn in self.connections):
+            # incorporate connection elements into problem
             # TODO: add interface node section for newly added interface connections and update interface element k values
             # TODO: move existing interface sections to back of nodes section map
             raise NotImplementedError("Non-merged connections not yet fully supported")
-            # incorporate connection elements into problem
             self.elements[self.connections_key] = connection_elements
 
         # globalize node numbering
