@@ -4,8 +4,7 @@
 
 import types
 from dataclasses import InitVar, dataclass, asdict
-from itertools import count
-from typing import Sequence, Generic, Type, Iterator, Union, TypeVar, Counter, List, Dict
+from typing import Sequence, Generic, Type, Iterator, Union, TypeVar, List, Dict
 
 from ...cid import CidLine
 from ...cid import CidSubLine, TOP_LEVEL_TYPES
@@ -46,7 +45,7 @@ class CidSeq(ChildRegistryMixin, Sequence[SubObj], Generic[CidObj, CidSubLine]):
         # TODO: implement slicing
         i_line_objs = iter(self.cid_obj.line_objs)
         num = idx + 1
-        start_ctr = Counter()
+        start_ctr: Dict[bool, int] = {True: 0, False: 0}
         for line in i_line_objs:
             start_ctr[isinstance(line, self.line_type)] += 1
             if start_ctr[True] == num:
