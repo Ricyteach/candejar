@@ -11,7 +11,12 @@ from candejar.candeobj.nummap import NumMap
 
 @pytest.fixture
 def HasNum():
-    return make_dataclass("HasNum", ["num", int])
+    return make_dataclass("HasNum", [("num", int),])
+
+
+@pytest.fixture
+def NoNum():
+    return make_dataclass("NoNum", [])
 
 
 @pytest.fixture
@@ -24,6 +29,8 @@ def num_map(has_n_list):
     return NumMap(has_n_list)
 
 
-def test_num_map(num_map):
-    assert not NumMap()
+def test_num_map(num_map, NoNum):
+    with pytest.raises(AttributeError):
+        NumMap([NoNum()])
+    assert not NumMap([])
     assert num_map
