@@ -17,7 +17,7 @@ from .. import msh
 from .candeseq import cande_seq_dict, PipeGroups, Nodes, Elements, PipeElements, SoilElements, InterfElements, \
     Boundaries, Materials, SoilMaterials, InterfMaterials, CompositeMaterials, Factors, NodesSection, ElementsSection, BoundariesSection
 from .connections import MergedConnection, InterfaceConnection, LinkConnection, CompositeConnection, Connection, Connections, Tolerance
-from .converter import NumMapsManager
+from .nummap import NumMapsManager
 from ..cid import CidLine
 from ..cidrw import CidLineStr
 from .parts import Node

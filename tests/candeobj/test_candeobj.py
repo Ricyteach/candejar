@@ -61,16 +61,17 @@ def test_add_from_msh_all_obj(monkeypatch, cande_obj_standard: CandeObj, msh_all
 
 
 @pytest.fixture
-def new_cobj():
+def new_c_obj():
     c = CandeObj()
     return c
 
 
-def test_update_totals(new_cobj):
+def test_update_totals(new_c_obj):
     n_attrs = "ngroups nsteps nnodes nelements".split()
-    assert all(getattr(new_cobj, attr)==v for attr, v in zip(n_attrs, (0,0,0,0)))
-    new_cobj.elements["TEST"] = []
-    new_cobj.elements.append(dict(num=1, i=1, j=2, k=0, l=0, mat=1, step=1))
-    new_cobj.update_totals()
-    assert all(getattr(new_cobj, attr)==v for attr, v in zip(n_attrs, (1,1,2,1)))
+    assert all(getattr(new_c_obj, attr) == v for attr, v in zip(n_attrs, (0, 0, 0, 0)))
+    new_c_obj.elements["TEST"] = []
+    new_c_obj.elements.append(dict(num=1, i=1, j=2, k=0, l=0, mat=1, step=1))
+    new_c_obj.update_totals()
+    assert all(getattr(new_c_obj, attr) == v for attr, v in zip(n_attrs, (1, 1, 2, 1)))
+
 
