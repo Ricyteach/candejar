@@ -2,57 +2,84 @@
 # -*- coding: utf-8 -*-
 
 """Tests for `candejar.candeobj.nummap` module."""
-from typing import Dict
 
 import pytest
+from typing import Dict, NamedTuple, List
 from dataclasses import make_dataclass
-from types import SimpleNamespace as SimpleNs
 
 from candejar.candeobj.nummap import NumMap, NumMapsManager
+from candejar.utilities.skip import skippable_len, SkipInt, SkipAttrIterMixin
 
 
+class SkipNumList(SkipAttrIterMixin, List):
+    """Object with skippable num attributes"""
+    skippable_attr = "num"
+
+
+No_num = make_dataclass("No_num", [])
 Has_num = make_dataclass("Has_num", [("num", int),])
-NoNum = make_dataclass("NoNum", [])
-Has_seq_map = make_dataclass("Has_seq_map", [("seq_map", Dict),])
+Has_seq_map = make_dataclass("Has_seq_map", [("seq_map", Dict[str, List[Has_num]]),])
 
 
-has_n_params_list = [SimpleNs(list = [Has_num(i) for i in range(3)], len=3),
-                                        ]
+class NumMapCheck(NamedTuple):
+    """Each instance is a check"""
+    length: int
+    iter_len: int
+    skip_len: int
+    has_nums: List[Has_num]
+
+nummap_check_list = [
+    #           length iter_len skip_len HasNum list
+    NumMapCheck(3,     3,       3,       SkipNumList(Has_num(i) for i in range(3))),
+    NumMapCheck(3,     3,       0,       SkipNumList(Has_num(SkipInt(i)) for i in range(3))),
+]
 
 
-@pytest.fixture(params=has_n_params_list)
-def has_n_test(request):
+@pytest.fixture(params=nummap_check_list)
+def nummap_check(request):
+    """Data used for the tests"""
     return request.param
 
 
 @pytest.fixture
-def num_map(has_n_test):
-    return NumMap(has_n_test.list)
+def num_map(nummap_check: NumMapCheck):
+    """A NumMap to test"""
+    return NumMap(nummap_check.has_nums)
 
 
 class TestNumMap:
-    def test_no_num_attribute(self, num_map):
-        with pytest.raises(AttributeError):
-            NumMap([NoNum()])
+    """
+    Given: a NumMap constructed from a NumMapCheck.has_nums list
+    """
 
-    def test_falsey(self, num_map):
+    def test_no_num_attribute(self, num_map: NumMap):
+        with pytest.raises(AttributeError):
+            NumMap([No_num()])
+
+    def test_falsey(self, num_map: NumMap):
         assert not NumMap([])
 
-    def test_truthy(self, num_map):
+    def test_truthy(self, num_map: NumMap):
         assert num_map
 
-    def test_len(self, num_map, has_n_test):
-        assert len(num_map) == has_n_test.len
+    def test_len(self, num_map: NumMap, nummap_check: NumMapCheck):
+        assert len(num_map) == nummap_check.length
+
+    def test_iter(self, num_map: NumMap, nummap_check: NumMapCheck):
+        assert sum(1 for _ in num_map) == nummap_check.iter_len
+
+    def test_skippable_len(self, num_map: NumMap, nummap_check: NumMapCheck):
+        assert skippable_len(num_map) == nummap_check.skip_len
 
 
 @pytest.fixture
-def has_n_map(has_n_test):
-    return Has_seq_map(seq_map=dict(x=has_n_test.list))
+def has_n_map(nummap_check):
+    return Has_seq_map(seq_map=dict(x=nummap_check.has_nums))
 
 
 @pytest.fixture
 def no_n_map():
-    return Has_seq_map(seq_map=dict(x=[NoNum()]))
+    return Has_seq_map(seq_map=dict(x=[No_num()]))
 
 
 @pytest.fixture
@@ -61,6 +88,7 @@ def num_maps_manager(has_n_map):
 
 
 class TestNumMapsManager:
+
     def test_manager(self, no_n_map):
         with pytest.raises(AttributeError):
             NumMapsManager(no_n_map)
