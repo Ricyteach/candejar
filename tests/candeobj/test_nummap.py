@@ -2,13 +2,15 @@
 # -*- coding: utf-8 -*-
 
 """Tests for `candejar.candeobj.nummap` module."""
+import itertools
 
 import pytest
 from typing import Dict, NamedTuple, List
 from dataclasses import make_dataclass
 
+from candejar.candeobj import exc
 from candejar.candeobj.nummap import NumMap, NumMapsManager
-from candejar.utilities.skip import skippable_len, SkipInt, SkipAttrIterMixin
+from candejar.utilities.skip import SkipInt, SkipAttrIterMixin
 
 
 class SkipNumList(SkipAttrIterMixin, List):
@@ -25,17 +27,19 @@ class NumMapCheck(NamedTuple):
     """Each instance is a check"""
     length: int
     iter_len: int
-    skip_len: int
+    skippable_len: int
+    bad_key: int
     has_nums: List[Has_num]
+    id: str
 
 nummap_check_list = [
-    #           length iter_len skip_len HasNum list
-    NumMapCheck(3,     3,       3,       SkipNumList(Has_num(i) for i in range(3))),
-    NumMapCheck(3,     3,       0,       SkipNumList(Has_num(SkipInt(i)) for i in range(3))),
+    #           len i_len s_len bad_k HasNum list                                         id
+    NumMapCheck(3,  3,    3,    10,   SkipNumList(Has_num(i) for i in range(3)),          "no skippable objects"),
+    NumMapCheck(3,  3,    0,    10,   SkipNumList(Has_num(SkipInt(i)) for i in range(3)), "skippable objects included"),
 ]
 
 
-@pytest.fixture(params=nummap_check_list)
+@pytest.fixture(params=nummap_check_list, ids=lambda param: param.id)
 def nummap_check(request):
     """Data used for the tests"""
     return request.param
@@ -62,14 +66,26 @@ class TestNumMap:
     def test_truthy(self, num_map: NumMap):
         assert num_map
 
+    def test_set_bad_key(self, num_map: NumMap, nummap_check: NumMapCheck):
+        with pytest.raises(exc.CandeKeyError):
+            num_map[nummap_check.bad_key] = None
+
+    def test_copy(self, num_map: NumMap):
+        copy = num_map.copy()
+        assert copy is not num_map
+        assert copy.section is num_map.section
+        assert copy._d is not num_map._d
+        assert copy._d == num_map._d
+
+    def test_renumber(self, num_map: NumMap):
+        num_map.renumber(10)
+        assert all(a.num==b for a,b in zip(num_map.values(), itertools.count(10)))
+
     def test_len(self, num_map: NumMap, nummap_check: NumMapCheck):
         assert len(num_map) == nummap_check.length
 
     def test_iter(self, num_map: NumMap, nummap_check: NumMapCheck):
         assert sum(1 for _ in num_map) == nummap_check.iter_len
-
-    def test_skippable_len(self, num_map: NumMap, nummap_check: NumMapCheck):
-        assert skippable_len(num_map) == nummap_check.skip_len
 
 
 @pytest.fixture
@@ -96,8 +112,16 @@ class TestNumMapsManager:
     def test_falsey(self):
         assert not NumMapsManager(Has_seq_map(dict()))
 
-    def test_truthy(self, num_maps_manager):
+    def test_truthy(self, num_maps_manager: NumMapsManager):
         assert num_maps_manager
 
-    def test_len(self, num_maps_manager):
+    def test_len(self, num_maps_manager: NumMapsManager):
         assert len(num_maps_manager) == 1
+
+    def test_renumber(self, num_maps_manager: NumMapsManager):
+        num_maps_manager.renumber()
+        assert all(a.num==b for a,b in zip((x for seq in num_maps_manager.values() for x in seq.values()), itertools.count(1)))
+
+    def test_seq_len(self, num_maps_manager: NumMapsManager, nummap_check: NumMapCheck):
+        """Make sure Skip instances in SkipAttrIterMixin sequences aren't included"""
+        assert  num_maps_manager.seq_len == nummap_check.skippable_len
