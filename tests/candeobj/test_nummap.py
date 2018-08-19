@@ -30,19 +30,22 @@ class NumMapCheck(NamedTuple):
     skippable_len: int
     bad_key: int
     has_nums: List[Has_num]
-    id: str
-
-nummap_check_list = [
-    #           len i_len s_len bad_k HasNum list                                         id
-    NumMapCheck(3,  3,    3,    10,   SkipNumList(Has_num(i) for i in range(3)),          "no skippable objects"),
-    NumMapCheck(3,  3,    0,    10,   SkipNumList(Has_num(SkipInt(i)) for i in range(3)), "skippable objects included"),
-]
 
 
-@pytest.fixture(params=nummap_check_list, ids=lambda param: param.id)
+check_list_idx_rng = range(2)
+nummap_check_ids = ("no skippable objects", "skippable objects included")
+
+@pytest.fixture(params=check_list_idx_rng, ids=lambda param: nummap_check_ids[param])
 def nummap_check(request):
     """Data used for the tests"""
-    return request.param
+    nummap_check_list = [
+        #           len i_len s_len bad_k HasNum list
+        NumMapCheck(3, 3, 3, 10, SkipNumList(Has_num(i) for i in range(3))),
+        NumMapCheck(3, 3, 0, 10, SkipNumList(Has_num(SkipInt(i)) for i in range(3))),
+    ]
+    assert len(check_list_idx_rng) == len(nummap_check_list)
+    assert len(nummap_check_ids) == len(nummap_check_list)
+    return nummap_check_list[request.param]
 
 
 @pytest.fixture
