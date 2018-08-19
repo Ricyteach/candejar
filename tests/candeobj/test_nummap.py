@@ -35,6 +35,7 @@ class NumMapCheck(NamedTuple):
 check_list_idx_rng = range(2)
 nummap_check_ids = ("no skippable objects", "skippable objects included")
 
+
 @pytest.fixture(params=check_list_idx_rng, ids=lambda param: nummap_check_ids[param])
 def nummap_check(request):
     """Data used for the tests"""
