@@ -32,21 +32,35 @@ class NumMapCheck(NamedTuple):
     has_nums: List[Has_num]
 
 
-check_list_idx_rng = range(2)
+NUMMAP_CHECKS_TOTAL = 2
 nummap_check_ids = ("no skippable objects", "skippable objects included")
 
 
-@pytest.fixture(params=check_list_idx_rng, ids=lambda param: nummap_check_ids[param])
-def nummap_check(request):
+@pytest.fixture(scope="module")
+def nummap_check_cases():
+    global NUMMAP_CHECKS_TOTAL
+    TOTAL = NUMMAP_CHECKS_TOTAL
+    try:
+        assert len(nummap_check_ids) == NUMMAP_CHECKS_TOTAL
+        NUMMAP_CHECKS_TOTAL = 0
+        yield
+        assert NUMMAP_CHECKS_TOTAL == TOTAL
+    except AssertionError:
+        raise Exception("check NUMMAP_CHECKS_TOTAL value")
+
+
+@pytest.fixture(params=range(NUMMAP_CHECKS_TOTAL), ids=lambda param: nummap_check_ids[param])
+def nummap_check(request, nummap_check_cases):
     """Data used for the tests"""
-    nummap_check_list = [
-        #           len i_len s_len bad_k HasNum list
-        NumMapCheck(3, 3, 3, 10, SkipNumList(Has_num(i) for i in range(3))),
-        NumMapCheck(3, 3, 0, 10, SkipNumList(Has_num(SkipInt(i)) for i in range(3))),
-    ]
-    assert len(check_list_idx_rng) == len(nummap_check_list)
-    assert len(nummap_check_ids) == len(nummap_check_list)
-    return nummap_check_list[request.param]
+    global NUMMAP_CHECKS_TOTAL
+    NUMMAP_CHECKS_TOTAL = max(NUMMAP_CHECKS_TOTAL, request.param+1)
+    #                  len i_len s_len bad_k HasNum list
+    if request.param == 0:
+        return NumMapCheck(3, 3, 3, 10, SkipNumList(Has_num(i) for i in range(3)))
+    elif request.param == 1:
+        return NumMapCheck(3, 3, 0, 10, SkipNumList(Has_num(SkipInt(i)) for i in range(3)))
+    else:
+        pass
 
 
 @pytest.fixture
