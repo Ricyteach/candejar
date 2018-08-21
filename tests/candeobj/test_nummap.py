@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 """Tests for `candejar.candeobj.nummap` module."""
-import itertools
 
+import itertools
 import pytest
 from typing import Dict, NamedTuple, List
 from dataclasses import make_dataclass
