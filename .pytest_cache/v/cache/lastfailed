@@ -1,6 +1,7 @@
 {
   "tests/candeobj/test_candemapseq.py::test_c_instance_invalid_dict": true,
   "tests/candeobj/test_candemapseq.py::test_c_instance_invalid_kwargs": true,
+  "tests/candeobj/test_candeobj.py::test_make_connections": true,
   "tests/candeobj/test_candeseq.py::test_c_instance_seqmap_type": true,
   "tests/candeobj/test_materials.py::test_something": true,
   "tests/candeobj/test_nummap.py::TestNumMap::()::test_copy[0]": true,

@@ -4,7 +4,9 @@
 """Tests for `candejar.candeobj` module."""
 
 from candejar import msh
+from candejar.candeobj import Node
 from candejar.candeobj.candeobj import CandeObj
+from candejar.candeobj.connections import MergedConnection
 from candejar.cidobjrw.names import SEQ_LINE_TYPE_TOTALS
 from candejar.msh import Msh
 
@@ -61,3 +63,12 @@ def test_update_totals(new_c_obj):
     assert all(getattr(new_c_obj, attr) == v for attr, v in zip(n_attrs, (1, 1, 2, 1)))
 
 
+def test_make_connections(new_c_obj):
+    new_c_obj.nodes["section1"] = []
+    new_c_obj.nodes.append(Node(num=1,x=0,y=0))
+    new_c_obj.nodes.append(Node(num=2,x=0,y=0))
+    nodes = (new_c_obj.nodes[i] for i in range(2))
+    new_c_obj.connections.append(MergedConnection(items=[*nodes]))
+    new_c_obj.make_connections()
+    assert new_c_obj.nodes[0].master.num==1
+    assert new_c_obj.nodes[1].master.num==1
