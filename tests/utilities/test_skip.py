@@ -16,6 +16,7 @@ def SkipList():
 @pytest.fixture
 def SkipAttr_x():
     class SkipAttr_x(skip.SkipAttrIterMixin, List):
+        """A list with a x skippable attribute."""
         skippable_attr = "x"
     return SkipAttr_x
 
@@ -33,30 +34,36 @@ def sk_x(SkipAttr_x):
 
 
 def test_init(SkipList):
+    """a SkipList should be instantiated same as a regular list"""
     assert not SkipList()
     assert SkipList([0])
     assert SkipList([1])
 
 
 def test_len(sk_lst):
+    """length of sk_lst should include skippable items"""
     assert len(sk_lst) == 1
 
 
 def test_iter(sk_lst):
+    """regular iteration should skip the skippable items"""
     assert list(sk_lst) == []
 
 
 def test_skippable_len(sk_lst):
+    """skippable_len should ignore skippable items"""
     assert skip.skippable_len(sk_lst) == 0
 
 
 def test_iter_skippable(sk_lst):
+    """iter_skippable should NOT skip the skippable items"""
     assert list(skip.iter_skippable(sk_lst)) == [0]
 
 
 def test_sk_x(sk_x):
-    assert len(sk_x) == 2
-    assert list(sk_x) == []
-    assert skip.skippable_len(sk_x) == 0
-    assert list(skip.iter_skippable(sk_x)) == [1, 0]
+    """Various tests for a SkipAttrIterMixin with a check for skippable marker in 'x'"""
+    assert len(sk_x) == 2  # len should work as normal
+    assert list(sk_x) == []  # iteration should skip items with a skippable attribute
+    assert skip.skippable_len(sk_x) == 0  # special len function also ignores items with skippable attribute
+    assert list(skip.iter_skippable(sk_x)) == [1, 0]  # special iteration includes skippables
 

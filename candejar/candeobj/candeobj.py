@@ -360,14 +360,15 @@ class CandeObj(CidRW):
 
         # reset node.num attribute
         seen = set()
-        for s_name, seq, sub_map in ((s_name, s, converter[id(s)].copy()) for s_name, s in self.nodes.seq_map.items()):
+        for section_name, seq, sub_map in ((section_name, section, converter[id(section)].copy())
+                                     for section_name, section in self.nodes.seq_map.items()):
             for node in seq:
                 old_num = node.num
                 try:
                     new_num = sub_map.pop(node.num)
                 except KeyError:
                     if old_num not in seen:
-                        raise exc.CandeKeyError(f"{s_name!r} nodes section has no conversion for node num {old_num!r}")
+                        raise exc.CandeKeyError(f"{section_name!r} nodes section has no conversion for node num {old_num!r}")
                 else:
                     node.num = new_num
                     seen.add(new_num)
