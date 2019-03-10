@@ -274,10 +274,10 @@
     B3AlumADLRFD:
         prefix: "B-3.Alum.AD.LRFD"
         # LRFD only
-        Yieldϕ: [10, 1.0]
-        Bucklingϕ: [10, 1.0]
-        Seamϕ: [10, 0.67]
-        Plasticϕ: [10, 0.85]
+        Yield_phi: [10, 1.0]
+        Buckling_phi: [10, 1.0]
+        Seam_phi: [10, 0.67]
+        Plastic_phi: [10, 0.85]
         DeflectionPercent: [10, 5.0] # percent
 
     B1Steel:
@@ -384,10 +384,10 @@
     B3SteelADLRFD:
         prefix: "B-3.Steel.AD.LRFD"
         # LRFD only
-        Yieldϕ: [10, 1.0]
-        Bucklingϕ: [10, 1.0]
-        Seamϕ: [10, 1.0]
-        Plasticϕ: [10, 0.9]
+        Yield_phi: [10, 1.0]
+        Buckling_phi: [10, 1.0]
+        Seam_phi: [10, 1.0]
+        Plastic_phi: [10, 0.9]
         DeflectionPercent: [10, 5.0] # percent
         Combined: [10, 0.9, True] # deep corrug only
 
@@ -481,9 +481,9 @@
         # for DESIGN only
         # WallType = SMOOTH
         # LRFD only
-        Yieldϕ: [10, 1.0]
-        Bucklingϕ: [10, 1.0]
-        Strainϕ: [10, 1.0]
+        Yield_phi: [10, 1.0]
+        Buckling_phi: [10, 1.0]
+        Strain_phi: [10, 1.0]
         DeflectionPercent: [10, 5.0] # percent
         TensileService: [10, 0.05] # in/in
 
@@ -591,10 +591,10 @@
     B5Concrete:
         prefix: "B-5.Concrete"
         # LRFD only
-        Yieldϕ: [10, 0.9]
-        Crushingϕ: [10, 0.75]
-        Shearϕ: [10, 0.9]
-        Tensionϕ: [10, 0.9]
+        Yield_phi: [10, 0.9]
+        Crushing_phi: [10, 0.75]
+        Shear_phi: [10, 0.9]
+        Tension_phi: [10, 0.9]
         CrackAllow: [10, 0.01] # in
 
     B1Basic:

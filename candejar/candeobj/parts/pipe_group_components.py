@@ -217,8 +217,8 @@ class Plastic4DSmoothLRFDComponent(PipeGroupComponent["Plastic4DSmoothLRFDCompon
     # for DESIGN only
     # WallType = SMOOTH
     # LRFD only
-    yieldϕ: CandeFloat = 1.0
-    bucklingϕ: CandeFloat = 1.0
-    strainϕ: CandeFloat = 1.0
+    yield_phi: CandeFloat = 1.0
+    buckling_phi: CandeFloat = 1.0
+    strain_phi: CandeFloat = 1.0
     deflectionpercent: CandeFloat = 5.0  # percent
     tensileservice: CandeFloat = 0.05  # in/in
