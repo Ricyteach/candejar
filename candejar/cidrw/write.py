@@ -16,6 +16,7 @@ from ..cid import CidLine
 from .exc import CIDRWError
 from . import CidObj, CidLineType, CidLineStr, FormatStr
 
+
 def forgiving_cid_attr(cid: CidObj, attr_getter: Callable[[], Optional[str]]
                        ) -> Union[CidObj, Collection, str, int, float]:
     """Extends `forgiving_dynamic_attr` by raising `CIDRWError` when the
@@ -26,6 +27,7 @@ def forgiving_cid_attr(cid: CidObj, attr_getter: Callable[[], Optional[str]]
     except SpecialError:
         target_obj_name: Optional[str] = attr_getter()
         raise CIDRWError(f"Incomplete cid object: {target_obj_name!s} is missing")
+
 
 def process_lines(cid: CidObj, line_types: Iterable[CidLineType]) -> Iterator[CidLine]:
     """Logic for producing `CidLine` instances from a cid object namespace and line type iterable."""
@@ -66,6 +68,7 @@ def process_lines(cid: CidObj, line_types: Iterable[CidLineType]) -> Iterator[Ci
                 raise CIDRWError(f"Encountered StopIteration before Stop object; last line type was "
                                  f"{line_type.__name__!s}")
 
+
 def process_formatting(cid: CidObj, i_lines: Iterable[CidLine],
                        total_getter = lambda cid,t: forgiving_cid_attr(cid, lambda: SEQ_LINE_TYPE_TOTAL_DICT.get(t))
                        ) -> Iterator[FormatStr]:
@@ -85,18 +88,22 @@ def process_formatting(cid: CidObj, i_lines: Iterable[CidLine],
     types = [type(x) for x in lines]
     type_totals = {t:total_getter(cid,t) for t in types}
     type_counter = Counter()
+    # Special 'cid' format string makes CANDE file lines from objects
     format_strs = list(repeat("cid", len(lines)))
     for idx,t in enumerate(types):
         if t in CIDL_FORMAT_TYPES:
             type_counter[t] += 1
             if type_counter[t]>=type_totals[t]:
+                # Append 'L' for format string ('cidL') to signal objects beyond total count for that object
                 format_strs[idx] += "L"
     yield from format_strs
+
 
 def line_strings(cid: CidObj, line_types: Iterable[CidLineType]) -> Iterator[CidLineStr]:
     lines = list(process_lines(cid, line_types))
     i_formatting = process_formatting(cid, lines)
     yield from (format(o, f) for o,f in zip(lines,i_formatting))
+
 
 def file(cid: CidObj, line_types: Iterable[CidLineType], path: Union[str, Path], mode: str="x") -> None:
     i_line_types = iter(line_types)
