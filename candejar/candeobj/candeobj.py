@@ -356,22 +356,21 @@ class CandeObj(CidRW):
 
     def globalize_node_nums(self, converter: NumMapsManager):
         """Re-numbers all node numbers based on converter."""
-        start = 1
 
         # reset node.num attribute
         seen = set()
         for section_name, seq, sub_map in ((section_name, section, converter[id(section)].copy())
                                      for section_name, section in self.nodes.seq_map.items()):
             for node in seq:
-                old_num = node.num
                 try:
-                    new_num = sub_map.pop(node.num)
+                    global_num = sub_map.pop(node.num).num
                 except KeyError:
-                    if old_num not in seen:
-                        raise exc.CandeKeyError(f"{section_name!r} nodes section has no conversion for node num {old_num!r}")
+                    if node.num not in seen:
+                        raise exc.CandeKeyError(f"{section_name!r} nodes section has no conversion for node num "
+                                                f"{node.num!r}; was `.make_connections()` run?")
                 else:
-                    node.num = new_num
-                    seen.add(new_num)
+                    node.num = global_num
+                    seen.add(global_num)
 
     def globalize_element_nums(self):
         """Re-numbers all element numbers based on current global element order."""

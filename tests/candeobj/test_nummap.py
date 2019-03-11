@@ -91,7 +91,7 @@ def has_n_map(nummap_check, Has_seq_map):
 
 
 @pytest.fixture
-def no_n_map(No_num, Has_seq_map):
+def no_num_map(No_num, Has_seq_map):
     return Has_seq_map(seq_map=dict(x=[No_num()]))
 
 
@@ -102,9 +102,9 @@ def num_maps_manager(has_n_map):
 
 class TestNumMapsManager:
 
-    def test_manager(self, no_n_map):
+    def test_manager(self, no_num_map):
         with pytest.raises(AttributeError):
-            NumMapsManager(no_n_map)
+            NumMapsManager(no_num_map)
 
     def test_falsey(self, Has_seq_map):
         assert not NumMapsManager(Has_seq_map(dict()))

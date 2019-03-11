@@ -7,8 +7,10 @@ from candejar import msh
 from candejar.candeobj import Node
 from candejar.candeobj.candeobj import CandeObj
 from candejar.candeobj.connections import MergedConnection
+from candejar.candeobj.nummap import NumMapsManager
 from candejar.cidobjrw.names import SEQ_LINE_TYPE_TOTALS
 from candejar.msh import Msh
+from candejar.utilities import skip
 
 
 def test_candebase():
@@ -70,5 +72,25 @@ def test_make_connections(new_c_obj):
     nodes = (new_c_obj.nodes[i] for i in range(2))
     new_c_obj.connections.append(MergedConnection(items=[*nodes]))
     new_c_obj.make_connections()
-    assert new_c_obj.nodes[0].master.num==1
+    # First node is master
+    assert new_c_obj.nodes[0].master is None
+    # Second node is slave
     assert new_c_obj.nodes[1].master.num==1
+
+
+def test_globalize_node_nums(new_c_obj):
+    A1 = Node(num=2000, x=1, y=1)
+    B1 = Node(num=2001, x=2, y=2)
+    A2 = Node(num=2000, x=1, y=1)
+    B2 = Node(num=2001, x=2, y=2)
+    new_c_obj.nodes["Section1"] = [A1, B1]
+    new_c_obj.nodes["Section2"] = [A2, B2]
+    node_convert_map = NumMapsManager(new_c_obj.nodes)
+    node_convert_map.renumber()
+    A2.num = skip.SkipInt(A2.num)
+    B2.num = skip.SkipInt(B2.num)
+    new_c_obj.globalize_node_nums(node_convert_map)
+    assert A1.num == 1
+    assert B1.num == 2
+    assert A2.num == 2000
+    assert B2.num == 2001
