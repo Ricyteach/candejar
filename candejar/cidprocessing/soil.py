@@ -23,7 +23,7 @@ def D1Soil(cid, material_num):
     if material.model not in range(1, 9):
         raise exc.CIDProcessingError('Invalid model number {:d} for material #{:d}'
                                      ''.format(material.model, material.num))
-    if material.model in (6, 8):  # Interface or Composite
+    if material.model in range(6, 8):  # Interface or Composite
         raise exc.CIDProcessingError('Interface or composite model number found in soil material #{:d}'
                                      ''.format(material.num))
     gen = D_nxts[material.model]
@@ -83,5 +83,5 @@ def D2Interface(material):
     yield from gen_line('D2Interface')
 
 D_nxts = (None, D2Isotropic, D2Orthotropic, D2Duncan,
-          D2Overburden, D2Hardin, D2HardinTRIA, D2Interface,
+          D2Overburden, D2Hardin, D2Interface,
           D2Composite, D2MohrCoulomb)

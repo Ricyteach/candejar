@@ -38,11 +38,11 @@ class TotalDef(NamedTuple):
     attr_dict: Dict[str, Union[str, List[str]]]
 
     @classmethod
-    def make(cls: Type[T], seq_name: str, total_name: str, attr_dict: Dict[str, Union[str, List[str]]] = None) -> T:
+    def make(cls: Type[T], total_name: str, seq_name: str, attr_dict: Dict[str, Union[str, List[str]]] = None) -> T:
         """The attr_dict argument is optional when using this factory method."""
         if attr_dict is None:
             attr_dict = dict()
-        return cls(seq_name, total_name, attr_dict)
+        return cls(total_name, seq_name, attr_dict)
 
 
 # see CandeObj.update_totals method below for explanation
@@ -236,7 +236,7 @@ class CandeObj(CidRW):
     def add_standard_boundaries(self, name: Optional[str] = None, nodes: Optional[Iterable] = None, *, step: int = 1):
         """Creates a new section of standard boundaries. The nodes section can either be provided, or an existing nodes
         section referenced by name (the same name as the new boundaries section). However it is not required that the
-        new boundaries section name match the nodes section name (pass a reference to and existing nodes section name
+        new boundaries section name match the nodes section name (pass a reference to an existing nodes section name
         to the nodes argument in this case).
 
         The problem boundary extents are assumed to be rectangular. The max and min X coordinates, and the min Y
@@ -245,6 +245,9 @@ class CandeObj(CidRW):
         NOTE: if a new nodes section is created it is NOT added to the nodes sections automatically! This needs to be
         done separately. Might change this later?
         """
+
+        if name is not None and nodes is None:
+            raise TypeError("bad argument combination")
 
         # resolve the node section to be referenced by new boundaries section
         existing_nodes = None
@@ -309,12 +312,15 @@ class CandeObj(CidRW):
         # top level totals
         total_def: TotalDef
         for total_def in CANDE_TOTAL_DEFS:
-            attr_len = skippable_len(getattr(self, total_def.seq_name))
+            attr_len = len(getattr(self, total_def.seq_name))
             # TODO: handle situation when attr_len includes nodes with num set to zero because exist in another NodesSection
             attr_max = 0
+            # TODO: fix this shit
+            """
             for seq_obj, sub_attrs in ((getattr(self, ch), [sub] if isinstance(sub, str) else sub)
                                          for ch, sub in total_def.attr_dict.items()):
                 attr_max = max(itertools.chain([attr_max], (getattr(sub_obj, sub_attr) for sub_obj in seq_obj for sub_attr in sub_attrs)))
+            """
             setattr(self, total_def.total_name, max(attr_len, attr_max))
 
         # pipe group totals
@@ -341,7 +347,7 @@ class CandeObj(CidRW):
                     old = getattr(element, attr)
                     # skip zero entries
                     if old:
-                        new = sub_map[old]
+                        new = sub_map[old].num
                         setattr(element, attr, new)
 
         # reassign boundary.node numbers
@@ -351,26 +357,15 @@ class CandeObj(CidRW):
             for boundary in seq:
                 # TODO: relocate below routine to method on Boundary class
                 old = boundary.node
-                new = sub_map[old]
+                new = sub_map[old].num
                 boundary.node = new
 
-    def globalize_node_nums(self, converter: NumMapsManager):
-        """Re-numbers all node numbers based on converter."""
+    def globalize_node_nums(self):
+        """Re-numbers node num attributes based on master/slave relationships."""
 
-        # reset node.num attribute
-        seen = set()
-        for section_name, seq, sub_map in ((section_name, section, converter[id(section)].copy())
-                                     for section_name, section in self.nodes.seq_map.items()):
-            for node in seq:
-                try:
-                    global_num = sub_map.pop(node.num).num
-                except KeyError:
-                    if node.num not in seen:
-                        raise exc.CandeKeyError(f"{section_name!r} nodes section has no conversion for node num "
-                                                f"{node.num!r}; was `.make_connections()` run?")
-                else:
-                    node.num = global_num
-                    seen.add(global_num)
+        for node in self.nodes:
+            if node.master:
+                node.num = node.master.num
 
     def globalize_element_nums(self):
         """Re-numbers all element numbers based on current global element order."""
@@ -420,10 +415,9 @@ class CandeObj(CidRW):
                         self.connections.append(conn)
 
     def make_connections(self):
-        """The global node numbers in the converter map are mutated so CANDE problem connections are resolved. The
-        converter numbers also renumbered starting at 1. The interface elements and nodes, and link elements, are also
-        created. Node num attributes are set to SkipInt() (ie, zero) if the same node already appears in another
-        NodesSection.
+        """CANDE problem connections are resolved: 1. Mated connections are assigned master or slave node status. Slave
+         node.num attributes are turned into skippable attributes if the same physical node already appears in a mated
+         NodesSection. 2. The interface elements and nodes, and link elements, are also created.
         """
         connection_elements: List[Dict[str, Any]] = []
         conn: Connection
@@ -471,7 +465,8 @@ class CandeObj(CidRW):
             5. Moves beam sections to the front of the elements map
             6. Updates all totals (nodes, elements, boundaries, soil/interf materials, pipe groups, steps)
         """
-        # init conversion map
+        # init conversion map: for keeps a copy of the original num attribute values in each section so original
+        # values can be referred to later
         node_convert_map = NumMapsManager(self.nodes)
 
         # resolve CANDE problem node connections (merges, interfaces, links)
@@ -485,11 +480,11 @@ class CandeObj(CidRW):
             # incorporate connection elements into problem
             # TODO: add interface node section for newly added interface connections and update interface element k values
             # TODO: move existing interface sections to back of nodes section map
-            raise NotImplementedError("Non-merged connections not yet fully supported")
+            raise NotImplementedError("Non-mated connections not yet fully supported")
             self.elements[self.connections_key] = connection_elements
 
         # globalize node numbering
-        self.globalize_node_nums(node_convert_map)
+        self.globalize_node_nums()
 
         # globalize node references for elements and boundaries AND remove node num repeats from element k,l fields
         self.globalize_node_references(node_convert_map)

@@ -81,16 +81,20 @@ def test_make_connections(new_c_obj):
 def test_globalize_node_nums(new_c_obj):
     A1 = Node(num=2000, x=1, y=1)
     B1 = Node(num=2001, x=2, y=2)
-    A2 = Node(num=2000, x=1, y=1)
-    B2 = Node(num=2001, x=2, y=2)
+    A2 = Node(num=3000, x=1, y=1)
+    B2 = Node(num=3001, x=2, y=2)
+    A2.master = A1
+    B2.master = B1
     new_c_obj.nodes["Section1"] = [A1, B1]
     new_c_obj.nodes["Section2"] = [A2, B2]
     node_convert_map = NumMapsManager(new_c_obj.nodes)
     node_convert_map.renumber()
-    A2.num = skip.SkipInt(A2.num)
-    B2.num = skip.SkipInt(B2.num)
-    new_c_obj.globalize_node_nums(node_convert_map)
+    new_c_obj.globalize_node_nums()
     assert A1.num == 1
     assert B1.num == 2
-    assert A2.num == 2000
-    assert B2.num == 2001
+    assert A2.num == 1
+    assert B2.num == 2
+    assert node_convert_map[id(new_c_obj.nodes["Section1"])][2000].num == 1
+    assert node_convert_map[id(new_c_obj.nodes["Section1"])][2001].num == 2
+    assert node_convert_map[id(new_c_obj.nodes["Section2"])][3000].num == 1
+    assert node_convert_map[id(new_c_obj.nodes["Section2"])][3001].num == 2
