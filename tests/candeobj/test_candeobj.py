@@ -59,10 +59,12 @@ def test_add_from_msh_all_obj(monkeypatch, cande_obj_standard: CandeObj, msh_all
 def test_update_totals(new_c_obj):
     n_attrs = "ngroups nsteps nnodes nelements".split()
     assert all(getattr(new_c_obj, attr) == v for attr, v in zip(n_attrs, (0, 0, 0, 0)))
+    new_c_obj.nodes["TEST"] = []
+    new_c_obj.nodes.extend([dict(num=2, x=1, y=1), dict(num=2, x=2, y=2), dict(num=3, x=3, y=3)])
     new_c_obj.elements["TEST"] = []
     new_c_obj.elements.append(dict(num=1, i=1, j=2, k=0, l=0, mat=1, step=1))
     new_c_obj.update_totals()
-    assert all(getattr(new_c_obj, attr) == v for attr, v in zip(n_attrs, (1, 1, 2, 1)))
+    assert all(getattr(new_c_obj, attr) == v for attr, v in zip(n_attrs, (1, 1, 3, 1)))
 
 
 def test_make_connections(new_c_obj):
