@@ -315,12 +315,9 @@ class CandeObj(CidRW):
             attr_len = len(getattr(self, total_def.seq_name))
             # TODO: handle situation when attr_len includes nodes with num set to zero because exist in another NodesSection
             attr_max = 0
-            # TODO: fix this shit
-            """
             for seq_obj, sub_attrs in ((getattr(self, ch), [sub] if isinstance(sub, str) else sub)
                                          for ch, sub in total_def.attr_dict.items()):
                 attr_max = max(itertools.chain([attr_max], (getattr(sub_obj, sub_attr) for sub_obj in seq_obj for sub_attr in sub_attrs)))
-            """
             setattr(self, total_def.total_name, max(attr_len, attr_max))
 
         # pipe group totals
