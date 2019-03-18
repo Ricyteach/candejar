@@ -180,8 +180,9 @@ class TestAPI:
         """After mated connections, some master nodes are set to a node in the other mated section"""
         assert candejar_obj_ready.nodes["STRUCT"][0].master is candejar_obj_ready.nodes["SOIL"][1]
         assert candejar_obj_ready.nodes["STRUCT"][3].master is candejar_obj_ready.nodes["SOIL"][2]
-        assert len(candejar_obj_ready.nodes) == 12
         # bypass direct iteration with len():
+        assert len(candejar_obj_ready.nodes) == 12
         assert sum(1 for _ in range(len(candejar_obj_ready.nodes))) == 12
+        # check slave node skipping
         assert sum(1 for num in range(len(candejar_obj_ready.nodes)) if candejar_obj_ready.nodes[num].master is None) == 8  # slave nodes skipped
-        assert sum(1 for _ in candejar_obj_ready.nodes["STRUCT"]) == 0  # slave nodes not iterated
+        assert sum(1 for _ in candejar_obj_ready.nodes) == 8  # slave nodes not iterated
