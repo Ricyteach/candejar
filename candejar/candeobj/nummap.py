@@ -9,7 +9,7 @@ import itertools
 from . import exc
 from .parts import Node, Element, Material
 from .candeseqbase import CandeSection, CandeMapSequence
-from ..utilities.skip import skippable_len, iter_skippable
+from ..utilities.skip import skippable_len, iter_skippable, SkipInt
 
 HasNum = TypeVar("HasNum", bound=Union[Node, Element, Material])
 
@@ -63,7 +63,8 @@ class NumMap(Generic[HasNum], MutableMapping[int, HasNum]):
         """
         ctr = itertools.count(start)
         for has_num in self.values():
-            has_num.num = next(ctr)
+            if not isinstance(has_num.num, SkipInt):
+                has_num.num = next(ctr)
 
 
 class NumMapsManager(Generic[HasNum], MutableMapping[int, NumMap[HasNum]]):
