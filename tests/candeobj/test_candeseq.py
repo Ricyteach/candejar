@@ -6,7 +6,27 @@
 import pytest
 import types
 
-from candejar.candeobj.candeseq import CandeList, cande_seq_dict
+from candejar.candeobj.candeseq import CandeList, CandeChainMap, CandeChainMapKeyError, CandeChainMapTypeError,\
+    CandeChainMapError, CandeChainMapValueError
+
+def test_cande_chain_map():
+    ccm = CandeChainMap(dict(LALA={}))
+    with pytest.raises(CandeChainMapValueError):
+        ccm["FOO"] = dict(a=None)
+    with pytest.raises(CandeChainMapKeyError):
+        ccm[0] = None
+    with pytest.raises(CandeChainMapKeyError):
+        ccm[True] = None
+    with pytest.raises(CandeChainMapTypeError):
+        ccm["LALA"] = None
+    with pytest.raises(CandeChainMapError):
+        del_map = ccm.maps.pop(-1)
+        try:
+            del ccm["LALA"]
+        except CandeChainMapError:
+            raise
+        finally:
+            ccm.maps.append(del_map)
 
 def test_cande_sequence_subclass_missing_converter_error():
     with pytest.raises(AttributeError):

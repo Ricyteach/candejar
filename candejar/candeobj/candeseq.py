@@ -1,12 +1,92 @@
 # -*- coding: utf-8 -*-
 
 """All the top level Cande sequence objects"""
+from typing import TypeVar, Mapping, MutableMapping, List, ChainMap
 
+from candejar.utilities.collections import DeepChainMap
 from .candeseqbase import CandeSection, CandeList, CandeMapSequence
 from .parts import PipeGroup, Node, Element, Boundary, Material, Factor
 from ..utilities.mixins import GeoMixin
 from ..utilities.skip import SkipAttrIterMixin
 
+V=TypeVar("V")
+K=TypeVar("K")
+
+
+class CandeChainMapError(Exception):
+    pass
+
+
+class CandeChainMapKeyError(KeyError, CandeChainMapError):
+    pass
+
+
+class CandeChainMapTypeError(TypeError, CandeChainMapError):
+    pass
+
+
+class CandeChainMapValueError(ValueError, CandeChainMapError):
+    pass
+
+
+class CandeChainMap(ChainMap[K,V]):
+    """A ChainMap with context map being the sections map. Subsequent maps are maps of numbered objects (nodes, elements,
+    boundaries, materials, etc)."""
+    maps: List[MutableMapping[K, V]]
+
+    def __setitem__(self, key, value):
+        # sections are labeled by a str key
+        if isinstance(key, str):
+            if not isinstance(value, Mapping):
+                raise CandeChainMapTypeError(f"section must be a Mapping, not {type(value).__qualname__!s}")
+            if not all(isinstance(k, int) for k in value.keys()):
+                raise CandeChainMapValueError(f"section objects must be numbered with ints")
+            self.maps[0][key] = value
+            self.maps.append(value)
+        # item numbers are labeled by an int
+        elif isinstance(key, int):
+            for mapping in self.maps:
+                if key in mapping:
+                    mapping[key] = value
+                    break
+            else:
+                raise CandeChainMapKeyError(f"item #{key!s} not found; cannot add new keys using CandeChainMap directly")
+        # other key types are invalid
+        else:
+            raise CandeChainMapTypeError(f"key must be a str or int, not {type(key).__qualname__!s}")
+
+    def __delitem__(self, key):
+        # sections are labeled by a str key
+        if isinstance(key, str):
+            del_map = self.maps[0].pop(key)
+            try:
+                self.maps.remove(del_map)
+            except ValueError:
+                self.maps[0][key] = del_map  # undo
+                raise CandeChainMapError(f"inconsistent state detected; {key!r} key was not deleted")
+        # item numbers are labeled by an int
+        elif isinstance(key, int):
+            for mapping in self.maps:
+                if key in mapping:
+                    del mapping[key]
+                    break
+        else:
+            raise KeyError(key)
+
+    @property
+    def all(self)->DeepChainMap[int, V]:
+        """A DeepChainMap containing only the numbered objects (nodes, elements, boundaries, materials, etc)."""
+        return DeepChainMap(*self.parents.maps)
+
+    @property
+    def objects(self):
+        """A view of all the numbered objects (nodes, elements, boundaries, materials, etc)."""
+        return self.all.values()
+
+    @property
+    def sections(self)->MutableMapping[str, V]:
+        """The sections map."""
+        return self.maps[0]
 
 ############################
 #  CandeSection sequences  #

@@ -8,10 +8,35 @@ import functools
 import itertools
 from typing import List, Tuple, Any, overload, Sequence, MutableSequence, \
     Generic, TypeVar, Type, Union, Optional, Iterable, Iterator, Mapping, \
-    Callable, ClassVar
+    Callable, ClassVar, ChainMap, MutableMapping
 
 T = TypeVar("T")
+K = TypeVar("K")
+V = TypeVar("V")
 NO_SLICE = object()
+
+
+class DeepChainMap(ChainMap[K, V]):
+    """Variant of ChainMap that allows direct updates to inner scopes
+
+    Recipe copied from python.org
+    """
+    maps: List[MutableMapping[K, V]]
+
+    def __setitem__(self, key, value):
+        for mapping in self.maps:
+            if key in mapping:
+                mapping[key] = value
+                break
+        else:
+            self.maps[0][key] = value
+
+    def __delitem__(self, key):
+        for mapping in self.maps:
+            if key in mapping:
+                del mapping[key]
+                return
+        raise KeyError(key)
 
 
 class SpecialValueError(ValueError):
