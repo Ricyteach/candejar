@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """All the top level Cande sequence objects"""
-from typing import TypeVar, Mapping, MutableMapping, List, ChainMap, overload, Union, Tuple
+from typing import TypeVar, Mapping, MutableMapping, List, ChainMap, overload, Union, Tuple, ValuesView
 import collections
 
 from candejar.utilities.collections import DeepChainMap
@@ -13,7 +13,9 @@ from ..utilities.skip import SkipAttrIterMixin
 T=TypeVar("T")
 K=TypeVar("K")
 V=TypeVar("V")
+V_co = TypeVar('V_co', covariant=True)
 no_arg = object()
+
 
 class CandeChainMapError(Exception):
     pass
@@ -43,7 +45,7 @@ class CandeChainMap(ChainMap[K,V]):
             raise CandeChainMapValueError("section objects must be numbered with ints")
         super().__init__(sections, *(section for section in sections.values()))
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key, value) -> None:
         # sections are labeled by a str key
         if isinstance(key, str):
             if not isinstance(value, Mapping):
@@ -75,7 +77,7 @@ class CandeChainMap(ChainMap[K,V]):
         else:
             raise CandeChainMapTypeError(f"key must be a str or int, not {type(key).__qualname__!s}")
 
-    def __delitem__(self, key):
+    def __delitem__(self, key) -> None:
         # sections are labeled by a str key
         if isinstance(key, str):
             del_map = self.maps[0].pop(key)
@@ -101,14 +103,22 @@ class CandeChainMap(ChainMap[K,V]):
         return DeepChainMap(*self.parents.maps)
 
     @property
-    def objects(self):
+    def objects(self) -> ValuesView[V_co]:
         """A view of all the numbered objects (nodes, elements, boundaries, materials, etc)."""
-        return self.all.values()
+        try:
+            return self._objects
+        except AttributeError:
+            result = self._objects = self.all.values()
+            return result
 
     @property
     def sections(self)->MutableMapping[str, V]:
         """The sections map."""
-        return self.maps[0]
+        try:
+            return self._sections
+        except AttributeError:
+            result = self._sections = self.maps[0]
+            return result
 
     @overload
     def pop(self, key: K) -> V: ...
@@ -146,7 +156,8 @@ class CandeChainMap(ChainMap[K,V]):
             return default
 
     def popitem(self) -> Tuple[K, V]:
-        key, item = self.maps[0].popitem()
+        """Only pops sections."""
+        key, item = self.sections.popitem()
         if len(self.maps)>1:
             del self.maps[-1]
         else:
