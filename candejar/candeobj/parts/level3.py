@@ -4,8 +4,9 @@
 
 from __future__ import annotations
 import enum
+from abc import abstractmethod
 from dataclasses import dataclass
-from typing import ClassVar, Iterable
+from typing import ClassVar, overload, List, Iterator
 
 from .. import exc
 from ...utilities.decorators import init_kwargs
@@ -37,7 +38,7 @@ class ElementCategory(enum.Enum):
 
 
 @init_kwargs
-@dataclass(init=False)
+@dataclass#(init=False)  # commenting this may be a mistake - did it to get __post_init__ to run
 class Element(WithKwargsMixin, GeoMixin, geo_type="Polygon"):
     num: int
     i: int
@@ -48,6 +49,14 @@ class Element(WithKwargsMixin, GeoMixin, geo_type="Polygon"):
     step: int = 0
     connection: int = 0
     death: int = 0
+
+    def __post_init__(self):
+        if self.k==0 and self.l!=0:
+            raise exc.CandeValueError("misnumbered element")
+        i=0
+        for i,_ in enumerate(self, 1):
+            pass
+        self._len = i
 
     def remove_repeats(self):
         """Change repeated node numbers to zero."""
@@ -72,6 +81,26 @@ class Element(WithKwargsMixin, GeoMixin, geo_type="Polygon"):
             except ValueError as e:
                 raise exc.CandeValueError(f"Invalid field value for Connection: "
                                           f"{connection_value}") from e
+
+    def __iter__(self) -> Iterator[int]:
+
+        for n in (getattr(self, n) for n in "ijkl"):
+            if n!=0:
+                yield n
+
+    def __len__(self) -> int:
+        return self._len
+
+    @overload
+    @abstractmethod
+    def __getitem__(self, i: int) -> int: ...
+
+    @overload
+    @abstractmethod
+    def __getitem__(self, s: slice) -> List[int]: ...
+
+    def __getitem__(self, x):
+        return list(self)[x]
 
 
 @init_kwargs
