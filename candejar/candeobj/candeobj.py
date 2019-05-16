@@ -246,9 +246,6 @@ class CandeObj(CidRW):
         done separately. Might change this later?
         """
 
-        if name is not None and nodes is None:
-            raise TypeError("bad argument combination")
-
         # resolve the node section to be referenced by new boundaries section
         existing_nodes = None
         if name is None:
@@ -264,6 +261,9 @@ class CandeObj(CidRW):
             except KeyError as e:
                 if nodes is None:
                     raise KeyError(f"failed to find {section_name!r} node section") from e
+        else:
+            if name is not None and nodes is None:
+                raise TypeError("no nodes were provided with new section name")
         if existing_nodes is None and nodes is None:
             raise ValueError("nodes argument is required when supplying a new section name")
         if existing_nodes is not None and nodes is not None:
